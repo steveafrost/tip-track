@@ -1,7 +1,7 @@
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <h1 className="text-3xl">Tip Track</h1>
-    </main>
+    <div className="flex flex-row space-x-4">
+      <h2 className="text-4xl text-primary font-bold">Tip Track</h2>
+    </div>
   );
 }
