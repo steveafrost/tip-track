@@ -1,0 +1,34 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+}
+
+model Location {
+  id          String   @id @default(cuid())
+  address     String   @unique
+  tips        Tip[]
+  coordinates Float[]  @unique @default([0, 0])
+  createdAt   DateTime @default(now()) @map(name: "created_at")
+  updatedAt   DateTime @updatedAt @map(name: "updated_at")
+}
+
+model Tip {
+  id         String    @id @default(cuid())
+  amount     TipAmount
+  location   Location  @relation(fields: [locationId], references: [id])
+  locationId String
+  createdAt  DateTime  @default(now()) @map(name: "created_at")
+  updatedAt  DateTime  @updatedAt @map(name: "updated_at")
+}
+
+enum TipAmount {
+  None
+  Low
+  Medium
+  High
+}
