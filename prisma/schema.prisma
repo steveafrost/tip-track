@@ -11,24 +11,19 @@ datasource db {
 model Location {
   id          String   @id @default(cuid())
   address     String   @unique
-  tips        Tip[]
+  orders      Order[]
   coordinates Float[]  @unique @default([0, 0])
   createdAt   DateTime @default(now()) @map(name: "created_at")
   updatedAt   DateTime @updatedAt @map(name: "updated_at")
 }
 
-model Tip {
-  id         String    @id @default(cuid())
-  amount     TipAmount
-  location   Location  @relation(fields: [locationId], references: [id])
+model Order {
+  id         String   @id @default(cuid())
+  externalId String   @unique
+  tip        Int?
+  total      Int?
+  location   Location @relation(fields: [locationId], references: [id])
   locationId String
-  createdAt  DateTime  @default(now()) @map(name: "created_at")
-  updatedAt  DateTime  @updatedAt @map(name: "updated_at")
-}
-
-enum TipAmount {
-  None
-  Low
-  Medium
-  High
+  createdAt  DateTime @default(now()) @map(name: "created_at")
+  updatedAt  DateTime @updatedAt @map(name: "updated_at")
 }

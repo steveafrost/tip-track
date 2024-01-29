@@ -15,18 +15,29 @@ import {
 } from "../ui/form";
 import { Input } from "../ui/input";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+import { useTransition } from "react";
+import { LucideLoader } from "lucide-react";
+import { addOrder } from "./submit-actions";
 
 export function SubmitForm() {
+  const [isSubmitting, startTransition] = useTransition();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       address: "",
-      tipAmount: undefined,
+      externalId: "",
+      tip: undefined,
     },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+    startTransition(() => {
+      addOrder({
+        address: values.address,
+        externalId: values.externalId,
+        tip: values.tip,
+      });
+    });
   }
 
   return (
@@ -47,7 +58,7 @@ export function SubmitForm() {
         />
         <FormField
           control={form.control}
-          name="tipAmount"
+          name="tip"
           render={({ field }) => (
             <FormItem className="space-y-3">
               <FormLabel>Tip Amount</FormLabel>
@@ -59,19 +70,19 @@ export function SubmitForm() {
                 >
                   <FormItem className="flex items-center space-x-3 space-y-0">
                     <FormControl>
-                      <RadioGroupItem value="none" />
+                      <RadioGroupItem value={"1"} />
                     </FormControl>
                     <FormLabel className="font-normal">None</FormLabel>
                   </FormItem>
                   <FormItem className="flex items-center space-x-3 space-y-0">
                     <FormControl>
-                      <RadioGroupItem value="low" />
+                      <RadioGroupItem value={"2"} />
                     </FormControl>
                     <FormLabel className="font-normal">Less than $5</FormLabel>
                   </FormItem>
                   <FormItem className="flex items-center space-x-3 space-y-0">
                     <FormControl>
-                      <RadioGroupItem value="medium" />
+                      <RadioGroupItem value={"3"} />
                     </FormControl>
                     <FormLabel className="font-normal">
                       Between $5 and $10
@@ -79,7 +90,7 @@ export function SubmitForm() {
                   </FormItem>
                   <FormItem className="flex items-center space-x-3 space-y-0">
                     <FormControl>
-                      <RadioGroupItem value="high" />
+                      <RadioGroupItem value={"4"} />
                     </FormControl>
                     <FormLabel className="font-normal">More than $10</FormLabel>
                   </FormItem>
@@ -89,8 +100,13 @@ export function SubmitForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full font-bold">
-          Submit
+        <Button
+          type="submit"
+          className="w-full font-bold"
+          disabled={isSubmitting}
+        >
+          {!isSubmitting && <span>Submit</span>}
+          {isSubmitting && <LucideLoader className="animate-spin" size={20} />}
         </Button>
       </form>
     </Form>
