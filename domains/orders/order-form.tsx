@@ -3,8 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { formSchema } from "./submit.constants";
-import { Button } from "../ui/button";
+import { Button } from "../../components/button";
 import {
   Form,
   FormField,
@@ -12,30 +11,28 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
-} from "../ui/form";
-import { Input } from "../ui/input";
-import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+} from "../../components/form";
+import { Input } from "../../components/input";
 import { useTransition } from "react";
 import { LucideLoader } from "lucide-react";
-import { addOrder } from "./submit-actions";
+import { addOrder } from "./order-actions";
+import { orderEditFormSchema } from "./orders.constants";
 
 export function SubmitForm() {
   const [isSubmitting, startTransition] = useTransition();
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof orderEditFormSchema>>({
+    resolver: zodResolver(orderEditFormSchema),
     defaultValues: {
       address: "",
-      externalId: "",
-      tip: undefined,
+      orderId: "",
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(values: z.infer<typeof orderEditFormSchema>) {
     startTransition(() => {
       addOrder({
         address: values.address,
-        externalId: values.externalId,
-        tip: values.tip,
+        externalId: values.orderId,
       });
     });
   }
@@ -48,7 +45,7 @@ export function SubmitForm() {
           name="address"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Address</FormLabel>
+              <FormLabel className="text-xl">Address</FormLabel>
               <FormControl>
                 <Input placeholder="Enter an address" {...field} />
               </FormControl>
@@ -58,10 +55,38 @@ export function SubmitForm() {
         />
         <FormField
           control={form.control}
+          name="orderId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xl">Order ID</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter an order ID" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <Button
+          type="submit"
+          className="w-full font-bold"
+          disabled={isSubmitting}
+        >
+          {!isSubmitting && <span>Submit</span>}
+          {isSubmitting && <LucideLoader className="animate-spin" size={20} />}
+        </Button>
+      </form>
+    </Form>
+  );
+}
+
+{
+  /* <FormField
+          control={form.control}
           name="tip"
           render={({ field }) => (
             <FormItem className="space-y-3">
-              <FormLabel>Tip Amount</FormLabel>
+              <FormLabel className="text-xl">Tip Amount</FormLabel>
               <FormControl>
                 <RadioGroup
                   onValueChange={field.onChange}
@@ -99,16 +124,5 @@ export function SubmitForm() {
               <FormMessage />
             </FormItem>
           )}
-        />
-        <Button
-          type="submit"
-          className="w-full font-bold"
-          disabled={isSubmitting}
-        >
-          {!isSubmitting && <span>Submit</span>}
-          {isSubmitting && <LucideLoader className="animate-spin" size={20} />}
-        </Button>
-      </form>
-    </Form>
-  );
+        /> */
 }

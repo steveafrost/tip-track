@@ -1,6 +1,6 @@
-import { getLocations } from "@/components/search/search-actions";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Combobox } from "@/components/ui/combobox";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/card";
+import { Combobox } from "@/components/combobox";
+import { getLocations } from "@/domains/location/location-actions";
 import { format } from "date-fns";
 
 export default async function Search() {

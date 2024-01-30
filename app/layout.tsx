@@ -8,7 +8,7 @@ import {
   LucidePackagePlus,
   LucidePackageSearch,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/button";
 
 export const metadata: Metadata = {
   title: "Tip Track",
@@ -29,7 +29,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={cn(
-          "flex flex-col min-h-dvh bg-background font-sans antialiased",
+          "flex flex-col h-[100dvh] bg-background font-sans antialiased",
           fontSans.variable
         )}
       >
