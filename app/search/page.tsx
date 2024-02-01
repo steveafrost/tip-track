@@ -1,43 +1,22 @@
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/card";
-import { Combobox } from "@/components/combobox";
 import { getLocations } from "@/domains/location/location-actions";
-import { OrdersList } from "@/domains/order/order-list";
-import { getOrdersAverageTip } from "@/domains/order/order.utils";
+import { LocationCard } from "@/domains/location/location-card";
+import { LocationSearch } from "@/domains/location/location-search";
 
 export default async function Search() {
   const { locations } = await getLocations();
 
-  const locationOptions = locations?.map((location) => ({
-    value: `${location.address} - ${location.orders.join("|")}`.toLowerCase(),
-    label: location.address,
-  }));
-
-  const location = locations?.[0];
-
   return (
-    <div className="w-full space-y-8 bg-zinc-50 rounded-md p-4 py-8">
+    <div className="w-full space-y-8 bg-zinc-50 rounded-md p-4 py-8 border-2 border-slate-700 drop-shadow-md">
       <h2 className="text-4xl drop-shadow-sm font-bold text-center text-zinc-800">
         Locations
       </h2>
-      <Combobox options={locationOptions ?? []} />
+      <LocationSearch locations={locations} />
       {!locations && (
         <div>
           <p>No locations found.</p>
         </div>
       )}
-      {location && (
-        <Card key={location.id}>
-          <CardHeader className="pb-4">
-            <CardTitle className="text-xl">
-              Average Tip: {getOrdersAverageTip(location.orders)}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <h4 className="underline mb-2 text-lg">Previous Tips</h4>
-            <OrdersList orders={location.orders} />
-          </CardContent>
-        </Card>
-      )}
+      {locations && <LocationCard />}
     </div>
   );
 }

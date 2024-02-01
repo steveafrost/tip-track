@@ -13,12 +13,14 @@ import {
   CommandItem,
 } from "@/components/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/popover";
+import { Option } from "@/types/all.types";
 
 type ComboboxProps = {
-  options: Record<string, string>[];
+  options: Option[];
+  onSelect?: (value: Option) => void;
 };
 
-export function Combobox({ options }: ComboboxProps) {
+export function Combobox({ options, onSelect }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState("");
 
@@ -32,11 +34,10 @@ export function Combobox({ options }: ComboboxProps) {
           aria-expanded={open}
           className="w-full justify-between"
         >
-          <span className="text-lg">
-            {value
-              ? options.find((option) => option.value === value)?.label
-              : "Search"}
-          </span>
+          {value
+            ? options.find((option) => option.value === value)?.label
+            : "Search"}
+
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -50,9 +51,10 @@ export function Combobox({ options }: ComboboxProps) {
                 key={option.value}
                 value={option.value}
                 onSelect={(currentValue) => {
-                  console.log(currentValue);
                   setValue(currentValue === value ? "" : currentValue);
                   setOpen(false);
+
+                  onSelect?.(option);
                 }}
               >
                 <Check

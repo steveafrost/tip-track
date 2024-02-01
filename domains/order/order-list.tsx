@@ -17,7 +17,7 @@ type OrdersListProps = {
 
 export const OrdersList = ({ orders }: OrdersListProps) => {
   return (
-    <ul className="pl-6 list-disc">
+    <ul className="pl-2">
       {orders.map((order) => (
         <Sheet key={order.id}>
           <SheetTrigger asChild>
