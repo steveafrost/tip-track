@@ -16,7 +16,7 @@ import { Input } from "../../components/input";
 import { useTransition } from "react";
 import { LucideLoader } from "lucide-react";
 import { addOrder } from "./order-actions";
-import { orderAddFormSchema } from "./orders.constants";
+import { orderAddFormSchema } from "./order.constants";
 
 export function SubmitForm() {
   const [isSubmitting, startTransition] = useTransition();
@@ -39,7 +39,7 @@ export function SubmitForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <FormField
           control={form.control}
           name="address"
@@ -69,9 +69,8 @@ export function SubmitForm() {
 
         <Button
           type="submit"
-          className="w-full text-xl font-bold text-zinc-900"
+          className="w-full font-bold"
           disabled={isSubmitting}
-          size="lg"
         >
           {!isSubmitting && <span>Submit</span>}
           {isSubmitting && <LucideLoader className="animate-spin" size={20} />}

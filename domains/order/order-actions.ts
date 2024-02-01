@@ -27,3 +27,24 @@ export async function addOrder({
     return { error };
   }
 }
+
+export async function updateOrder({
+  externalId,
+  tip,
+}: {
+  externalId: string;
+  tip: number;
+}) {
+  try {
+    const order = await prisma.order.update({
+      where: { externalId },
+      data: {
+        tip,
+      },
+    });
+
+    return { order };
+  } catch (error) {
+    return { error };
+  }
+}

@@ -27,19 +27,22 @@ export function Combobox({ options }: ComboboxProps) {
       <PopoverTrigger asChild>
         <Button
           variant="outline"
+          size={"lg"}
           role="combobox"
           aria-expanded={open}
-          className="w-[200px] justify-between"
+          className="w-full justify-between"
         >
-          {value
-            ? options.find((option) => option.value === value)?.label
-            : "Pick Location"}
+          <span className="text-lg">
+            {value
+              ? options.find((option) => option.value === value)?.label
+              : "Search"}
+          </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0">
+      <PopoverContent className="w-[342px] p-0">
         <Command>
-          <CommandInput placeholder="Pick Location" />
+          <CommandInput placeholder="Enter address" />
           <CommandEmpty>No location found.</CommandEmpty>
           <CommandGroup>
             {options.map((option) => (
@@ -47,6 +50,7 @@ export function Combobox({ options }: ComboboxProps) {
                 key={option.value}
                 value={option.value}
                 onSelect={(currentValue) => {
+                  console.log(currentValue);
                   setValue(currentValue === value ? "" : currentValue);
                   setOpen(false);
                 }}

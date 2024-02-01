@@ -1,64 +1,43 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/card";
 import { Combobox } from "@/components/combobox";
 import { getLocations } from "@/domains/location/location-actions";
-import { format } from "date-fns";
+import { OrdersList } from "@/domains/order/order-list";
+import { getOrdersAverageTip } from "@/domains/order/order.utils";
 
 export default async function Search() {
   const { locations } = await getLocations();
 
+  const locationOptions = locations?.map((location) => ({
+    value: `${location.address} - ${location.orders.join("|")}`.toLowerCase(),
+    label: location.address,
+  }));
+
+  const location = locations?.[0];
+
   return (
-    <div className="w-full">
-      <h2 className="text-xl">Search Previous Locations</h2>
-      <Combobox
-        options={[
-          {
-            value: "next.js",
-            label: "Next.js",
-          },
-          {
-            value: "sveltekit",
-            label: "SvelteKit",
-          },
-          {
-            value: "nuxt.js",
-            label: "Nuxt.js",
-          },
-          {
-            value: "remix",
-            label: "Remix",
-          },
-          {
-            value: "astro",
-            label: "Astro",
-          },
-        ]}
-      />
+    <div className="w-full space-y-10">
+      <h2 className="text-4xl drop-shadow-sm font-bold text-center">
+        Locations
+      </h2>
+      <Combobox options={locationOptions ?? []} />
       {!locations && (
         <div>
           <p>No locations found.</p>
         </div>
       )}
-      {locations &&
-        locations.map((location) => (
-          <Card key={location.id}>
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg">{location.address}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <h4 className="underline mb-2">Previous Tips</h4>
-              <ul className="pl-2 list-inside">
-                {location.orders.map((order) => (
-                  <li key={order.id} className="space-x-2">
-                    <span className="text-sm">{order.tip}</span>
-                    <span className="text-xs text-zinc-400">
-                      ({format(order.createdAt, "MMMM dd, yyyy")})
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        ))}
+      {location && (
+        <Card key={location.id}>
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl">
+              Average Tip: {getOrdersAverageTip(location.orders)}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <h4 className="underline mb-2 text-lg">Previous Tips</h4>
+            <OrdersList orders={location.orders} />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
