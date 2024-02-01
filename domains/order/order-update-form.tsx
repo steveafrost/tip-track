@@ -105,7 +105,7 @@ export function OrderUpdateForm({
         />
         <Button
           type="submit"
-          className="w-full text-lg font-bold text-zinc-900"
+          className="w-full text-lg font-bold"
           disabled={isSubmitting}
           size="lg"
         >

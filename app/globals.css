@@ -13,7 +13,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
  
-    --primary: 179 78% 42%;
+    --primary: 139 100% 30%;
     --primary-foreground: 240 5% 34%;
  
     --secondary: 28 73% 74%;
@@ -72,5 +72,42 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .text-real-stroke {
+    text-shadow: calc(4px * 1) calc(4px * 0) 0
+      darkslategray,
+    calc(4px * 0.9239) calc(4px * 0.3827) 0
+      darkslategray,
+    calc(4px * 0.7071) calc(4px * 0.7071) 0
+      darkslategray,
+    calc(4px * 0.3827) calc(4px * 0.9239) 0
+      darkslategray,
+    calc(4px * 0) calc(4px * 1) 0
+      darkslategray,
+    calc(4px * -0.3827) calc(4px * 0.9239) 0
+      darkslategray,
+    calc(4px * -0.7071) calc(4px * 0.7071) 0
+      darkslategray,
+    calc(4px * -0.9239) calc(4px * 0.3827) 0
+      darkslategray,
+    calc(4px * -1) calc(4px * 0) 0
+      darkslategray,
+    calc(4px * -0.9239) calc(4px * -0.3827) 0
+      darkslategray,
+    calc(4px * -0.7071) calc(4px * -0.7071) 0
+      darkslategray,
+    calc(4px * -0.3827) calc(4px * -0.9239) 0
+      darkslategray,
+    calc(4px * 0) calc(4px * -1) 0
+      darkslategray,
+    calc(4px * 0.3827) calc(4px * -0.9239) 0
+      darkslategray,
+    calc(4px * 0.7071) calc(4px * -0.7071) 0
+      darkslategray,
+    calc(4px * 0.9239) calc(4px * -0.3827) 0
+      darkslategray;
   }
 }

@@ -39,7 +39,7 @@ export function OrderAddForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="address"
@@ -69,7 +69,7 @@ export function OrderAddForm() {
 
         <Button
           type="submit"
-          className="w-full text-xl font-bold text-zinc-900"
+          className="w-full text-xl font-bold"
           disabled={isSubmitting}
           size="lg"
         >
