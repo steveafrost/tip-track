@@ -34,10 +34,11 @@ export function Combobox({ options, onSelect }: ComboboxProps) {
           aria-expanded={open}
           className="w-full justify-between"
         >
-          {value
-            ? options.find((option) => option.value === value)?.label
-            : "Search"}
-
+          <span className="overflow-hidden text-ellipsis">
+            {value
+              ? options.find((option) => option.value === value)?.label
+              : "Search"}
+          </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -50,6 +51,7 @@ export function Combobox({ options, onSelect }: ComboboxProps) {
               <CommandItem
                 key={option.value}
                 value={option.value}
+                className="text-sm"
                 onSelect={(currentValue) => {
                   setValue(currentValue === value ? "" : currentValue);
                   setOpen(false);

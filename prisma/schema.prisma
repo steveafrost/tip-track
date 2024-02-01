@@ -12,7 +12,7 @@ model Location {
   id          String   @id @default(cuid())
   address     String   @unique
   orders      Order[]
-  coordinates Float[]  @unique @default([0, 0])
+  coordinates Float[]  @default([0, 0])
   createdAt   DateTime @default(now()) @map(name: "created_at")
   updatedAt   DateTime @updatedAt @map(name: "updated_at")
 }

@@ -18,7 +18,7 @@ import { LucideLoader } from "lucide-react";
 import { addOrder } from "./order-actions";
 import { orderAddFormSchema } from "./order.constants";
 
-export function OrderAddForm() {
+export const OrderAddForm = () => {
   const [isSubmitting, startTransition] = useTransition();
   const form = useForm<z.infer<typeof orderAddFormSchema>>({
     resolver: zodResolver(orderAddFormSchema),
@@ -28,14 +28,16 @@ export function OrderAddForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof orderAddFormSchema>) {
+  const onSubmit = (values: z.infer<typeof orderAddFormSchema>) => {
     startTransition(() => {
       addOrder({
         address: values.address,
         externalId: values.orderId,
       });
     });
-  }
+
+    form.reset();
+  };
 
   return (
     <Form {...form}>
@@ -79,4 +81,4 @@ export function OrderAddForm() {
       </form>
     </Form>
   );
-}
+};

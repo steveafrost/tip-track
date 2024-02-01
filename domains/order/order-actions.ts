@@ -10,7 +10,7 @@ export async function addOrder({
   externalId: string;
 }) {
   try {
-    const order = await prisma.order.create({
+    await prisma.order.create({
       data: {
         externalId,
         location: {
@@ -21,10 +21,8 @@ export async function addOrder({
         },
       },
     });
-
-    return { order };
   } catch (error) {
-    return { error };
+    console.error(error);
   }
 }
 
@@ -45,6 +43,8 @@ export async function updateOrder({
 
     return { order };
   } catch (error) {
+    console.error(error);
+
     return { error };
   }
 }

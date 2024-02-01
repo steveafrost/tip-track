@@ -23,10 +23,10 @@ type OrderUpdateFormProps = {
   existingTip: number | null;
 };
 
-export function OrderUpdateForm({
+export const OrderUpdateForm = ({
   externalId,
   existingTip,
-}: OrderUpdateFormProps) {
+}: OrderUpdateFormProps) => {
   const [isSubmitting, startTransition] = useTransition();
   const form = useForm<z.infer<typeof orderUpdateFormSchema>>({
     resolver: zodResolver(orderUpdateFormSchema),
@@ -115,4 +115,4 @@ export function OrderUpdateForm({
       </form>
     </Form>
   );
-}
+};
