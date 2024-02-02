@@ -17,6 +17,7 @@ import { useTransition } from "react";
 import { LucideLoader } from "lucide-react";
 import { addOrder } from "./order-actions";
 import { orderAddFormSchema } from "./order.constants";
+import { toast } from "sonner";
 
 export const OrderAddForm = () => {
   const [isSubmitting, startTransition] = useTransition();
@@ -36,6 +37,7 @@ export const OrderAddForm = () => {
       });
     });
 
+    toast.success("Order added");
     form.reset();
   };
 

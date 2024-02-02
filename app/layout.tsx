@@ -3,13 +3,10 @@ import Link from "next/link";
 import { Montserrat as FontSans } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import {
-  LucideBarChart2,
-  LucidePackagePlus,
-  LucidePackageSearch,
-  WalletIcon,
-} from "lucide-react";
+import { WalletIcon } from "lucide-react";
 import { Button } from "@/components/button";
+import { Toaster } from "sonner";
+import { Navigation } from "@/components/navigation";
 
 export const metadata: Metadata = {
   title: "Tip Track",
@@ -18,11 +15,12 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  initialScale: 1,
+  maximumScale: 1,
+  minimumScale: 1,
   themeColor: "#00852a",
   userScalable: false,
-  initialScale: 1,
-  minimumScale: 1,
-  maximumScale: 1,
+  viewportFit: "cover",
   width: "device-width",
 };
 
@@ -40,7 +38,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={cn(
-          "flex flex-col h-[100dvh] bg-background font-sans antialiased bg-home",
+          "flex flex-col h-[100dvh] bg-background font-sans antialiased bg-home bg-no-repeat",
           fontSans.variable
         )}
       >
@@ -58,23 +56,8 @@ export default function RootLayout({
           </Link>
         </Button>
         <main className="flex-1 flex flex-col px-4">{children}</main>
-        <nav className="sticky bottom-0 flex flex-row space-x-4 justify-around bg-primary px-4 py-2 border-t-2 border-t-zinc-200">
-          <Button variant="icon" size={"icon"} type="button" asChild>
-            <Link href="/submit">
-              <LucidePackagePlus size={36} />
-            </Link>
-          </Button>
-          <Button variant="icon" size={"icon"} type="button" asChild>
-            <Link href="/search">
-              <LucidePackageSearch size={36} />
-            </Link>
-          </Button>
-          <Button variant="icon" size={"icon"} type="button" asChild>
-            <Link href="/reports">
-              <LucideBarChart2 size={36} />
-            </Link>
-          </Button>
-        </nav>
+        <Navigation />
+        <Toaster />
       </body>
     </html>
   );
