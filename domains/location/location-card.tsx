@@ -8,7 +8,13 @@ import { useStore } from "@/store";
 export const LocationCard = () => {
   const { location } = useStore();
 
-  if (Object.keys(location).length === 0) return null;
+  if (Object.keys(location).length === 0)
+    return (
+      <p className="font-semibold px-2">
+        Search for a location to display all orders and tips associated with
+        that address.
+      </p>
+    );
 
   return (
     <Card key={location.id}>

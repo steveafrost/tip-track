@@ -20,8 +20,8 @@ export default async function ReportsPage() {
   }, [] as PieChartData);
 
   return (
-    <div className="w-full space-y-8 bg-zinc-50 rounded-md p-4 py-8 border-2 border-slate-700 drop-shadow-md">
-      <h2 className="text-4xl drop-shadow-sm font-bold text-center text-zinc-800">
+    <div className="w-full space-y-8 bg-zinc-800/75 rounded-md p-4 pt-8 pb-10 border-2 border-zinc-950/25 drop-shadow-md">
+      <h2 className="text-4xl drop-shadow-sm font-bold text-center ">
         Reports
       </h2>
       {!data && (

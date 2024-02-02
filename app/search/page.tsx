@@ -6,17 +6,14 @@ export default async function SearchPage() {
   const { locations } = await getLocations();
 
   return (
-    <div className="w-full space-y-8 bg-zinc-50 rounded-md p-4 pt-8 pb-10 border-2 border-slate-700 drop-shadow-md">
-      <h2 className="text-4xl drop-shadow-sm font-bold text-center text-zinc-800">
+    <div className="flex flex-col space-y-8 bg-zinc-800/75 rounded-md p-4 pt-8 pb-10 border-2 border-zinc-950/25 drop-shadow-md">
+      <h2 className="text-4xl drop-shadow-sm font-bold text-center">
         Locations
       </h2>
+
       <LocationSearch locations={locations} />
-      {!locations && (
-        <div>
-          <p>No locations found.</p>
-        </div>
-      )}
-      {locations && <LocationCard />}
+
+      <LocationCard />
     </div>
   );
 }

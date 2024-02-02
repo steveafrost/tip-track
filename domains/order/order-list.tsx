@@ -25,7 +25,9 @@ export const OrdersList = ({ orders }: OrdersListProps) => {
         <Sheet
           key={order.id}
           open={order.id === activeOrder}
-          onOpenChange={() => setActiveOrder(order.id)}
+          onOpenChange={(open) =>
+            open ? setActiveOrder(order.id) : setActiveOrder("")
+          }
         >
           <SheetTrigger asChild>
             <li key={order.id} className="space-x-2">

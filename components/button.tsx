@@ -5,19 +5,20 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        default: "bg-primary text-white hover:bg-primary/90",
+        default:
+          "bg-green-800/75 border border-green-500 text-green-400 hover:bg-green-700/75",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+          "border-zinc-950/25 border-2 bg-zinc-800/50 text-zinc-200 hover:bg-zinc-800/75 hover:text-zinc-50",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
-        icon: "hover:bg-accent/50 hover:text-zinc-900 focus-visible:ring-offset-0 text-zinc-200 data-[active=true]:bg-white/50 data-[active=true]:text-primary",
+        icon: "hover:bg-zinc-200/25 border-2 hover:border-green-800/75 hover:text-zinc-900 border-transparent text-zinc-950 drop-shadow-lg data-[active=true]:bg-zinc-200/25 data-[active=true]:border-green-800/75",
         link: "text-primary underline-offset-4 hover:underline",
         logo: "bg-transparent",
       },
@@ -26,7 +27,7 @@ const buttonVariants = cva(
         sm: "h-9 rounded-md px-3",
         lg: "h-12 rounded-md px-4",
         xl: "h-14 rounded-md px-10",
-        icon: "px-4 py-2",
+        icon: "px-8 py-2",
         logo: "px-0 py-0 h-fit w-fit",
       },
     },

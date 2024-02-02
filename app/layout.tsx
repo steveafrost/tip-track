@@ -38,7 +38,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={cn(
-          "flex flex-col h-[100dvh] bg-background font-sans antialiased bg-home bg-no-repeat",
+          "flex flex-col h-[100dvh] bg-background font-sans antialiased bg-home bg-no-repeat bg-cover",
           fontSans.variable
         )}
       >

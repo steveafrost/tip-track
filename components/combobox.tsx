@@ -43,7 +43,7 @@ export function Combobox({ options, onSelect }: ComboboxProps) {
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-full p-0"
+        className="w-[calc(100vw-68px)] p-0 border-0"
         avoidCollisions={false}
         side={"bottom"}
       >
