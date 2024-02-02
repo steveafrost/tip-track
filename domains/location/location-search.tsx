@@ -14,7 +14,9 @@ export const LocationSearch = ({ locations = [] }: LocationSearchProps) => {
 
   const options = locations.map((location) => ({
     id: location.id,
-    value: `${location.address} - ${location.orders.join("|")}`.toLowerCase(),
+    value: `${location.address} - ${location.orders
+      .map((order) => order.externalId)
+      .join(" | ")}`.toLowerCase(),
     label: location.address,
   })) as Option[];
 

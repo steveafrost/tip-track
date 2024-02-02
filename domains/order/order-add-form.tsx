@@ -13,14 +13,14 @@ import {
   FormMessage,
 } from "../../components/form";
 import { Input } from "../../components/input";
-import { useTransition } from "react";
+import { useState } from "react";
 import { LucideLoader } from "lucide-react";
 import { addOrder } from "./order-actions";
 import { orderAddFormSchema } from "./order.constants";
 import { toast } from "sonner";
 
 export const OrderAddForm = () => {
-  const [isSubmitting, startTransition] = useTransition();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm<z.infer<typeof orderAddFormSchema>>({
     resolver: zodResolver(orderAddFormSchema),
     defaultValues: {
@@ -29,16 +29,18 @@ export const OrderAddForm = () => {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof orderAddFormSchema>) => {
-    startTransition(() => {
-      addOrder({
-        address: values.address,
-        externalId: values.orderId,
-      });
+  const onSubmit = async (values: z.infer<typeof orderAddFormSchema>) => {
+    setIsSubmitting(true);
+
+    await addOrder({
+      address: values.address,
+      externalId: values.orderId,
     });
 
     toast.success("Order added");
     form.reset();
+
+    setIsSubmitting(false);
   };
 
   return (
