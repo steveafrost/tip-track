@@ -13,7 +13,7 @@ export const Navigation = () => {
   const pathname = usePathname();
 
   return (
-    <nav className="sticky bottom-0 flex flex-row space-x-4 justify-around bg-zinc-800/70 px-4 py-2 pb-safe border-t-4 border-t-zinc-950/50">
+    <nav className="sticky bottom-0 flex flex-row space-x-4 justify-around bg-zinc-800/60 px-4 py-2 pb-safe border-t-4 border-t-zinc-900/50">
       <Button
         variant="icon"
         size={"icon"}
