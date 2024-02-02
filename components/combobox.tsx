@@ -42,7 +42,11 @@ export function Combobox({ options, onSelect }: ComboboxProps) {
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[310px] p-0">
+      <PopoverContent
+        className="w-full p-0"
+        avoidCollisions={false}
+        side={"bottom"}
+      >
         <Command>
           <CommandInput placeholder="Enter address" />
           <CommandEmpty>No location found.</CommandEmpty>
