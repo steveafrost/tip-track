@@ -49,7 +49,7 @@ export const OrderAddForm = () => {
           name="address"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xl">Address</FormLabel>
+              <FormLabel className="text-base">Address</FormLabel>
               <FormControl>
                 <Input placeholder="Enter an address" {...field} />
               </FormControl>
@@ -62,7 +62,7 @@ export const OrderAddForm = () => {
           name="orderId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xl">Order ID</FormLabel>
+              <FormLabel className="text-base">Order ID</FormLabel>
               <FormControl>
                 <Input placeholder="Enter an order ID" {...field} />
               </FormControl>

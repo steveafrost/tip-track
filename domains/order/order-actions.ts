@@ -1,6 +1,19 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
+
+export async function getOrders() {
+  try {
+    const orders = await prisma.order.findMany({});
+
+    return { orders };
+  } catch (error) {
+    console.error(error);
+
+    return { error };
+  }
+}
 
 export async function addOrder({
   address,
@@ -21,6 +34,8 @@ export async function addOrder({
         },
       },
     });
+
+    revalidatePath("/search");
   } catch (error) {
     console.error(error);
   }
@@ -40,6 +55,9 @@ export async function updateOrder({
         tip,
       },
     });
+
+    revalidatePath("/search");
+    revalidatePath("/reports");
 
     return { order };
   } catch (error) {

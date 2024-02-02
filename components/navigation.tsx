@@ -12,8 +12,6 @@ import Link from "next/link";
 export const Navigation = () => {
   const pathname = usePathname();
 
-  console.log(pathname);
-
   return (
     <nav className="sticky bottom-0 flex flex-row space-x-4 justify-around bg-primary px-4 py-2 pb-safe border-t-2 border-t-zinc-200">
       <Button
