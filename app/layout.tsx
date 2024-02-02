@@ -57,7 +57,7 @@ export default function RootLayout({
         </Button>
         <main className="flex-1 flex flex-col px-4">{children}</main>
         <Navigation />
-        <Toaster />
+        <Toaster position="top-center" richColors={true} />
       </body>
     </html>
   );
