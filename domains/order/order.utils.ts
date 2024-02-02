@@ -1,5 +1,5 @@
 import { Order } from "@prisma/client";
-import { tipLabels } from "../tip/tip.constants";
+import { tipEmoji } from "../tip/tip.constants";
 
 export const getOrdersAverageTip = (orders: Order[]) => {
   if (!orders) return "0";
@@ -7,5 +7,5 @@ export const getOrdersAverageTip = (orders: Order[]) => {
   const totalTips = orders.reduce((acc, order) => acc + (order.tip ?? 0), 0);
   const averageTip = Math.ceil(totalTips / orders.length);
 
-  return tipLabels[averageTip.toString()];
+  return tipEmoji[averageTip.toString()];
 };

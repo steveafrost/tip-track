@@ -17,6 +17,7 @@ import { LucideLoader } from "lucide-react";
 import { updateOrder } from "./order-actions";
 import { orderUpdateFormSchema } from "./order.constants";
 import { RadioGroup, RadioGroupItem } from "@/components/radio-group";
+import { tipLabel } from "../tip/tip.constants";
 
 type OrderUpdateFormProps = {
   externalId: string;
@@ -68,7 +69,7 @@ export const OrderUpdateForm = ({
                       <RadioGroupItem value={"0"} />
                     </FormControl>
                     <FormLabel className="font-normal text-base ml-2">
-                      None
+                      {tipLabel[0]}
                     </FormLabel>
                   </FormItem>
                   <FormItem className="flex items-center space-x-3 space-y-0">
@@ -76,7 +77,7 @@ export const OrderUpdateForm = ({
                       <RadioGroupItem value={"1"} />
                     </FormControl>
                     <FormLabel className="font-normal ml-2 text-base">
-                      Less than $5
+                      {tipLabel[1]}
                     </FormLabel>
                   </FormItem>
                   <FormItem className="flex items-center space-x-3 space-y-0">
@@ -84,7 +85,7 @@ export const OrderUpdateForm = ({
                       <RadioGroupItem value={"2"} />
                     </FormControl>
                     <FormLabel className="font-normal ml-2 text-base">
-                      Between $5 and $10
+                      {tipLabel[2]}
                     </FormLabel>
                   </FormItem>
                   <FormItem className="flex items-center space-x-3 space-y-0">
@@ -92,7 +93,7 @@ export const OrderUpdateForm = ({
                       <RadioGroupItem value={"3"} />
                     </FormControl>
                     <FormLabel className="font-normal ml-2 text-base">
-                      More than $10
+                      {tipLabel[3]}
                     </FormLabel>
                   </FormItem>
                   <FormItem className="flex items-center space-x-3 space-y-0">
@@ -100,7 +101,7 @@ export const OrderUpdateForm = ({
                       <RadioGroupItem value={"4"} />
                     </FormControl>
                     <FormLabel className="font-normal ml-2 text-base">
-                      More than $20
+                      {tipLabel[4]}
                     </FormLabel>
                   </FormItem>
                 </RadioGroup>

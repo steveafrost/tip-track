@@ -1,8 +1,8 @@
 {
   "name": "Tip Track",
   "short_name": "Tip Track",
-  "theme_color": "#00852a",
-  "background_color": "#00852a",
+  "theme_color": "#006c22",
+  "background_color": "#006c22",
   "display": "standalone",
   "scope": "/",
   "start_url": "/",

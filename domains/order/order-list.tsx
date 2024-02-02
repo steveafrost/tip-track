@@ -9,7 +9,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/sheet";
-import { tipLabels } from "../tip/tip.constants";
+import { tipEmoji } from "../tip/tip.constants";
 import { useState } from "react";
 
 type OrdersListProps = {
@@ -32,9 +32,7 @@ export const OrdersList = ({ orders }: OrdersListProps) => {
           <SheetTrigger asChild>
             <li key={order.id} className="space-x-2">
               <span>
-                {order.tip
-                  ? tipLabels[order.tip.toString()]
-                  : "No Tip Recorded"}
+                {order.tip ? tipEmoji[order.tip.toString()] : "No Tip Recorded"}
               </span>
               <span className="text-sm text-zinc-400">
                 ({format(order.createdAt, "MM-dd-yy")})

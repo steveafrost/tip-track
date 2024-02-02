@@ -5,11 +5,13 @@ import {
   Pie,
   PieChart as RechartsPieChart,
   Cell,
+  Legend,
 } from "recharts";
 
 export type PieChartData = {
   name: string;
   value: number;
+  sortOrder: number;
 }[];
 
 type PieChartProps = {
@@ -25,16 +27,15 @@ export const PieChart = ({ data }: PieChartProps) => {
         <Pie
           data={data}
           dataKey="value"
-          fill="#15803D"
           innerRadius={50}
           outerRadius={100}
-          label={(value) => value.name}
-          labelLine={false}
+          label={false}
         >
-          {data.map((entry, index) => (
+          {data.map((_entry, index) => (
             <Cell key={`cell-${index}`} fill={colors[index]} />
           ))}
         </Pie>
+        <Legend layout="vertical" iconSize={20} />
       </RechartsPieChart>
     </ResponsiveContainer>
   );
