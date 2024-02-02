@@ -21,11 +21,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/radio-group";
 type OrderUpdateFormProps = {
   externalId: string;
   existingTip: number | null;
+  onUpdate?: () => void;
 };
 
 export const OrderUpdateForm = ({
   externalId,
   existingTip,
+  onUpdate,
 }: OrderUpdateFormProps) => {
   const [isSubmitting, startTransition] = useTransition();
   const form = useForm<z.infer<typeof orderUpdateFormSchema>>({
@@ -42,11 +44,13 @@ export const OrderUpdateForm = ({
         tip: parseInt(values.tip),
       });
     });
+
+    onUpdate?.();
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 ">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <FormField
           control={form.control}
           name="tip"
@@ -63,13 +67,15 @@ export const OrderUpdateForm = ({
                     <FormControl>
                       <RadioGroupItem value={"0"} />
                     </FormControl>
-                    <FormLabel className="font-normal ml-2">None</FormLabel>
+                    <FormLabel className="font-normal text-base ml-2">
+                      None
+                    </FormLabel>
                   </FormItem>
                   <FormItem className="flex items-center space-x-3 space-y-0">
                     <FormControl>
                       <RadioGroupItem value={"1"} />
                     </FormControl>
-                    <FormLabel className="font-normal ml-2">
+                    <FormLabel className="font-normal ml-2 text-base">
                       Less than $5
                     </FormLabel>
                   </FormItem>
@@ -77,7 +83,7 @@ export const OrderUpdateForm = ({
                     <FormControl>
                       <RadioGroupItem value={"2"} />
                     </FormControl>
-                    <FormLabel className="font-normal ml-2">
+                    <FormLabel className="font-normal ml-2 text-base">
                       Between $5 and $10
                     </FormLabel>
                   </FormItem>
@@ -85,7 +91,7 @@ export const OrderUpdateForm = ({
                     <FormControl>
                       <RadioGroupItem value={"3"} />
                     </FormControl>
-                    <FormLabel className="font-normal ml-2">
+                    <FormLabel className="font-normal ml-2 text-base">
                       More than $10
                     </FormLabel>
                   </FormItem>
@@ -93,7 +99,7 @@ export const OrderUpdateForm = ({
                     <FormControl>
                       <RadioGroupItem value={"4"} />
                     </FormControl>
-                    <FormLabel className="font-normal ml-2">
+                    <FormLabel className="font-normal ml-2 text-base">
                       More than $20
                     </FormLabel>
                   </FormItem>

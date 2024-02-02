@@ -10,16 +10,23 @@ import {
   SheetDescription,
 } from "@/components/sheet";
 import { tipLabels } from "../tip/tip.constants";
+import { useState } from "react";
 
 type OrdersListProps = {
   orders: Order[];
 };
 
 export const OrdersList = ({ orders }: OrdersListProps) => {
+  const [activeOrder, setActiveOrder] = useState("");
+
   return (
     <ul className="pl-2">
       {orders.map((order) => (
-        <Sheet key={order.id}>
+        <Sheet
+          key={order.id}
+          open={order.id === activeOrder}
+          onOpenChange={() => setActiveOrder(order.id)}
+        >
           <SheetTrigger asChild>
             <li key={order.id} className="space-x-2">
               <span>
@@ -35,10 +42,11 @@ export const OrdersList = ({ orders }: OrdersListProps) => {
           <SheetContent side={"bottom"}>
             <SheetHeader>
               <SheetTitle>Tip for Order #{order.externalId}</SheetTitle>
-              <SheetDescription>
+              <SheetDescription asChild>
                 <OrderUpdateForm
                   externalId={order.externalId}
                   existingTip={order.tip}
+                  onUpdate={() => setActiveOrder("")}
                 />
               </SheetDescription>
             </SheetHeader>
