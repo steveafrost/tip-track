@@ -18,7 +18,7 @@ const buttonVariants = cva(
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
-        icon: "hover:bg-zinc-200/25 border-2 hover:border-green-800/75 hover:text-zinc-900 border-transparent text-zinc-950 drop-shadow-lg data-[active=true]:bg-zinc-200/25 data-[active=true]:border-green-800/75",
+        icon: "hover:bg-zinc-200/25 border-2 hover:border-green-800/75 hover:text-zinc-900 border-transparent text-green-500 drop-shadow-lg data-[active=true]:bg-zinc-200/25 data-[active=true]:text-green-400 data-[active=true]:border-green-800/75",
         link: "text-primary underline-offset-4 hover:underline",
         logo: "bg-transparent",
       },
