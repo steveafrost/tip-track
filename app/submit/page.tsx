@@ -1,6 +1,7 @@
 import { OrderAddForm } from "@/domains/order/order-add-form";
 import { auth } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
+import Script from "next/script";
 
 export default function SubmitPage() {
   const { userId } = auth();
@@ -13,6 +14,10 @@ export default function SubmitPage() {
         Add Order
       </h2>
       <OrderAddForm />
+      <Script
+        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.GOOGLE_MAPS_KEY}&libraries=places`}
+        strategy="lazyOnload"
+      />
     </div>
   );
 }

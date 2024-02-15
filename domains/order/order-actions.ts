@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { auth } from "@clerk/nextjs";
 import { revalidatePath } from "next/cache";
+import { LocationLookup } from "./order.constants";
 
 export async function getOrders() {
   const { userId } = auth();
@@ -24,10 +25,10 @@ export async function getOrders() {
 }
 
 export async function addOrder({
-  address,
+  location,
   externalId,
 }: {
-  address: string;
+  location: LocationLookup;
   externalId: string;
 }) {
   const { userId } = auth();
@@ -41,8 +42,11 @@ export async function addOrder({
         externalId,
         location: {
           connectOrCreate: {
-            where: { address },
-            create: { address },
+            where: { address: location.address },
+            create: {
+              address: location.address,
+              coordinates: [location.latitude, location.longitude],
+            },
           },
         },
         createdBy: userId,

@@ -18,13 +18,18 @@ import { LucideLoader } from "lucide-react";
 import { addOrder } from "./order-actions";
 import { orderAddFormSchema } from "./order.constants";
 import { toast } from "sonner";
+import { OrderAddressSearch } from "./order-address-search";
 
 export const OrderAddForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm<z.infer<typeof orderAddFormSchema>>({
     resolver: zodResolver(orderAddFormSchema),
     defaultValues: {
-      address: "",
+      location: {
+        address: "",
+        latitude: 0,
+        longitude: 0,
+      },
       orderId: "",
     },
   });
@@ -33,7 +38,7 @@ export const OrderAddForm = () => {
     setIsSubmitting(true);
 
     await addOrder({
-      address: values.address,
+      location: values.location,
       externalId: values.orderId,
     });
 
@@ -48,12 +53,12 @@ export const OrderAddForm = () => {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
-          name="address"
+          name="location"
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-base">Address</FormLabel>
               <FormControl>
-                <Input placeholder="Enter an address" {...field} />
+                <OrderAddressSearch {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
