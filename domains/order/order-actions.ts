@@ -1,6 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { auth } from "@clerk/nextjs";
 import { revalidatePath } from "next/cache";
 
 export async function getOrders() {
@@ -22,6 +23,11 @@ export async function addOrder({
   address: string;
   externalId: string;
 }) {
+  const { userId } = auth();
+
+  if (!userId)
+    throw new Error(`User must be signed in to create order: ${userId}`);
+
   try {
     await prisma.order.create({
       data: {
@@ -32,6 +38,7 @@ export async function addOrder({
             create: { address },
           },
         },
+        createdBy: userId,
       },
     });
 

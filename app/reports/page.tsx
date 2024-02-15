@@ -2,9 +2,14 @@ import { Card, CardContent, CardHeader } from "@/components/card";
 import { PieChart, PieChartData } from "@/components/pie-chart";
 import { getOrders } from "@/domains/order/order-actions";
 import { tipLabel } from "@/domains/tip/tip.constants";
+import { auth } from "@clerk/nextjs";
+import { redirect } from "next/navigation";
 
 export default async function ReportsPage() {
   const { orders } = await getOrders();
+  const { userId } = auth();
+
+  if (!userId) redirect("/");
 
   const data = orders?.reduce((acc, order) => {
     const label = tipLabel[order.tip?.toString() ?? "0"];

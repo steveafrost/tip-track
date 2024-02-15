@@ -7,7 +7,7 @@ export default function Home() {
         appearance={{
           variables: {
             colorPrimary: "green",
-            colorBackground: "darkgreen",
+            colorBackground: "#005a23",
             colorText: "white",
             colorInputBackground: "gray",
           },
@@ -34,6 +34,8 @@ export default function Home() {
             },
           },
         }}
+        afterSignInUrl={"/search"}
+        redirectUrl={"/search"}
       />
     </div>
   );
