@@ -5,8 +5,15 @@ import { auth } from "@clerk/nextjs";
 import { revalidatePath } from "next/cache";
 
 export async function getOrders() {
+  const { userId } = auth();
+
+  if (!userId)
+    throw new Error(`User must be signed in to get orders: ${userId}`);
+
   try {
-    const orders = await prisma.order.findMany({});
+    const orders = await prisma.order.findMany({
+      where: { createdBy: userId },
+    });
 
     return { orders };
   } catch (error) {
