@@ -58,7 +58,7 @@ export const OrderAddForm = () => {
             <FormItem>
               <FormLabel className="text-base">Address</FormLabel>
               <FormControl>
-                <OrderAddressSearch {...field} />
+                <OrderAddressSearch onChange={field.onChange} />
               </FormControl>
               <FormMessage />
             </FormItem>
