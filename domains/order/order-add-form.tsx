@@ -27,8 +27,8 @@ export const OrderAddForm = () => {
     defaultValues: {
       location: {
         address: "",
-        latitude: 0,
-        longitude: 0,
+        latitude: 91,
+        longitude: 181,
       },
       orderId: "",
     },
