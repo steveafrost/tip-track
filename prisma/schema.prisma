@@ -19,11 +19,12 @@ model Location {
 
 model Order {
   id         String   @id @default(cuid())
-  externalId String   @unique
+  externalId String   @unique @default("") @map(name: "external_id")
   tip        Int?
   total      Int?
   location   Location @relation(fields: [locationId], references: [id])
-  locationId String
+  locationId String   @default("") @map(name: "location_id")
+  createdBy  String   @map(name: "created_by")
   createdAt  DateTime @default(now()) @map(name: "created_at")
   updatedAt  DateTime @updatedAt @map(name: "updated_at")
 }
