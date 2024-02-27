@@ -14,12 +14,15 @@ import Script from "next/script";
 
 type OrderAddressSearchProps = {
   onChange: (value: LocationLookup) => void;
+  value: string;
 };
 
-export const OrderAddressSearch = ({ onChange }: OrderAddressSearchProps) => {
+export const OrderAddressSearch = ({
+  onChange,
+  value,
+}: OrderAddressSearchProps) => {
   const {
     ready,
-    value,
     suggestions: { status, data },
     setValue,
     clearSuggestions,
@@ -32,12 +35,12 @@ export const OrderAddressSearch = ({ onChange }: OrderAddressSearchProps) => {
 
   const handleInput = (event: ChangeEvent<HTMLInputElement>) => {
     setValue(event.target.value);
+    onChange({ address: event.target.value, latitude: 0, longitude: 0 });
   };
 
   const handleSelect =
     ({ description }: { description: string }) =>
     async () => {
-      setValue(description, false);
       clearSuggestions();
 
       const results = await getGeocode({ address: description });

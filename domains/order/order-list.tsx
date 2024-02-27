@@ -29,7 +29,7 @@ export const OrdersList = ({ orders }: OrdersListProps) => {
             open ? setActiveOrder(order.id) : setActiveOrder("")
           }
         >
-          <SheetTrigger asChild>
+          <SheetTrigger>
             <li key={order.id} className="space-x-2">
               <span>
                 {order.tip ? tipEmoji[order.tip.toString()] : "No Tip Recorded"}
