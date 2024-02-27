@@ -4,12 +4,12 @@ import prisma from "@/lib/prisma";
 import { auth } from "@clerk/nextjs";
 import { revalidatePath } from "next/cache";
 import { LocationLookup } from "./order.constants";
+import { redirect } from "next/navigation";
 
 export async function getOrders() {
   const { userId } = auth();
 
-  if (!userId)
-    throw new Error(`User must be signed in to get orders: ${userId}`);
+  if (!userId) redirect("/");
 
   try {
     const orders = await prisma.order.findMany({

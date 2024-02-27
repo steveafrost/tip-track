@@ -2,12 +2,12 @@
 
 import prisma from "@/lib/prisma";
 import { auth } from "@clerk/nextjs";
+import { redirect } from "next/navigation";
 
 export async function getLocations() {
   const { userId } = auth();
 
-  if (!userId)
-    throw new Error(`User must be signed in to get locations: ${userId}`);
+  if (!userId) redirect("/");
 
   try {
     const locations = await prisma.location.findMany({
