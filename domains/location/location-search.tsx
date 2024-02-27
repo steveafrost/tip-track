@@ -30,5 +30,5 @@ export const LocationSearch = ({ locations = [] }: LocationSearchProps) => {
     setLocation(matchingLocation);
   };
 
-  return <Combobox options={options} onSelect={handleOnSelect} />;
+  return <Combobox options={options.slice(0, 5)} onSelect={handleOnSelect} />;
 };
