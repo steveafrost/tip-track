@@ -5,9 +5,17 @@ import { OrdersList } from "../order/order-list";
 import { getOrdersAverageTip } from "../order/order.utils";
 import { useStore } from "@/store";
 import { tipEmoji, tipLabel } from "../tip/tip.constants";
+import { useEffect } from "react";
+import { LocationsWithOrders } from "./location.types";
 
 export const LocationCard = () => {
-  const { location } = useStore();
+  const { location, setLocation } = useStore();
+
+  useEffect(() => {
+    return () => {
+      setLocation({} as LocationsWithOrders);
+    };
+  }, [setLocation]);
 
   if (Object.keys(location).length === 0) {
     return (

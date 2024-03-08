@@ -12,12 +12,19 @@ import {
   SheetDescription,
 } from "@/components/sheet";
 import { OrderUpdateForm } from "./order-update-form";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/button";
+import { OrdersWithLocation } from "./order.types";
 
 export const OrderCard = () => {
-  const { order } = useStore();
+  const { order, setOrder } = useStore();
   const [activeOrder, setActiveOrder] = useState("");
+
+  useEffect(() => {
+    return () => {
+      setOrder({} as OrdersWithLocation);
+    };
+  }, [setOrder]);
 
   if (Object.keys(order).length === 0) {
     return (
