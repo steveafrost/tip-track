@@ -24,6 +24,25 @@ export async function getOrders() {
   }
 }
 
+export async function getOrdersWithLocation() {
+  const { userId } = auth();
+
+  if (!userId) redirect("/");
+
+  try {
+    const ordersWithLocation = await prisma.order.findMany({
+      where: { createdBy: userId },
+      include: { location: true },
+    });
+
+    return { orders: ordersWithLocation };
+  } catch (error) {
+    console.error(error);
+
+    return { error };
+  }
+}
+
 export async function addOrder({
   location,
   externalId,
