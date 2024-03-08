@@ -38,7 +38,7 @@ export const LocationCard = () => {
       </CardHeader>
       <CardContent className="px-4">
         <h4 className="mb-2">Previous Tips</h4>
-        <OrdersList orders={location.orders} location={location} />
+        <OrdersList orders={location.orders} />
       </CardContent>
     </Card>
   );

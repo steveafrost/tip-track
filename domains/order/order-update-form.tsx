@@ -26,7 +26,10 @@ type OrderUpdateFormProps = {
   externalId: string;
   existingTip: number | null;
   existingLocation: Location;
-  onUpdate?: (values: z.infer<typeof orderUpdateFormSchema>) => void;
+  onUpdate?: (
+    values: z.infer<typeof orderUpdateFormSchema>,
+    externalId: string
+  ) => void;
   shouldAllowEditingLocation: boolean;
 };
 
@@ -59,7 +62,7 @@ export const OrderUpdateForm = ({
       });
     });
 
-    onUpdate?.(values);
+    onUpdate?.(values, externalId);
   }
 
   const handleAddressSelect = ({

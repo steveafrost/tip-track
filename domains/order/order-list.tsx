@@ -12,16 +12,43 @@ import {
 } from "@/components/sheet";
 import { tipLabel } from "../tip/tip.constants";
 import { useState } from "react";
-import { Order, Location } from "@prisma/client";
+import { Order } from "@prisma/client";
 import { LucidePencil } from "lucide-react";
+import { z } from "zod";
+import { orderUpdateFormSchema } from "./order.constants";
+import { useStore } from "@/store";
 
 type OrdersListProps = {
-  location: Location;
   orders: Order[];
 };
 
-export const OrdersList = ({ location, orders }: OrdersListProps) => {
+export const OrdersList = ({ orders }: OrdersListProps) => {
+  const { location, setLocation } = useStore();
   const [activeOrder, setActiveOrder] = useState("");
+
+  const handleOrderUpdate = (
+    values: z.infer<typeof orderUpdateFormSchema>,
+    externalId: string
+  ) => {
+    const updatedOrder = location.orders.find(
+      (order) => order.externalId === externalId
+    );
+
+    if (!updatedOrder) {
+      setActiveOrder("");
+
+      return;
+    }
+
+    setLocation({
+      ...location,
+      orders: [
+        ...location.orders.filter((order) => order.externalId !== externalId),
+        { ...updatedOrder, tip: parseInt(values.tip) },
+      ],
+    });
+    setActiveOrder("");
+  };
 
   return (
     <ul className="pl-6 list-disc">
@@ -56,7 +83,7 @@ export const OrdersList = ({ location, orders }: OrdersListProps) => {
                   externalId={order.externalId}
                   existingTip={order.tip}
                   existingLocation={location}
-                  onUpdate={() => setActiveOrder("")}
+                  onUpdate={handleOrderUpdate}
                   shouldAllowEditingLocation={false}
                 />
               </SheetDescription>

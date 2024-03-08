@@ -15,6 +15,8 @@ import { OrderUpdateForm } from "./order-update-form";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/button";
 import { OrdersWithLocation } from "./order.types";
+import { z } from "zod";
+import { orderUpdateFormSchema } from "./order.constants";
 
 export const OrderCard = () => {
   const { order, setOrder } = useStore();
@@ -25,6 +27,19 @@ export const OrderCard = () => {
       setOrder({} as OrdersWithLocation);
     };
   }, [setOrder]);
+
+  const handleOrderUpdate = (values: z.infer<typeof orderUpdateFormSchema>) => {
+    setOrder({
+      ...order,
+      location: {
+        ...order.location,
+        address: values.address,
+        coordinates: [values.latitude ?? 0, values.longitude ?? 0],
+      },
+      tip: parseInt(values.tip),
+    });
+    setActiveOrder("");
+  };
 
   if (Object.keys(order).length === 0) {
     return (
@@ -67,9 +82,7 @@ export const OrderCard = () => {
                   externalId={order.externalId}
                   existingTip={order.tip}
                   existingLocation={order.location}
-                  onUpdate={() => {
-                    setActiveOrder("");
-                  }}
+                  onUpdate={handleOrderUpdate}
                   shouldAllowEditingLocation={true}
                 />
               </SheetDescription>
