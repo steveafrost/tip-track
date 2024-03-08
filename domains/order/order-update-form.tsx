@@ -73,22 +73,24 @@ export const OrderUpdateForm = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="address"
-          render={({ field }) => (
-            <FormItem className="text-left">
-              <FormLabel className="text-base">Address</FormLabel>
-              <FormControl>
-                <OrderAddressSearch
-                  onChange={handleAddressSelect}
-                  value={field.value}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {existingLocation && (
+          <FormField
+            control={form.control}
+            name="address"
+            render={({ field }) => (
+              <FormItem className="text-left">
+                <FormLabel className="text-base">Address</FormLabel>
+                <FormControl>
+                  <OrderAddressSearch
+                    onChange={handleAddressSelect}
+                    value={field.value}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
         <FormField
           control={form.control}
           name="tip"
