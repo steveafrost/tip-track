@@ -25,8 +25,9 @@ import { Input } from "@/components/input";
 type OrderUpdateFormProps = {
   externalId: string;
   existingTip: number | null;
-  existingLocation?: Location;
-  onUpdate?: () => void;
+  existingLocation: Location;
+  onUpdate?: (values: z.infer<typeof orderUpdateFormSchema>) => void;
+  shouldAllowEditingLocation: boolean;
 };
 
 export const OrderUpdateForm = ({
@@ -34,6 +35,7 @@ export const OrderUpdateForm = ({
   existingLocation,
   existingTip,
   onUpdate,
+  shouldAllowEditingLocation,
 }: OrderUpdateFormProps) => {
   const [isSubmitting, startTransition] = useTransition();
   const form = useForm<z.infer<typeof orderUpdateFormSchema>>({
@@ -50,14 +52,14 @@ export const OrderUpdateForm = ({
         externalId,
         location: {
           address: values.address,
-          latitude: values.latitude,
-          longitude: values.longitude,
+          latitude: values.latitude ?? 0,
+          longitude: values.longitude ?? 0,
         },
         tip: parseInt(values.tip),
       });
     });
 
-    onUpdate?.();
+    onUpdate?.(values);
   }
 
   const handleAddressSelect = ({
@@ -73,7 +75,7 @@ export const OrderUpdateForm = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        {existingLocation && (
+        {shouldAllowEditingLocation && (
           <FormField
             control={form.control}
             name="address"

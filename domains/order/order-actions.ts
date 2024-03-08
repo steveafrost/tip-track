@@ -71,11 +71,11 @@ export async function addOrder({
         createdBy: userId,
       },
     });
-
-    revalidatePath("/");
   } catch (error) {
     console.error(error);
   }
+
+  revalidatePath("/");
 }
 
 export async function updateOrder({
@@ -88,7 +88,7 @@ export async function updateOrder({
   location?: LocationLookup;
 }) {
   try {
-    const order = await prisma.order.update({
+    await prisma.order.update({
       where: { externalId },
       data: {
         location: location
@@ -105,13 +105,9 @@ export async function updateOrder({
         tip,
       },
     });
-
-    revalidatePath("/");
-
-    return { order };
   } catch (error) {
     console.error(error);
-
-    return { error };
   }
+
+  revalidatePath("/");
 }

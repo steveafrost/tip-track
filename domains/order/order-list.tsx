@@ -2,7 +2,6 @@
 
 import { format } from "date-fns";
 import { OrderUpdateForm } from "./order-update-form";
-import { Order } from "@prisma/client";
 import {
   Sheet,
   SheetTrigger,
@@ -11,18 +10,21 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/sheet";
-import { tipEmoji } from "../tip/tip.constants";
+import { tipLabel } from "../tip/tip.constants";
 import { useState } from "react";
+import { Order, Location } from "@prisma/client";
+import { LucidePencil } from "lucide-react";
 
 type OrdersListProps = {
+  location: Location;
   orders: Order[];
 };
 
-export const OrdersList = ({ orders }: OrdersListProps) => {
+export const OrdersList = ({ location, orders }: OrdersListProps) => {
   const [activeOrder, setActiveOrder] = useState("");
 
   return (
-    <ul className="pl-2">
+    <ul className="pl-6 list-disc">
       {orders.map((order) => (
         <Sheet
           key={order.id}
@@ -31,14 +33,19 @@ export const OrdersList = ({ orders }: OrdersListProps) => {
             open ? setActiveOrder(order.id) : setActiveOrder("")
           }
         >
-          <SheetTrigger>
-            <li key={order.id} className="space-x-2">
-              <span>
-                {order.tip ? tipEmoji[order.tip.toString()] : "No Tip Recorded"}
-              </span>
-              <span className="text-sm text-zinc-400">
-                ({format(order.createdAt, "MM-dd-yy")})
-              </span>
+          <SheetTrigger asChild>
+            <li key={order.id} className="list-item">
+              <button className="flex space-x-2 items-center">
+                <span>
+                  {order.tip
+                    ? tipLabel[order.tip.toString()]
+                    : "No Tip Recorded"}
+                </span>
+                <span className="text-sm text-zinc-400">
+                  ({format(order.createdAt, "MM-dd-yy")})
+                </span>
+                <LucidePencil className="text-zinc-400 w-4" />
+              </button>
             </li>
           </SheetTrigger>
           <SheetContent side={"bottom"}>
@@ -48,7 +55,9 @@ export const OrdersList = ({ orders }: OrdersListProps) => {
                 <OrderUpdateForm
                   externalId={order.externalId}
                   existingTip={order.tip}
+                  existingLocation={location}
                   onUpdate={() => setActiveOrder("")}
+                  shouldAllowEditingLocation={false}
                 />
               </SheetDescription>
             </SheetHeader>

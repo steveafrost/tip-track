@@ -2,7 +2,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/card";
 import { useStore } from "@/store";
-import { tipEmoji } from "../tip/tip.constants";
+import { tipLabel } from "../tip/tip.constants";
 import {
   Sheet,
   SheetTrigger,
@@ -18,7 +18,6 @@ import { Button } from "@/components/button";
 export const OrderCard = () => {
   const { order } = useStore();
   const [activeOrder, setActiveOrder] = useState("");
-  const [activeLocation, setActiveLocation] = useState("");
 
   if (Object.keys(order).length === 0) {
     return (
@@ -41,13 +40,13 @@ export const OrderCard = () => {
           <span>Location: {order.location.address}</span>
           <span>
             Tip:{" "}
-            {order.tip ? tipEmoji[order.tip.toString()] : "No Tip Recorded"}
+            {order.tip ? tipLabel[order.tip.toString()] : "No Tip Recorded"}
           </span>
         </div>
         <Sheet
-          open={order.locationId === activeLocation}
+          open={order.locationId === activeOrder}
           onOpenChange={(open) =>
-            open ? setActiveLocation(order.locationId) : setActiveLocation("")
+            open ? setActiveOrder(order.locationId) : setActiveOrder("")
           }
         >
           <SheetTrigger asChild>
@@ -61,7 +60,10 @@ export const OrderCard = () => {
                   externalId={order.externalId}
                   existingTip={order.tip}
                   existingLocation={order.location}
-                  onUpdate={() => setActiveLocation("")}
+                  onUpdate={() => {
+                    setActiveOrder("");
+                  }}
+                  shouldAllowEditingLocation={true}
                 />
               </SheetDescription>
             </SheetHeader>

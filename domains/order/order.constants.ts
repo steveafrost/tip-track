@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 const orderLocationSchema = {
-  address: z.string(),
-  latitude: z.number(),
-  longitude: z.number(),
+  address: z.string().min(2, { message: "Please choose location from list" }),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 };
 
 export const orderUpdateFormSchema = z.object({
