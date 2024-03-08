@@ -7,7 +7,7 @@ import { useStore } from "@/store";
 import { tipEmoji, tipLabel } from "../tip/tip.constants";
 
 export const LocationCard = () => {
-  const { order: location } = useStore();
+  const { location } = useStore();
 
   if (Object.keys(location).length === 0) {
     return (

@@ -18,9 +18,16 @@ import { Option } from "@/types/all.types";
 type ComboboxProps = {
   options: Option[];
   onSelect?: (value: Option) => void;
+  placeholder: string;
+  emptyText: string;
 };
 
-export function Combobox({ options, onSelect }: ComboboxProps) {
+export function Combobox({
+  emptyText,
+  options,
+  onSelect,
+  placeholder,
+}: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState("");
 
@@ -48,8 +55,8 @@ export function Combobox({ options, onSelect }: ComboboxProps) {
         side={"bottom"}
       >
         <Command>
-          <CommandInput placeholder="Enter address" />
-          <CommandEmpty>No location found.</CommandEmpty>
+          <CommandInput placeholder={placeholder} />
+          <CommandEmpty>{emptyText}</CommandEmpty>
           <CommandGroup>
             {options.map((option) => (
               <CommandItem

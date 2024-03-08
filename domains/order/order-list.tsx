@@ -1,3 +1,5 @@
+"use client";
+
 import { format } from "date-fns";
 import { OrderUpdateForm } from "./order-update-form";
 import { Order } from "@prisma/client";

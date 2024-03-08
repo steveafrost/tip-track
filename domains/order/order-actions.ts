@@ -81,14 +81,27 @@ export async function addOrder({
 export async function updateOrder({
   externalId,
   tip,
+  location,
 }: {
   externalId: string;
   tip: number;
+  location?: LocationLookup;
 }) {
   try {
     const order = await prisma.order.update({
       where: { externalId },
       data: {
+        location: location
+          ? {
+              connectOrCreate: {
+                where: { address: location.address },
+                create: {
+                  address: location.address,
+                  coordinates: [location.latitude, location.longitude],
+                },
+              },
+            }
+          : undefined,
         tip,
       },
     });

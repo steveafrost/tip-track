@@ -26,5 +26,12 @@ export const OrderSearch = ({ orders = [] }: OrderSearchProps) => {
     setOrder(matchingOrder);
   };
 
-  return <Combobox options={options.slice(0, 5)} onSelect={handleOnSelect} />;
+  return (
+    <Combobox
+      placeholder="Enter Order ID"
+      emptyText="No orders found"
+      options={options.slice(0, 5)}
+      onSelect={handleOnSelect}
+    />
+  );
 };

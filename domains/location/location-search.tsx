@@ -30,5 +30,12 @@ export const LocationSearch = ({ locations = [] }: LocationSearchProps) => {
     setLocation(matchingLocation);
   };
 
-  return <Combobox options={options.slice(0, 5)} onSelect={handleOnSelect} />;
+  return (
+    <Combobox
+      placeholder="Enter address"
+      emptyText="No location found"
+      options={options.slice(0, 5)}
+      onSelect={handleOnSelect}
+    />
+  );
 };
