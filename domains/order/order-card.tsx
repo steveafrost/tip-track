@@ -13,6 +13,7 @@ import {
 } from "@/components/sheet";
 import { OrderUpdateForm } from "./order-update-form";
 import { useState } from "react";
+import { Button } from "@/components/button";
 
 export const OrderCard = () => {
   const { order } = useStore();
@@ -35,50 +36,32 @@ export const OrderCard = () => {
           Order #{order.externalId}
         </CardTitle>
       </CardHeader>
-      <CardContent className="px-4 space-y-2">
+      <CardContent className="px-4 space-y-8 flex flex-col">
+        <div className="flex flex-col space-y-2">
+          <span>Location: {order.location.address}</span>
+          <span>
+            Tip:{" "}
+            {order.tip ? tipEmoji[order.tip.toString()] : "No Tip Recorded"}
+          </span>
+        </div>
         <Sheet
           open={order.locationId === activeLocation}
           onOpenChange={(open) =>
             open ? setActiveLocation(order.locationId) : setActiveLocation("")
           }
         >
-          <SheetTrigger className="text-left">
-            <span>Location: {order.location.address}</span>
+          <SheetTrigger asChild>
+            <Button type="button">Edit Order</Button>
           </SheetTrigger>
           <SheetContent side={"bottom"}>
             <SheetHeader>
-              <SheetTitle>Location for Order #{order.externalId}</SheetTitle>
+              <SheetTitle>Edit Order #{order.externalId}</SheetTitle>
               <SheetDescription asChild>
                 <OrderUpdateForm
                   externalId={order.externalId}
                   existingTip={order.tip}
+                  existingLocation={order.location}
                   onUpdate={() => setActiveLocation("")}
-                />
-              </SheetDescription>
-            </SheetHeader>
-          </SheetContent>
-        </Sheet>
-
-        <Sheet
-          open={order.id === activeOrder}
-          onOpenChange={(open) =>
-            open ? setActiveOrder(order.id) : setActiveOrder("")
-          }
-        >
-          <SheetTrigger>
-            <span>
-              Tip:{" "}
-              {order.tip ? tipEmoji[order.tip.toString()] : "No Tip Recorded"}
-            </span>
-          </SheetTrigger>
-          <SheetContent side={"bottom"}>
-            <SheetHeader>
-              <SheetTitle>Tip for Order #{order.externalId}</SheetTitle>
-              <SheetDescription asChild>
-                <OrderUpdateForm
-                  externalId={order.externalId}
-                  existingTip={order.tip}
-                  onUpdate={() => setActiveOrder("")}
                 />
               </SheetDescription>
             </SheetHeader>

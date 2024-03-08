@@ -15,18 +15,23 @@ import {
 import { useTransition } from "react";
 import { LucideLoader } from "lucide-react";
 import { updateOrder } from "./order-actions";
-import { orderUpdateFormSchema } from "./order.constants";
+import { LocationLookup, orderUpdateFormSchema } from "./order.constants";
 import { RadioGroup, RadioGroupItem } from "@/components/radio-group";
 import { tipLabel } from "../tip/tip.constants";
+import { Location } from "@prisma/client";
+import { OrderAddressSearch } from "./order-address-search";
+import { Input } from "@/components/input";
 
 type OrderUpdateFormProps = {
   externalId: string;
   existingTip: number | null;
+  existingLocation?: Location;
   onUpdate?: () => void;
 };
 
 export const OrderUpdateForm = ({
   externalId,
+  existingLocation,
   existingTip,
   onUpdate,
 }: OrderUpdateFormProps) => {
@@ -34,6 +39,7 @@ export const OrderUpdateForm = ({
   const form = useForm<z.infer<typeof orderUpdateFormSchema>>({
     resolver: zodResolver(orderUpdateFormSchema),
     defaultValues: {
+      address: existingLocation ? existingLocation.address : "",
       tip: existingTip ? existingTip.toString() : "",
     },
   });
@@ -42,6 +48,11 @@ export const OrderUpdateForm = ({
     startTransition(() => {
       updateOrder({
         externalId,
+        location: {
+          address: values.address,
+          latitude: values.latitude,
+          longitude: values.longitude,
+        },
         tip: parseInt(values.tip),
       });
     });
@@ -49,9 +60,35 @@ export const OrderUpdateForm = ({
     onUpdate?.();
   }
 
+  const handleAddressSelect = ({
+    address,
+    latitude,
+    longitude,
+  }: LocationLookup) => {
+    form.setValue("address", address);
+    form.setValue("latitude", latitude);
+    form.setValue("longitude", longitude);
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <FormField
+          control={form.control}
+          name="address"
+          render={({ field }) => (
+            <FormItem className="text-left">
+              <FormLabel className="text-base">Address</FormLabel>
+              <FormControl>
+                <OrderAddressSearch
+                  onChange={handleAddressSelect}
+                  value={field.value}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="tip"
@@ -105,6 +142,32 @@ export const OrderUpdateForm = ({
                     </FormLabel>
                   </FormItem>
                 </RadioGroup>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="latitude"
+          render={({ field }) => (
+            <FormItem hidden>
+              <FormLabel className="text-base">Latitude</FormLabel>
+              <FormControl>
+                <Input placeholder="hidden" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="longitude"
+          render={({ field }) => (
+            <FormItem hidden>
+              <FormLabel className="text-base">Longitude</FormLabel>
+              <FormControl>
+                <Input placeholder="hidden" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
