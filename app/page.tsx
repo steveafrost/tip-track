@@ -34,8 +34,8 @@ export default function Home() {
             },
           },
         }}
-        afterSignInUrl={"/search"}
-        redirectUrl={"/search"}
+        afterSignInUrl={"/submit"}
+        redirectUrl={"/submit"}
       />
     </div>
   );
