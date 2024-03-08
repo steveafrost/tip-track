@@ -38,8 +38,8 @@ export const OrderAddForm = () => {
     await addOrder({
       location: {
         address: values.address,
-        latitude: values.latitude,
-        longitude: values.longitude,
+        latitude: values.latitude ?? 0,
+        longitude: values.longitude ?? 0,
       },
       externalId: values.orderId,
     });
