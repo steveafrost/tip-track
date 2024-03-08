@@ -72,7 +72,7 @@ export async function addOrder({
       },
     });
 
-    revalidatePath("/search");
+    revalidatePath("/");
   } catch (error) {
     console.error(error);
   }
@@ -106,8 +106,7 @@ export async function updateOrder({
       },
     });
 
-    revalidatePath("/search");
-    revalidatePath("/reports");
+    revalidatePath("/");
 
     return { order };
   } catch (error) {
