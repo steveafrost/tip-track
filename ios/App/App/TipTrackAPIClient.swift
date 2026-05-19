@@ -1,0 +1,237 @@
+import Foundation
+
+struct TipTrackAPIConfiguration {
+    let baseURL: URL
+    let token: String
+
+    static var bundled: TipTrackAPIConfiguration? {
+        guard
+            let rawBaseURL = Bundle.main.object(forInfoDictionaryKey: "TipTrackAPIBaseURL") as? String,
+            let baseURL = URL(string: rawBaseURL.trimmingCharacters(in: .whitespacesAndNewlines)),
+            !rawBaseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        else {
+            return nil
+        }
+
+        let token = (Bundle.main.object(forInfoDictionaryKey: "TipTrackAPIToken") as? String) ?? ""
+
+        return TipTrackAPIConfiguration(baseURL: baseURL, token: token)
+    }
+}
+
+struct TipTrackAPIClient {
+    private let configuration: TipTrackAPIConfiguration
+    private let session: URLSession
+    private let decoder: JSONDecoder
+    private let encoder: JSONEncoder
+
+    init(configuration: TipTrackAPIConfiguration, session: URLSession = .shared) {
+        self.configuration = configuration
+        self.session = session
+        self.decoder = TipTrackAPIClient.makeDecoder()
+        self.encoder = JSONEncoder()
+    }
+
+    func signIn(displayName: String) async throws -> DriverSession {
+        let requestBody = MobileSessionRequest(displayName: displayName)
+        let response: MobileSessionResponse = try await send(
+            path: "/api/mobile/session",
+            method: "POST",
+            body: requestBody,
+            driverId: nil
+        )
+
+        return DriverSession(userId: response.driverId, displayName: response.displayName)
+    }
+
+    func fetchOrders(session driverSession: DriverSession) async throws -> [TipOrder] {
+        let response: MobileOrdersResponse = try await send(
+            path: "/api/mobile/orders",
+            method: "GET",
+            body: Optional<String>.none,
+            driverId: driverSession.userId
+        )
+
+        return response.orders
+    }
+
+    func addOrder(
+        session driverSession: DriverSession,
+        address: String,
+        latitude: Double,
+        longitude: Double,
+        externalId: String
+    ) async throws -> TipOrder {
+        let requestBody = MobileOrderCreateRequest(
+            externalId: externalId,
+            location: MobileLocationRequest(
+                address: address,
+                latitude: latitude,
+                longitude: longitude
+            )
+        )
+
+        let response: MobileOrderResponse = try await send(
+            path: "/api/mobile/orders",
+            method: "POST",
+            body: requestBody,
+            driverId: driverSession.userId
+        )
+
+        return response.order
+    }
+
+    func updateOrder(
+        session driverSession: DriverSession,
+        order: TipOrder,
+        address: String,
+        latitude: Double,
+        longitude: Double,
+        tip: Int
+    ) async throws -> TipOrder {
+        let requestBody = MobileOrderUpdateRequest(
+            tip: tip,
+            location: MobileLocationRequest(
+                address: address,
+                latitude: latitude,
+                longitude: longitude
+            )
+        )
+
+        let response: MobileOrderResponse = try await send(
+            path: "/api/mobile/orders/\(order.externalId.urlPathEncoded)",
+            method: "PATCH",
+            body: requestBody,
+            driverId: driverSession.userId
+        )
+
+        return response.order
+    }
+
+    private func send<Response: Decodable, Body: Encodable>(
+        path: String,
+        method: String,
+        body: Body?,
+        driverId: String?
+    ) async throws -> Response {
+        let url = configuration.baseURL.appendingPathComponent(path)
+        var request = URLRequest(url: url)
+        request.httpMethod = method
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+
+        if !configuration.token.isEmpty {
+            request.setValue("Bearer \(configuration.token)", forHTTPHeaderField: "Authorization")
+        }
+
+        if let driverId {
+            request.setValue(driverId, forHTTPHeaderField: "x-tip-track-driver-id")
+        }
+
+        if let body {
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try encoder.encode(body)
+        }
+
+        let (data, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw TipTrackAPIError.invalidResponse
+        }
+
+        guard (200..<300).contains(httpResponse.statusCode) else {
+            if let errorResponse = try? decoder.decode(MobileErrorResponse.self, from: data) {
+                throw TipTrackAPIError.server(errorResponse.error)
+            }
+
+            throw TipTrackAPIError.server("Request failed with status \(httpResponse.statusCode)")
+        }
+
+        return try decoder.decode(Response.self, from: data)
+    }
+
+    private static func makeDecoder() -> JSONDecoder {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let value = try container.decode(String.self)
+            let fractionalFormatter = ISO8601DateFormatter()
+            fractionalFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+            if let date = fractionalFormatter.date(from: value) {
+                return date
+            }
+
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime]
+
+            if let date = formatter.date(from: value) {
+                return date
+            }
+
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription: "Invalid ISO-8601 date: \(value)"
+            )
+        }
+
+        return decoder
+    }
+}
+
+enum TipTrackAPIError: LocalizedError {
+    case invalidResponse
+    case server(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidResponse:
+            return "The server returned an invalid response."
+        case .server(let message):
+            return message
+        }
+    }
+}
+
+private struct MobileSessionRequest: Encodable {
+    let displayName: String
+}
+
+private struct MobileSessionResponse: Decodable {
+    let driverId: String
+    let displayName: String
+}
+
+private struct MobileOrdersResponse: Decodable {
+    let orders: [TipOrder]
+}
+
+private struct MobileOrderResponse: Decodable {
+    let order: TipOrder
+}
+
+private struct MobileErrorResponse: Decodable {
+    let error: String
+}
+
+private struct MobileLocationRequest: Encodable {
+    let address: String
+    let latitude: Double
+    let longitude: Double
+}
+
+private struct MobileOrderCreateRequest: Encodable {
+    let externalId: String
+    let location: MobileLocationRequest
+}
+
+private struct MobileOrderUpdateRequest: Encodable {
+    let tip: Int
+    let location: MobileLocationRequest
+}
+
+private extension String {
+    var urlPathEncoded: String {
+        addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? self
+    }
+}
+
