@@ -42,6 +42,14 @@ final class TipTrackStore: ObservableObject {
             TipTrackAPIClient(configuration: $0)
         }
 
+#if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--tiptrack-demo-data") {
+            session = DriverSession(userId: "app-store-demo", displayName: "App Store Demo")
+            allOrders = TipTrackStore.makeDemoOrders()
+            return
+        }
+#endif
+
         if let sessionData = defaults.data(forKey: sessionKey),
            let decodedSession = try? decoder.decode(DriverSession.self, from: sessionData) {
             session = decodedSession
@@ -177,4 +185,45 @@ final class TipTrackStore: ObservableObject {
 
         return slug.isEmpty ? UUID().uuidString : slug
     }
+
+#if DEBUG
+    private static func makeDemoOrders() -> [TipOrder] {
+        let formatter = ISO8601DateFormatter()
+        return [
+            TipOrder(
+                id: "demo-1",
+                externalId: "A1042",
+                address: "315 Liberty St, Ann Arbor, MI",
+                latitude: 42.2798,
+                longitude: -83.7487,
+                tip: 3,
+                createdBy: "app-store-demo",
+                createdAt: formatter.date(from: "2026-05-19T13:15:00Z") ?? Date(),
+                updatedAt: formatter.date(from: "2026-05-19T13:45:00Z") ?? Date()
+            ),
+            TipOrder(
+                id: "demo-2",
+                externalId: "B2198",
+                address: "515 E Washington St, Ann Arbor, MI",
+                latitude: 42.2804,
+                longitude: -83.7427,
+                tip: 2,
+                createdBy: "app-store-demo",
+                createdAt: formatter.date(from: "2026-05-19T12:20:00Z") ?? Date(),
+                updatedAt: formatter.date(from: "2026-05-19T12:50:00Z") ?? Date()
+            ),
+            TipOrder(
+                id: "demo-3",
+                externalId: "C3307",
+                address: "315 Liberty St, Ann Arbor, MI",
+                latitude: 42.2798,
+                longitude: -83.7487,
+                tip: 4,
+                createdBy: "app-store-demo",
+                createdAt: formatter.date(from: "2026-05-18T18:05:00Z") ?? Date(),
+                updatedAt: formatter.date(from: "2026-05-18T18:30:00Z") ?? Date()
+            )
+        ]
+    }
+#endif
 }
