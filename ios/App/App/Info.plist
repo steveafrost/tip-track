@@ -25,7 +25,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>TipTrackAPIBaseURL</key>
-	<string>https://tip-track-steve-frosts-projects.vercel.app</string>
+	<string>https://tiptrack.steveafrost.com</string>
 	<key>TipTrackAPIToken</key>
 	<string></string>
 	<key>ITSAppUsesNonExemptEncryption</key>
