@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = getWebUserId();
+    const userId = await getWebUserId();
     const entitlement = await getStoreKitEntitlement(userId);
 
     return NextResponse.json({ entitlement });

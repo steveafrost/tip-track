@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = getWebUserId();
+    const userId = await getWebUserId();
 
     const orders = await prisma.order.findMany({
       where: { createdBy: userId },
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = getWebUserId();
+    const userId = await getWebUserId();
     const body = await request.json();
 
     const externalId =

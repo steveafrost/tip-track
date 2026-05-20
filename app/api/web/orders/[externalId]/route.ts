@@ -16,7 +16,7 @@ type RouteContext = {
 
 export async function PATCH(request: NextRequest, { params }: RouteContext) {
   try {
-    const userId = getWebUserId();
+    const userId = await getWebUserId();
     const body = await request.json();
 
     const existingOrder = await prisma.order.findFirst({

@@ -1,13 +1,13 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { auth } from "@clerk/nextjs";
 import { revalidatePath } from "next/cache";
 import { LocationLookup } from "./order.constants";
 import { redirect } from "next/navigation";
+import { getWebUserId } from "@/lib/web-auth";
 
 export async function getOrders() {
-  const { userId } = auth();
+  const userId = await getWebUserId().catch(() => null);
 
   if (!userId) redirect("/");
 
@@ -25,7 +25,7 @@ export async function getOrders() {
 }
 
 export async function getOrdersWithLocation() {
-  const { userId } = auth();
+  const userId = await getWebUserId().catch(() => null);
 
   if (!userId) redirect("/");
 
@@ -50,7 +50,7 @@ export async function addOrder({
   location: LocationLookup;
   externalId: string;
 }) {
-  const { userId } = auth();
+  const userId = await getWebUserId().catch(() => null);
 
   if (!userId)
     throw new Error(`User must be signed in to create order: ${userId}`);

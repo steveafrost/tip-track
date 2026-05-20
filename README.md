@@ -113,7 +113,7 @@ POSTGRES_URL_NON_POOLING=
 NEXT_PUBLIC_GOOGLE_MAPS_KEY=
 ```
 
-The `/submit` web app uses Clerk OAuth for user identity. Web API routes under `/api/web` derive `Order.createdBy` and location visibility from Clerk's authenticated `userId`; the browser no longer sends or controls a driver ID.
+The `/submit` web app uses Clerk OAuth for user identity and requires Sign in with Apple for cross-device continuity. Web API routes under `/api/web` derive `Order.createdBy` and location visibility from Clerk's Apple external account id as `apple:<provider-user-id>`, matching the native iOS identity key. The browser no longer sends or controls a driver ID.
 
 ## Verification
 

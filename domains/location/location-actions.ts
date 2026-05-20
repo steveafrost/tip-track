@@ -1,11 +1,11 @@
 "use server";
 
 import prisma from "@/lib/prisma";
-import { auth } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
+import { getWebUserId } from "@/lib/web-auth";
 
 export async function getLocations() {
-  const { userId } = auth();
+  const userId = await getWebUserId().catch(() => null);
 
   if (!userId) redirect("/");
 
