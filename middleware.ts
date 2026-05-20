@@ -2,7 +2,14 @@ import { authMiddleware } from "@clerk/nextjs";
 import { NextResponse } from "next/server";
 
 const clerkMiddleware = authMiddleware({
-  publicRoutes: ["/", "/api/mobile(.*)", "/search", "/submit", "/reports"],
+  publicRoutes: [
+    "/",
+    "/api/mobile(.*)",
+    "/api/web(.*)",
+    "/search",
+    "/submit",
+    "/reports",
+  ],
 });
 
 export default process.env.CLERK_SECRET_KEY
