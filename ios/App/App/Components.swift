@@ -114,21 +114,28 @@ struct OrderCard: View {
     var body: some View {
         Button(action: onEdit) {
             VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 8) {
+                    Text("Order details")
+                        .font(.caption.weight(.semibold))
+                        .foregroundColor(.tipGreen)
+                    Spacer()
+                    Image(systemName: "pencil")
+                        .font(.caption.weight(.bold))
+                        .foregroundColor(.tipGreen)
+                }
+
                 HStack(alignment: .top, spacing: 12) {
                     AppIconTile(systemName: "receipt", tint: .tipGreen)
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Order #\(order.externalId)")
-                            .font(.headline.weight(.semibold))
+                            .font(.subheadline.weight(.semibold))
                             .foregroundColor(.zinc900)
                         Text(order.address)
-                            .font(.subheadline)
+                            .font(.caption)
                             .foregroundColor(.zinc500)
                             .lineLimit(2)
                     }
                     Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.caption.weight(.bold))
-                        .foregroundColor(.zinc400)
                 }
 
                 HStack(spacing: 8) {
