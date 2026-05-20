@@ -1,4 +1,4 @@
 CAPACITOR_DEBUG = true
-GID_CLIENT_ID =
-GID_SERVER_CLIENT_ID =
-GID_REVERSED_CLIENT_ID =
+GID_CLIENT_ID = 235559068133-9ocgpdl176esgo6cvbq8s6qpip3cdgl3.apps.googleusercontent.com
+GID_SERVER_CLIENT_ID = 235559068133-b2tdfe7avn6nbjf9fv200fh7r56o35vh.apps.googleusercontent.com
+GID_REVERSED_CLIENT_ID = com.googleusercontent.apps.235559068133-9ocgpdl176esgo6cvbq8s6qpip3cdgl3
