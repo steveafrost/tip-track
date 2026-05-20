@@ -264,16 +264,16 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="relative min-h-[520px]">
+          <div className="relative mx-auto min-h-[980px] w-full max-w-[18rem] sm:min-h-[520px] sm:max-w-[28rem] lg:mx-0 lg:max-w-none">
             <PhoneShot
               src="/images/marketing/add-order.png"
               alt="TipTrack add order screen."
-              className="absolute left-0 top-0 h-[500px] w-[232px] rotate-[-3deg]"
+              className="absolute left-1/2 top-0 h-[500px] w-[232px] -translate-x-1/2 rotate-[-3deg] sm:-translate-x-[84%] lg:left-0 lg:translate-x-0"
             />
             <PhoneShot
               src="/images/marketing/locations.png"
               alt="TipTrack saved locations screen."
-              className="absolute right-0 top-14 h-[470px] w-[218px] rotate-[4deg]"
+              className="absolute left-1/2 top-[500px] h-[470px] w-[218px] -translate-x-1/2 rotate-[4deg] sm:top-14 sm:-translate-x-[16%] lg:left-auto lg:right-0 lg:translate-x-0"
             />
           </div>
         </div>
