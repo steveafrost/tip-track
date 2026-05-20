@@ -7,7 +7,9 @@ import {
   Building2,
   CheckCircle2,
   ChevronRight,
+  Edit3,
   HelpCircle,
+  Infinity,
   Loader2,
   LogOut,
   MapPin,
@@ -17,7 +19,14 @@ import {
   ShieldCheck,
   Sparkles,
   Unlock,
+  WalletCards,
+  X,
 } from "lucide-react";
+import Script from "next/script";
+import usePlacesAutocomplete, {
+  getGeocode,
+  getLatLng,
+} from "use-places-autocomplete";
 
 type Session = {
   driverId: string;
@@ -48,6 +57,13 @@ type Tab = "add" | "orders" | "locations" | "reports";
 
 const sessionKey = "tiptrack:web-session";
 const freeOrderLimit = 20;
+const googleMapsKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
+
+type LocationValue = {
+  address: string;
+  latitude: number;
+  longitude: number;
+};
 
 const tipOptions = [
   { value: 0, label: "No Tip", short: "No Tip", color: "text-zinc-500 bg-zinc-500/10" },
@@ -91,6 +107,7 @@ export function WebApp() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [paywallOpen, setPaywallOpen] = useState(false);
 
   const selectedTab = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
 
@@ -185,33 +202,33 @@ export function WebApp() {
     setActiveTab("add");
   }
 
-  async function handleAddOrder(values: { address: string; orderId: string }) {
+  async function handleAddOrder(values: LocationValue & { orderId: string }) {
     await apiFetch<{ order: TipOrder }>("/api/web/orders", {
       method: "POST",
       body: JSON.stringify({
         externalId: values.orderId,
         location: {
           address: values.address,
-          latitude: 0,
-          longitude: 0,
+          latitude: values.latitude,
+          longitude: values.longitude,
         },
       }),
     });
     await refreshData();
   }
 
-  async function handleUpdateOrder(order: TipOrder, tip: number, address?: string) {
+  async function handleUpdateOrder(order: TipOrder, tip: number, location?: LocationValue) {
     await apiFetch<{ order: TipOrder }>(
       `/api/web/orders/${encodeURIComponent(order.externalId)}`,
       {
         method: "PATCH",
         body: JSON.stringify({
           tip,
-          location: address
+          location: location
             ? {
-                address,
-                latitude: order.latitude,
-                longitude: order.longitude,
+                address: location.address,
+                latitude: location.latitude,
+                longitude: location.longitude,
               }
             : undefined,
         }),
@@ -231,7 +248,7 @@ export function WebApp() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fafaf8] text-zinc-950">
+    <div className="app-background min-h-screen text-zinc-950">
       <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-3">
           <IconTile icon={selectedTab.icon} />
@@ -246,6 +263,7 @@ export function WebApp() {
           <div className="ml-auto flex items-center gap-2">
             <button
               type="button"
+              onClick={() => setPaywallOpen(true)}
               className="grid h-9 w-9 place-items-center rounded-md bg-zinc-100 text-zinc-800"
               aria-label="TipTrack Pro"
               title="First 20 orders free, then $4.99 once."
@@ -279,6 +297,7 @@ export function WebApp() {
         {activeTab === "add" ? (
           <AddOrderPanel
             orders={orders}
+            onShowPaywall={() => setPaywallOpen(true)}
             onAddOrder={handleAddOrder}
             onUpdateOrder={handleUpdateOrder}
           />
@@ -316,6 +335,7 @@ export function WebApp() {
       </nav>
 
       {helpOpen ? <HelpDialog onClose={() => setHelpOpen(false)} /> : null}
+      {paywallOpen ? <PaywallDialog onClose={() => setPaywallOpen(false)} /> : null}
     </div>
   );
 }
@@ -337,10 +357,10 @@ function SignInScreen({
   }
 
   return (
-    <div className="min-h-screen bg-[#fafaf8] px-4 py-10 text-zinc-950">
+    <div className="app-background min-h-screen px-4 py-10 text-zinc-950">
       <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-md min-w-0 flex-col justify-center gap-6">
         <div className="space-y-5">
-          <IconTile icon={WalletIcon} large />
+          <IconTile icon={WalletCards} large />
           <div>
             <h1 className="text-5xl font-bold leading-none">Tip Track</h1>
             <p className="mt-3 max-w-sm text-lg font-medium leading-7 text-zinc-500">
@@ -372,14 +392,20 @@ function SignInScreen({
 
 function AddOrderPanel({
   orders,
+  onShowPaywall,
   onAddOrder,
   onUpdateOrder,
 }: {
   orders: TipOrder[];
-  onAddOrder: (values: { address: string; orderId: string }) => Promise<void>;
-  onUpdateOrder: (order: TipOrder, tip: number, address?: string) => Promise<void>;
+  onShowPaywall: () => void;
+  onAddOrder: (values: LocationValue & { orderId: string }) => Promise<void>;
+  onUpdateOrder: (order: TipOrder, tip: number, location?: LocationValue) => Promise<void>;
 }) {
-  const [address, setAddress] = useState("");
+  const [location, setLocation] = useState<LocationValue>({
+    address: "",
+    latitude: 0,
+    longitude: 0,
+  });
   const [orderId, setOrderId] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -387,12 +413,16 @@ function AddOrderPanel({
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
+    if (orders.length >= freeOrderLimit) {
+      onShowPaywall();
+      return;
+    }
     setIsSaving(true);
     setError(null);
     setMessage(null);
     try {
-      await onAddOrder({ address, orderId });
-      setAddress("");
+      await onAddOrder({ ...location, orderId });
+      setLocation({ address: "", latitude: 0, longitude: 0 });
       setOrderId("");
       setMessage("Order added.");
     } catch (error) {
@@ -403,26 +433,16 @@ function AddOrderPanel({
   }
 
   return (
-    <div className="space-y-4">
+      <div className="space-y-4">
       <DashboardSummary orders={orders} />
-      <TrialCard orderCount={orders.length} />
+      <TrialCard orderCount={orders.length} onOpen={onShowPaywall} />
 
       <form onSubmit={handleSubmit} className="app-card space-y-4">
         <SectionHeader
           title="New delivery"
           subtitle="Log the order before the shift moves on."
         />
-        <Field label="Address">
-          <div className="relative">
-            <MapPin className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-500" />
-            <input
-              value={address}
-              onChange={(event) => setAddress(event.target.value)}
-              className="app-input pl-10"
-              placeholder="Enter an address"
-            />
-          </div>
-        </Field>
+        <AddressLookupField value={location} onChange={setLocation} />
         <Field label="Order ID">
           <div className="relative">
             <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-semibold text-zinc-500">
@@ -455,12 +475,19 @@ function OrdersPanel({
   onUpdateOrder,
 }: {
   orders: TipOrder[];
-  onUpdateOrder: (order: TipOrder, tip: number, address?: string) => Promise<void>;
+  onUpdateOrder: (order: TipOrder, tip: number, location?: LocationValue) => Promise<void>;
 }) {
   const [query, setQuery] = useState("");
-  const matches = orders.filter((order) =>
-    order.externalId.toLowerCase().includes(query.toLowerCase())
-  );
+  const [selectedOrder, setSelectedOrder] = useState<TipOrder | null>(null);
+  const [editingOrder, setEditingOrder] = useState<TipOrder | null>(null);
+  const matches = orders
+    .filter((order) => order.externalId.toLowerCase().includes(query.toLowerCase()))
+    .slice(0, 5);
+
+  useEffect(() => {
+    if (!selectedOrder) return;
+    setSelectedOrder(orders.find((order) => order.id === selectedOrder.id) ?? null);
+  }, [orders, selectedOrder]);
 
   return (
     <div className="space-y-4">
@@ -469,11 +496,41 @@ function OrdersPanel({
         subtitle="Search by the customer-facing order ID."
       />
       <SearchBox value={query} onChange={setQuery} placeholder="Enter Order ID" />
-      <OrderList
-        orders={matches}
-        emptyText={orders.length ? "No orders found." : "No orders saved yet."}
-        onUpdateOrder={onUpdateOrder}
-      />
+      {orders.length ? (
+        <ResultsList emptyText="No orders found." isEmpty={!matches.length}>
+          {matches.map((order, index) => (
+            <ResultButton
+              key={order.id}
+              index={index}
+              onClick={() => {
+                setSelectedOrder(order);
+                setQuery(order.externalId);
+              }}
+            >
+              <IconTile icon={Receipt} tint="blue" />
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate text-sm font-semibold text-zinc-900">
+                  Order #{order.externalId}
+                </h3>
+                <p className="truncate text-xs text-zinc-500">{order.address}</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-zinc-400" />
+            </ResultButton>
+          ))}
+        </ResultsList>
+      ) : (
+        <EmptyPrompt text="No orders saved yet." />
+      )}
+      {selectedOrder ? (
+        <OrderCard order={selectedOrder} onEdit={() => setEditingOrder(selectedOrder)} />
+      ) : null}
+      {editingOrder ? (
+        <OrderEditor
+          order={editingOrder}
+          onClose={() => setEditingOrder(null)}
+          onUpdateOrder={onUpdateOrder}
+        />
+      ) : null}
     </div>
   );
 }
@@ -483,16 +540,26 @@ function LocationsPanel({
   onUpdateOrder,
 }: {
   locations: TipLocation[];
-  onUpdateOrder: (order: TipOrder, tip: number, address?: string) => Promise<void>;
+  onUpdateOrder: (order: TipOrder, tip: number, location?: LocationValue) => Promise<void>;
 }) {
   const [query, setQuery] = useState("");
-  const matches = locations.filter((location) => {
-    const needle = query.toLowerCase();
-    return (
-      location.address.toLowerCase().includes(needle) ||
-      location.orders.some((order) => order.externalId.toLowerCase().includes(needle))
+  const [selectedLocation, setSelectedLocation] = useState<TipLocation | null>(null);
+  const matches = locations
+    .filter((location) => {
+      const needle = query.toLowerCase();
+      return (
+        location.address.toLowerCase().includes(needle) ||
+        location.orders.some((order) => order.externalId.toLowerCase().includes(needle))
+      );
+    })
+    .slice(0, 5);
+
+  useEffect(() => {
+    if (!selectedLocation) return;
+    setSelectedLocation(
+      locations.find((location) => location.id === selectedLocation.id) ?? null
     );
-  });
+  }, [locations, selectedLocation]);
 
   return (
     <div className="space-y-4">
@@ -501,19 +568,36 @@ function LocationsPanel({
         subtitle="Review repeat addresses and saved tip patterns."
       />
       <SearchBox value={query} onChange={setQuery} placeholder="Enter address" />
-      {matches.length ? (
-        <div className="space-y-3">
-          {matches.map((location) => (
-            <LocationCard
+      {locations.length ? (
+        <ResultsList emptyText="No location found." isEmpty={!matches.length}>
+          {matches.map((location, index) => (
+            <ResultButton
               key={location.id}
-              location={location}
-              onUpdateOrder={onUpdateOrder}
-            />
+              index={index}
+              onClick={() => {
+                setSelectedLocation(location);
+                setQuery(location.address);
+              }}
+            >
+              <IconTile icon={Building2} />
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate text-sm font-semibold text-zinc-900">
+                  {location.address}
+                </h3>
+                <p className="truncate text-xs text-zinc-500">
+                  {location.orders.map((order) => order.externalId).join(" | ")}
+                </p>
+              </div>
+              <TipBadge tip={averageTip(location.orders)} compact />
+            </ResultButton>
           ))}
-        </div>
+        </ResultsList>
       ) : (
-        <EmptyPrompt text={locations.length ? "No location found." : "No locations saved yet."} />
+        <EmptyPrompt text="No locations saved yet." />
       )}
+      {selectedLocation ? (
+        <LocationCard location={selectedLocation} onUpdateOrder={onUpdateOrder} />
+      ) : null}
     </div>
   );
 }
@@ -580,20 +664,112 @@ function DashboardSummary({ orders }: { orders: TipOrder[] }) {
   );
 }
 
-function TrialCard({ orderCount }: { orderCount: number }) {
+function TrialCard({ orderCount, onOpen }: { orderCount: number; onOpen: () => void }) {
   const remaining = Math.max(freeOrderLimit - orderCount, 0);
   return (
     <div className="app-card flex items-center gap-3">
       <IconTile icon={remaining ? Unlock : ShieldCheck} tint={remaining ? "amber" : "green"} />
-      <div>
+      <div className="min-w-0 flex-1">
         <h2 className="text-sm font-semibold text-zinc-900">
-          {remaining ? `${remaining} free orders remaining` : "TipTrack Pro unlock"}
+          {remaining ? `${remaining} free order${remaining === 1 ? "" : "s"} left` : "TipTrack Pro unlock"}
         </h2>
         <p className="text-xs leading-5 text-zinc-500">
-          First 20 orders free, then a one-time $4.99 unlock. No subscription.
+          {remaining
+            ? "Use the ledger first. Upgrade when it becomes part of your shift."
+            : "Unlimited logging requires the one-time app unlock."}
         </p>
       </div>
+      <button
+        type="button"
+        onClick={onOpen}
+        className="rounded-full bg-amber-500/12 px-3 py-1.5 text-xs font-bold text-zinc-900"
+      >
+        Pro
+      </button>
     </div>
+  );
+}
+
+function AddressLookupField({
+  value,
+  onChange,
+}: {
+  value: LocationValue;
+  onChange: (value: LocationValue) => void;
+}) {
+  const {
+    ready,
+    suggestions: { data },
+    setValue,
+    clearSuggestions,
+    init,
+  } = usePlacesAutocomplete({
+    initOnMount: false,
+    debounce: 300,
+  });
+
+  function handleInput(nextAddress: string) {
+    setValue(nextAddress);
+    onChange({ address: nextAddress, latitude: 0, longitude: 0 });
+  }
+
+  async function handleSelect(description: string) {
+    clearSuggestions();
+    setValue(description, false);
+
+    try {
+      const results = await getGeocode({ address: description });
+      const { lat, lng } = getLatLng(results[0]);
+      onChange({ address: description, latitude: lat, longitude: lng });
+    } catch {
+      onChange({ address: description, latitude: 0, longitude: 0 });
+    }
+  }
+
+  return (
+    <Field label="Address">
+      <div className="relative">
+        <MapPin className="pointer-events-none absolute left-3 top-6 h-5 w-5 -translate-y-1/2 text-zinc-500" />
+        <input
+          value={value.address}
+          onChange={(event) => handleInput(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") clearSuggestions();
+          }}
+          className="app-input pl-10"
+          placeholder="Enter an address"
+          autoComplete="off"
+          aria-busy={googleMapsKey && !ready ? true : undefined}
+        />
+        {data.length ? (
+          <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-20 overflow-hidden rounded-md border border-zinc-200 bg-white px-3 shadow-[0_8px_24px_rgba(15,23,42,0.08)]">
+            {data.slice(0, 5).map((suggestion, index) => (
+              <button
+                key={suggestion.place_id}
+                type="button"
+                onClick={() => void handleSelect(suggestion.description)}
+                className={`block w-full py-3 text-left ${
+                  index ? "border-t border-zinc-100" : ""
+                }`}
+              >
+                <span className="block text-sm font-semibold text-zinc-900">
+                  {suggestion.structured_formatting.main_text}
+                </span>
+                <span className="block text-xs text-zinc-500">
+                  {suggestion.structured_formatting.secondary_text}
+                </span>
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+      {googleMapsKey ? (
+        <Script
+          src={`https://maps.googleapis.com/maps/api/js?key=${googleMapsKey}&libraries=places`}
+          onReady={init}
+        />
+      ) : null}
+    </Field>
   );
 }
 
@@ -602,7 +778,7 @@ function RecentOrdersPreview({
   onUpdateOrder,
 }: {
   orders: TipOrder[];
-  onUpdateOrder: (order: TipOrder, tip: number, address?: string) => Promise<void>;
+  onUpdateOrder: (order: TipOrder, tip: number, location?: LocationValue) => Promise<void>;
 }) {
   return (
     <div className="space-y-3">
@@ -616,6 +792,76 @@ function RecentOrdersPreview({
   );
 }
 
+function ResultsList({
+  children,
+  emptyText,
+  isEmpty,
+}: {
+  children: React.ReactNode;
+  emptyText: string;
+  isEmpty: boolean;
+}) {
+  return (
+    <div className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+      {isEmpty ? (
+        <p className="p-4 text-sm text-zinc-500">{emptyText}</p>
+      ) : (
+        children
+      )}
+    </div>
+  );
+}
+
+function ResultButton({
+  children,
+  index,
+  onClick,
+}: {
+  children: React.ReactNode;
+  index: number;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex w-full items-center gap-3 p-4 text-left ${
+        index ? "border-t border-zinc-100" : ""
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function OrderCard({ order, onEdit }: { order: TipOrder; onEdit: () => void }) {
+  return (
+    <button type="button" onClick={onEdit} className="app-card block w-full text-left">
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-emerald-700">Order details</span>
+          <Edit3 className="ml-auto h-4 w-4 text-emerald-700" />
+        </div>
+        <div className="flex items-start gap-3">
+          <IconTile icon={Receipt} />
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate text-sm font-semibold text-zinc-900">
+              Order #{order.externalId}
+            </h3>
+            <p className="line-clamp-2 text-xs leading-5 text-zinc-500">{order.address}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <TipBadge tip={order.tip} />
+          <span className="ml-auto text-xs font-medium text-zinc-500">
+            {formatDate(order.createdAt)}
+          </span>
+        </div>
+      </div>
+    </button>
+  );
+}
+
 function OrderList({
   orders,
   emptyText,
@@ -623,7 +869,7 @@ function OrderList({
 }: {
   orders: TipOrder[];
   emptyText: string;
-  onUpdateOrder: (order: TipOrder, tip: number, address?: string) => Promise<void>;
+  onUpdateOrder: (order: TipOrder, tip: number, location?: LocationValue) => Promise<void>;
 }) {
   const [editingOrder, setEditingOrder] = useState<TipOrder | null>(null);
 
@@ -668,7 +914,7 @@ function LocationCard({
   onUpdateOrder,
 }: {
   location: TipLocation;
-  onUpdateOrder: (order: TipOrder, tip: number, address?: string) => Promise<void>;
+  onUpdateOrder: (order: TipOrder, tip: number, location?: LocationValue) => Promise<void>;
 }) {
   const [editingOrder, setEditingOrder] = useState<TipOrder | null>(null);
   return (
@@ -722,9 +968,13 @@ function OrderEditor({
   order: TipOrder;
   lockAddress?: boolean;
   onClose: () => void;
-  onUpdateOrder: (order: TipOrder, tip: number, address?: string) => Promise<void>;
+  onUpdateOrder: (order: TipOrder, tip: number, location?: LocationValue) => Promise<void>;
 }) {
-  const [address, setAddress] = useState(order.address);
+  const [location, setLocation] = useState<LocationValue>({
+    address: order.address,
+    latitude: order.latitude,
+    longitude: order.longitude,
+  });
   const [selectedTip, setSelectedTip] = useState(order.tip ?? 0);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -733,7 +983,7 @@ function OrderEditor({
     setIsSaving(true);
     setError(null);
     try {
-      await onUpdateOrder(order, selectedTip, lockAddress ? undefined : address);
+      await onUpdateOrder(order, selectedTip, lockAddress ? undefined : location);
       onClose();
     } catch (error) {
       setError(error instanceof Error ? error.message : "Could not update order.");
@@ -744,7 +994,7 @@ function OrderEditor({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end bg-black/30 p-3 backdrop-blur-sm sm:items-center sm:justify-center">
-      <div className="w-full max-w-md rounded-lg bg-[#fafaf8] shadow-2xl">
+      <div className="app-background w-full max-w-md overflow-hidden rounded-lg shadow-2xl">
         <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-3">
           <button type="button" onClick={onClose} className="text-sm font-semibold text-zinc-500">
             Cancel
@@ -763,13 +1013,7 @@ function OrderEditor({
         </div>
         <div className="space-y-4 p-4">
           {!lockAddress ? (
-            <Field label="Address">
-              <input
-                value={address}
-                onChange={(event) => setAddress(event.target.value)}
-                className="app-input"
-              />
-            </Field>
+            <AddressLookupField value={location} onChange={setLocation} />
           ) : null}
           <div className="app-card space-y-3">
             <h3 className="text-sm font-semibold">Tip Amount</h3>
@@ -781,7 +1025,12 @@ function OrderEditor({
                   onClick={() => setSelectedTip(option.value)}
                   className="flex w-full items-center justify-between gap-3 py-3 text-left"
                 >
-                  <TipBadge tip={option.value} />
+                  <div className="flex items-center gap-3">
+                    <TipBadge tip={option.value} compact />
+                    <span className="text-sm font-semibold text-zinc-900">
+                      {option.label}
+                    </span>
+                  </div>
                   {selectedTip === option.value ? (
                     <CheckCircle2 className="h-5 w-5 text-emerald-700" />
                   ) : null}
@@ -971,20 +1220,87 @@ function HelpDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
+function PaywallDialog({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end bg-black/30 p-3 backdrop-blur-sm sm:items-center sm:justify-center">
+      <div className="app-background max-h-[92vh] w-full max-w-md overflow-y-auto rounded-lg shadow-2xl">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-zinc-200 bg-white/95 px-4 py-3 backdrop-blur">
+          <span className="w-12" />
+          <h2 className="text-sm font-bold">TipTrack Pro</h2>
+          <button type="button" onClick={onClose} className="grid h-8 w-8 place-items-center rounded-md bg-zinc-100">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="space-y-4 p-4">
+          <div className="app-card space-y-4">
+            <IconTile icon={ShieldCheck} large />
+            <div>
+              <h3 className="text-2xl font-bold text-zinc-950">Keep logging with Pro</h3>
+              <p className="mt-2 text-sm leading-6 text-zinc-500">
+                Log your first 20 orders free, then upgrade when TipTrack is earning its place on your shift.
+              </p>
+            </div>
+          </div>
+
+          <div className="app-card space-y-3">
+            <PaywallFeature icon={Infinity} text="Unlimited order logging" />
+            <PaywallFeature icon={Building2} text="Location history across repeat addresses" />
+            <PaywallFeature icon={BarChart3} text="Tip pattern reports for every saved order" />
+            <PaywallFeature icon={ShieldCheck} text="One-time unlock. No subscription." />
+          </div>
+
+          <a
+            href="/#download"
+            className="app-card flex items-center gap-3 p-3 no-underline"
+            onClick={onClose}
+          >
+            <IconTile icon={Sparkles} tint="amber" />
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm font-semibold text-zinc-900">TipTrack Pro Unlock</h3>
+              <p className="text-xs leading-5 text-zinc-500">
+                Pay once in the iOS app and keep Pro for this Apple ID.
+              </p>
+            </div>
+            <span className="text-sm font-bold text-zinc-900">$4.99</span>
+          </a>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="min-h-12 w-full rounded-md border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-900"
+          >
+            Done
+          </button>
+
+          <p className="px-1 text-xs leading-5 text-zinc-500">
+            Purchases are handled by the App Store. The web dashboard mirrors the app experience, but purchase and restore actions happen in the iOS app.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PaywallFeature({
+  icon: Icon,
+  text,
+}: {
+  icon: React.ElementType;
+  text: string;
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <Icon className="h-4 w-6 shrink-0 text-emerald-700" />
+      <span className="text-sm font-semibold text-zinc-900">{text}</span>
+    </div>
+  );
+}
+
 function HelpSection({ title, text }: { title: string; text: string }) {
   return (
     <div>
       <h3 className="text-sm font-bold text-zinc-950">{title}</h3>
       <p className="mt-1 text-sm leading-6 text-zinc-500">{text}</p>
     </div>
-  );
-}
-
-function WalletIcon(props: React.ComponentProps<"svg">) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
-      <path d="M4 7h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h13" />
-      <path d="M18 12h4v4h-4a2 2 0 0 1 0-4Z" />
-    </svg>
   );
 }
