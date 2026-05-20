@@ -307,10 +307,7 @@ export default function Home() {
               </tbody>
             </table>
           </div>
-          <div className="mt-8 flex flex-wrap items-center justify-between gap-5">
-            <div className="rotate-[-2deg] border border-[#d7c79c] bg-[#ead9a8] px-6 py-5 font-mono text-[#24311f]">
-              Fueled by coffee and determination.
-            </div>
+          <div className="mt-8 flex flex-wrap items-center justify-end gap-5">
             <div className="font-mono text-2xl text-[#f5ead0]">Keep going.</div>
           </div>
         </div>
