@@ -95,22 +95,17 @@ function BrandStamp() {
   return (
     <Link
       href="/"
-      className="inline-flex rotate-[-2deg] items-center gap-3 border-2 border-[#8bc34a] bg-black/25 px-3 py-2 text-[#b8f26d] shadow-[0_0_24px_rgba(139,195,74,0.15)] backdrop-blur"
+      className="inline-flex items-center"
+      aria-label="TipTrack home"
     >
       <Image
-        src="/images/logo-96.png"
-        alt=""
-        width={36}
-        height={36}
-        className="rounded-sm brightness-125"
+        src="/images/logo-192.png"
+        alt="TipTrack"
+        width={72}
+        height={72}
+        className="rounded-md"
         priority
       />
-      <span className="font-mono text-sm font-black uppercase leading-none tracking-[0.14em]">
-        TipTrack
-        <span className="block text-[0.62rem] tracking-[0.22em]">
-          Shift Ledger
-        </span>
-      </span>
     </Link>
   );
 }
