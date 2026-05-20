@@ -25,7 +25,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>TipTrackAPIBaseURL</key>
-	<string>https://tiptrack.steveafrost.com</string>
+	<string>https://usetiptrack.com</string>
 	<key>TipTrackAPIToken</key>
 	<string></string>
 	<key>ITSAppUsesNonExemptEncryption</key>

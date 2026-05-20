@@ -7,10 +7,22 @@ import { Toaster } from "sonner";
 import { AppChrome } from "@/components/app-chrome";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://usetiptrack.com"),
   title: "TipTrack Shift Ledger",
   description:
     "A delivery driver tip ledger for logging orders, addresses, and tip patterns.",
   manifest: "/manifest.json",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "TipTrack Shift Ledger",
+    description:
+      "A delivery driver tip ledger for logging orders, addresses, and tip patterns.",
+    url: "https://usetiptrack.com",
+    siteName: "TipTrack",
+    type: "website",
+  },
 };
 
 export const viewport: Viewport = {

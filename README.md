@@ -57,7 +57,7 @@ Configure the native app in `ios/App/App/Info.plist`:
 
 ```xml
 <key>TipTrackAPIBaseURL</key>
-<string>https://your-production-domain.example</string>
+<string>https://usetiptrack.com</string>
 <key>TipTrackAPIToken</key>
 <string>optional same-value-as-MOBILE_API_TOKEN</string>
 ```
