@@ -6,7 +6,7 @@ The original Next.js implementation remains in the repo for reference, but the i
 
 ## Native iOS App
 
-- Bundle ID: `com.tiptrack.app`
+- Bundle ID: `com.steveafrost.tiptrack`
 - Minimum iOS target: 15.0
 - Entry point: `ios/App/App/AppDelegate.swift`
 - UI framework: SwiftUI
@@ -51,7 +51,17 @@ POSTGRES_PRISMA_URL=
 POSTGRES_URL_NON_POOLING=
 ```
 
-`MOBILE_API_TOKEN` is optional. When it is set on Vercel, the native client must send the same bearer token. When it is not set, the API accepts the app's driver-scoped requests without an app-wide shared secret.
+The native app uses Sign in with Apple. The backend verifies Apple's identity token, derives a stable user key from Apple's `sub` claim, then stores that key in `Order.createdBy` and `AppStoreEntitlement.driverId`.
+
+Set these on the deployed web/API app:
+
+```bash
+MOBILE_SESSION_SECRET=
+APPLE_SIGN_IN_AUDIENCE=com.steveafrost.tiptrack
+MOBILE_REQUIRE_USER_AUTH=true
+```
+
+`MOBILE_API_TOKEN` is optional and still acts as an app-wide API shared secret. When it is set on Vercel, the native client must send the same bearer token in addition to the user session token.
 
 Configure the native app in `ios/App/App/Info.plist`:
 
@@ -78,10 +88,10 @@ When `MOBILE_API_TOKEN` is configured, all mobile API requests require:
 Authorization: Bearer <MOBILE_API_TOKEN>
 ```
 
-All order/location requests also require:
+All order/location requests also require the signed user session returned by `POST /api/mobile/session`:
 
 ```text
-x-tip-track-driver-id: <driver-id>
+x-tip-track-session-token: <session-token>
 ```
 
 ## Legacy Web App

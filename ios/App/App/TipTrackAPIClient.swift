@@ -32,16 +32,24 @@ struct TipTrackAPIClient {
         self.encoder = JSONEncoder()
     }
 
-    func signIn(displayName: String) async throws -> DriverSession {
-        let requestBody = MobileSessionRequest(displayName: displayName)
+    func signInWithApple(identityToken: String, rawNonce: String, displayName: String?) async throws -> DriverSession {
+        let requestBody = MobileSessionRequest(
+            identityToken: identityToken,
+            rawNonce: rawNonce,
+            displayName: displayName
+        )
         let response: MobileSessionResponse = try await send(
             path: "/api/mobile/session",
             method: "POST",
             body: requestBody,
-            driverId: nil
+            session: nil
         )
 
-        return DriverSession(userId: response.driverId, displayName: response.displayName)
+        return DriverSession(
+            userId: response.driverId,
+            displayName: response.displayName,
+            sessionToken: response.sessionToken
+        )
     }
 
     func fetchOrders(session driverSession: DriverSession) async throws -> [TipOrder] {
@@ -49,7 +57,7 @@ struct TipTrackAPIClient {
             path: "/api/mobile/orders",
             method: "GET",
             body: Optional<String>.none,
-            driverId: driverSession.userId
+            session: driverSession
         )
 
         return response.orders
@@ -75,7 +83,7 @@ struct TipTrackAPIClient {
             path: "/api/mobile/orders",
             method: "POST",
             body: requestBody,
-            driverId: driverSession.userId
+            session: driverSession
         )
 
         return response.order
@@ -102,7 +110,7 @@ struct TipTrackAPIClient {
             path: "/api/mobile/orders/\(order.externalId.urlPathEncoded)",
             method: "PATCH",
             body: requestBody,
-            driverId: driverSession.userId
+            session: driverSession
         )
 
         return response.order
@@ -113,7 +121,7 @@ struct TipTrackAPIClient {
             path: "/api/mobile/entitlements/apple",
             method: "GET",
             body: Optional<String>.none,
-            driverId: driverSession.userId
+            session: driverSession
         )
 
         return response.entitlement
@@ -131,7 +139,7 @@ struct TipTrackAPIClient {
             path: "/api/mobile/entitlements/apple",
             method: "POST",
             body: requestBody,
-            driverId: driverSession.userId
+            session: driverSession
         )
 
         return response.entitlement
@@ -141,7 +149,7 @@ struct TipTrackAPIClient {
         path: String,
         method: String,
         body: Body?,
-        driverId: String?
+        session driverSession: DriverSession?
     ) async throws -> Response {
         let url = configuration.baseURL.appendingPathComponent(path)
         var request = URLRequest(url: url)
@@ -152,7 +160,9 @@ struct TipTrackAPIClient {
             request.setValue("Bearer \(configuration.token)", forHTTPHeaderField: "Authorization")
         }
 
-        if let driverId {
+        if let sessionToken = driverSession?.sessionToken {
+            request.setValue(sessionToken, forHTTPHeaderField: "x-tip-track-session-token")
+        } else if let driverId = driverSession?.userId {
             request.setValue(driverId, forHTTPHeaderField: "x-tip-track-driver-id")
         }
 
@@ -222,12 +232,15 @@ enum TipTrackAPIError: LocalizedError {
 }
 
 private struct MobileSessionRequest: Encodable {
-    let displayName: String
+    let identityToken: String
+    let rawNonce: String
+    let displayName: String?
 }
 
 private struct MobileSessionResponse: Decodable {
     let driverId: String
     let displayName: String
+    let sessionToken: String
 }
 
 private struct MobileOrdersResponse: Decodable {

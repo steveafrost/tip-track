@@ -44,7 +44,11 @@ final class TipTrackStore: ObservableObject {
 
 #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--tiptrack-demo-data") {
-            session = DriverSession(userId: "app-store-demo", displayName: "App Store Demo")
+            session = DriverSession(
+                userId: "app-store-demo",
+                displayName: "App Store Demo",
+                sessionToken: "demo-session"
+            )
             allOrders = TipTrackStore.makeDemoOrders()
             return
         }
@@ -54,7 +58,7 @@ final class TipTrackStore: ObservableObject {
            let decodedSession = try? decoder.decode(DriverSession.self, from: sessionData) {
             session = decodedSession
         } else {
-            session = DriverSession(userId: nil, displayName: nil)
+            session = DriverSession(userId: nil, displayName: nil, sessionToken: nil)
         }
 
         if let orderData = defaults.data(forKey: ordersKey),
@@ -65,21 +69,22 @@ final class TipTrackStore: ObservableObject {
         }
     }
 
-    func signIn(name: String) async throws {
-        if let apiClient {
-            session = try await apiClient.signIn(displayName: name)
-            saveSession()
-            try await refreshOrders()
-
-            return
+    func signInWithApple(identityToken: String, rawNonce: String, displayName: String?) async throws {
+        guard let apiClient else {
+            throw TipTrackAPIError.server("Cloud sync is not configured.")
         }
 
-        session = makeLocalSession(name: name)
+        session = try await apiClient.signInWithApple(
+            identityToken: identityToken,
+            rawNonce: rawNonce,
+            displayName: displayName
+        )
         saveSession()
+        try await refreshOrders()
     }
 
     func signOut() {
-        session = DriverSession(userId: nil, displayName: nil)
+        session = DriverSession(userId: nil, displayName: nil, sessionToken: nil)
         saveSession()
     }
 
@@ -183,20 +188,6 @@ final class TipTrackStore: ObservableObject {
         if let data = try? encoder.encode(allOrders) {
             UserDefaults.standard.set(data, forKey: ordersKey)
         }
-    }
-
-    private func makeLocalSession(name: String) -> DriverSession {
-        DriverSession(userId: "local:\(slug(name))", displayName: name)
-    }
-
-    private func slug(_ value: String) -> String {
-        let slug = value
-            .lowercased()
-            .components(separatedBy: CharacterSet.alphanumerics.inverted)
-            .filter { !$0.isEmpty }
-            .joined(separator: "-")
-
-        return slug.isEmpty ? UUID().uuidString : slug
     }
 
 #if DEBUG

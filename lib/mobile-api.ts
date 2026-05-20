@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHmac, timingSafeEqual } from "crypto";
 
 export class MobileApiError extends Error {
   constructor(message: string, readonly status = 400) {
@@ -19,6 +20,16 @@ export function authorizeMobileRequest(request: NextRequest) {
 }
 
 export function getMobileDriverId(request: NextRequest) {
+  const sessionToken = request.headers.get("x-tip-track-session-token");
+
+  if (sessionToken) {
+    return verifyMobileSessionToken(sessionToken).driverId;
+  }
+
+  if (process.env.MOBILE_REQUIRE_USER_AUTH === "true") {
+    throw new MobileApiError("Missing user session", 401);
+  }
+
   const driverId = request.headers.get("x-tip-track-driver-id");
 
   if (!driverId) {
@@ -41,6 +52,24 @@ export function slugDriverName(name: string) {
   }
 
   return `mobile:${slug}`;
+}
+
+export function createMobileSessionToken({
+  driverId,
+  displayName,
+}: {
+  driverId: string;
+  displayName?: string;
+}) {
+  const now = Math.floor(Date.now() / 1000);
+  const payload = {
+    driverId,
+    displayName,
+    iat: now,
+    exp: now + 60 * 60 * 24 * 90,
+  };
+
+  return signMobileSessionPayload(payload);
 }
 
 export function mobileJsonError(error: unknown) {
@@ -76,4 +105,73 @@ export function serializeOrder(order: {
     createdAt: order.createdAt.toISOString(),
     updatedAt: order.updatedAt.toISOString(),
   };
+}
+
+function signMobileSessionPayload(payload: {
+  driverId: string;
+  displayName?: string;
+  iat: number;
+  exp: number;
+}) {
+  const encodedHeader = encodeBase64Url({ alg: "HS256", typ: "JWT" });
+  const encodedPayload = encodeBase64Url(payload);
+  const signature = sign(`${encodedHeader}.${encodedPayload}`);
+
+  return `${encodedHeader}.${encodedPayload}.${signature}`;
+}
+
+function verifyMobileSessionToken(token: string) {
+  const [encodedHeader, encodedPayload, encodedSignature] = token.split(".");
+
+  if (!encodedHeader || !encodedPayload || !encodedSignature) {
+    throw new MobileApiError("Invalid user session", 401);
+  }
+
+  const expectedSignature = sign(`${encodedHeader}.${encodedPayload}`);
+  const providedSignature = Buffer.from(encodedSignature, "base64url");
+  const expectedSignatureBytes = Buffer.from(expectedSignature, "base64url");
+
+  if (
+    providedSignature.length !== expectedSignatureBytes.length ||
+    !timingSafeEqual(providedSignature, expectedSignatureBytes)
+  ) {
+    throw new MobileApiError("Invalid user session", 401);
+  }
+
+  const payload = JSON.parse(
+    Buffer.from(encodedPayload, "base64url").toString("utf8")
+  ) as { driverId?: string; exp?: number };
+
+  if (!payload.driverId || !payload.exp) {
+    throw new MobileApiError("Invalid user session", 401);
+  }
+
+  if (payload.exp <= Math.floor(Date.now() / 1000)) {
+    throw new MobileApiError("User session expired", 401);
+  }
+
+  return { driverId: payload.driverId };
+}
+
+function sign(value: string) {
+  return createHmac("sha256", getMobileSessionSecret())
+    .update(value)
+    .digest("base64url");
+}
+
+function encodeBase64Url(value: unknown) {
+  return Buffer.from(JSON.stringify(value)).toString("base64url");
+}
+
+function getMobileSessionSecret() {
+  const secret =
+    process.env.MOBILE_SESSION_SECRET ??
+    process.env.MOBILE_API_TOKEN ??
+    process.env.CLERK_SECRET_KEY;
+
+  if (!secret) {
+    throw new MobileApiError("Mobile session secret is not configured", 500);
+  }
+
+  return secret;
 }

@@ -85,8 +85,9 @@ struct TipLocation: Identifiable, Equatable {
 struct DriverSession: Codable {
     var userId: String?
     var displayName: String?
+    var sessionToken: String?
 
     var isSignedIn: Bool {
-        userId != nil
+        userId != nil && sessionToken != nil
     }
 }

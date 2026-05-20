@@ -1,11 +1,13 @@
+import AuthenticationServices
+import CryptoKit
 import StoreKit
 import SwiftUI
 
 struct SignInView: View {
     @EnvironmentObject private var store: TipTrackStore
-    @State private var name = ""
     @State private var errorMessage: String?
     @State private var isSubmitting = false
+    @State private var currentNonce: String?
 
     var body: some View {
         ZStack {
@@ -32,33 +34,34 @@ struct SignInView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 16) {
-                    FieldStack("Driver Name") {
-                        AppTextField(placeholder: "Enter your name", text: $name, systemImage: "person")
-                            .textInputAutocapitalization(.words)
-                            .submitLabel(.go)
-                            .onSubmit(signIn)
-                    }
-
                     if let errorMessage {
                         ErrorBanner(message: errorMessage)
                     }
 
-                    Button(action: signIn) {
-                        HStack {
-                            if isSubmitting {
-                                ProgressView()
-                            } else {
-                                Image(systemName: "arrow.right.circle.fill")
-                            }
-                            Text(isSubmitting ? "Signing In" : "Sign In")
-                                .fontWeight(.semibold)
+                    SignInWithAppleButton(.signIn) { request in
+                        let nonce = randomNonce()
+                        currentNonce = nonce
+                        request.requestedScopes = [.fullName, .email]
+                        request.nonce = sha256(nonce)
+                        isSubmitting = true
+                        errorMessage = nil
+                    } onCompletion: { result in
+                        handleAppleSignIn(result)
+                    }
+                    .signInWithAppleButtonStyle(.black)
+                    .frame(height: 52)
+                    .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
+                    .disabled(isSubmitting)
+
+                    if isSubmitting {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                            Text("Signing in")
+                                .font(.footnote.weight(.medium))
+                                .foregroundColor(.zinc500)
                         }
                         .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    .tint(.tipGreen)
-                    .disabled(isSubmitting)
                 }
                 .appCard()
 
@@ -68,25 +71,75 @@ struct SignInView: View {
         }
     }
 
-    private func signIn() {
-        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard trimmedName.count >= 2 else {
-            errorMessage = "Name must contain at least 2 characters."
-            return
-        }
+    private func handleAppleSignIn(_ result: Result<ASAuthorization, Error>) {
+        switch result {
+        case .success(let authorization):
+            guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+                  let identityTokenData = credential.identityToken,
+                  let identityToken = String(data: identityTokenData, encoding: .utf8),
+                  let nonce = currentNonce else {
+                errorMessage = "Apple did not return a valid sign-in token."
+                isSubmitting = false
+                return
+            }
 
-        isSubmitting = true
-        errorMessage = nil
+            let displayName = PersonNameComponentsFormatter().string(from: credential.fullName ?? PersonNameComponents())
 
-        Task {
-            do {
-                try await store.signIn(name: trimmedName)
-            } catch {
+            Task {
+                do {
+                    try await store.signInWithApple(
+                        identityToken: identityToken,
+                        rawNonce: nonce,
+                        displayName: displayName.isEmpty ? nil : displayName
+                    )
+                } catch {
+                    errorMessage = error.localizedDescription
+                }
+
+                isSubmitting = false
+                currentNonce = nil
+            }
+        case .failure(let error):
+            if let authorizationError = error as? ASAuthorizationError,
+               authorizationError.code == .canceled {
+                errorMessage = nil
+            } else {
                 errorMessage = error.localizedDescription
             }
 
             isSubmitting = false
+            currentNonce = nil
         }
+    }
+
+    private func randomNonce(length: Int = 32) -> String {
+        precondition(length > 0)
+        let charset = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+        var result = ""
+        var remainingLength = length
+
+        while remainingLength > 0 {
+            var random: UInt8 = 0
+            let status = SecRandomCopyBytes(kSecRandomDefault, 1, &random)
+
+            if status != errSecSuccess {
+                fatalError("Unable to generate nonce.")
+            }
+
+            if random < UInt8(charset.count) {
+                result.append(charset[Int(random)])
+                remainingLength -= 1
+            }
+        }
+
+        return result
+    }
+
+    private func sha256(_ input: String) -> String {
+        let inputData = Data(input.utf8)
+        let hashedData = SHA256.hash(data: inputData)
+
+        return hashedData.map { String(format: "%02x", $0) }.joined()
     }
 }
 
