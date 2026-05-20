@@ -9,44 +9,50 @@ struct SignInView: View {
     var body: some View {
         ZStack {
             AppBackground()
-            VStack(spacing: 24) {
+
+            VStack(alignment: .leading, spacing: 24) {
                 Spacer()
-                Image(systemName: "wallet.pass.fill")
-                    .font(.system(size: 82, weight: .bold))
-                    .foregroundColor(.zinc900)
-                VStack(spacing: 8) {
-                    Text("Tip Track")
-                        .font(.system(size: 44, weight: .bold))
-                        .foregroundColor(.zinc900)
-                    Text("Track delivery orders, locations, and tip history.")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
+
+                VStack(alignment: .leading, spacing: 18) {
+                    AppIconTile(systemName: "wallet.pass", tint: .tipGreen)
+                        .scaleEffect(1.2, anchor: .leading)
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Tip Track")
+                            .font(.system(size: 46, weight: .bold))
+                            .foregroundColor(.zinc900)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.82)
+                        Text("A shift ledger for delivery orders, locations, and tip history.")
+                            .font(.headline)
+                            .foregroundColor(.zinc500)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
 
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Driver Name")
-                        .font(.headline)
-                    TextField("Enter your name", text: $name)
-                        .textInputAutocapitalization(.words)
-                        .submitLabel(.go)
-                        .onSubmit(signIn)
-                        .textFieldStyle(.roundedBorder)
+                VStack(alignment: .leading, spacing: 16) {
+                    FieldStack("Driver Name") {
+                        AppTextField(placeholder: "Enter your name", text: $name, systemImage: "person")
+                            .textInputAutocapitalization(.words)
+                            .submitLabel(.go)
+                            .onSubmit(signIn)
+                    }
 
                     if let errorMessage {
-                        Text(errorMessage)
-                            .font(.footnote.weight(.semibold))
-                            .foregroundColor(.red)
+                        ErrorBanner(message: errorMessage)
                     }
 
                     Button(action: signIn) {
-                        if isSubmitting {
-                            ProgressView()
-                                .frame(maxWidth: .infinity)
-                        } else {
-                            Text("Sign In")
-                                .frame(maxWidth: .infinity)
+                        HStack {
+                            if isSubmitting {
+                                ProgressView()
+                            } else {
+                                Image(systemName: "arrow.right.circle.fill")
+                            }
+                            Text(isSubmitting ? "Signing In" : "Sign In")
+                                .fontWeight(.semibold)
                         }
+                        .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
@@ -54,9 +60,10 @@ struct SignInView: View {
                     .disabled(isSubmitting)
                 }
                 .appCard()
+
                 Spacer()
             }
-            .padding(20)
+            .padding(TipTrackTheme.pagePadding)
         }
     }
 
@@ -94,8 +101,12 @@ struct AddOrderView: View {
     @State private var isSubmitting = false
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
+        PageScroll {
+            DashboardSummary()
+
+            VStack(alignment: .leading, spacing: 16) {
+                SectionHeader(title: "New delivery", subtitle: "Log the order before the shift moves on.")
+
                 AddressLookupField(
                     title: "Address",
                     address: $address,
@@ -104,30 +115,28 @@ struct AddOrderView: View {
                     search: addressSearch
                 )
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Order ID")
-                        .font(.headline)
-                    TextField("Enter an order ID", text: $orderId)
+                FieldStack("Order ID") {
+                    AppTextField(placeholder: "Enter an order ID", text: $orderId, systemImage: "number")
                         .textInputAutocapitalization(.characters)
-                        .textFieldStyle(.roundedBorder)
                 }
 
                 if let errorMessage {
-                    Text(errorMessage)
-                        .font(.footnote.weight(.semibold))
-                        .foregroundColor(.red)
+                    ErrorBanner(message: errorMessage)
                 }
 
                 Button {
                     addOrder()
                 } label: {
-                    if isSubmitting {
-                        ProgressView()
-                            .frame(maxWidth: .infinity)
-                    } else {
-                        Label("Submit", systemImage: "plus.circle.fill")
-                            .frame(maxWidth: .infinity)
+                    HStack {
+                        if isSubmitting {
+                            ProgressView()
+                        } else {
+                            Image(systemName: "plus.circle.fill")
+                        }
+                        Text(isSubmitting ? "Saving" : "Save Order")
+                            .fontWeight(.semibold)
                     }
+                    .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
@@ -135,9 +144,9 @@ struct AddOrderView: View {
                 .disabled(isSubmitting)
             }
             .appCard()
-            .padding()
+
+            RecentOrdersPreview()
         }
-        .background(AppBackground())
         .alert("Order added", isPresented: $didAddOrder) {
             Button("OK", role: .cancel) {}
         }
@@ -199,38 +208,45 @@ struct OrderSearchView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                SearchField("Enter Order ID", text: $query)
+        PageScroll {
+            SectionHeader(title: "Find an order", subtitle: "Search by the customer-facing order ID.")
 
-                if query.isEmpty && selectedOrder == nil {
-                    EmptyPrompt("Search for an order to display the location and tip associated with that order.")
-                }
+            SearchField("Enter Order ID", text: $query)
 
-                if !query.isEmpty {
-                    ResultsList(items: matches, emptyText: "No orders found") { order in
-                        Button {
-                            selectedOrder = order
-                            query = order.externalId
-                        } label: {
-                            HStack {
+            if store.orders.isEmpty {
+                EmptyPrompt("No orders saved yet.")
+            } else {
+                ResultsList(items: matches, emptyText: "No orders found") { order in
+                    Button {
+                        selectedOrder = order
+                        query = order.externalId
+                    } label: {
+                        HStack(spacing: 12) {
+                            AppIconTile(systemName: "receipt", tint: .tipBlue)
+                            VStack(alignment: .leading, spacing: 3) {
                                 Text("Order #\(order.externalId)")
-                                Spacer()
-                                Image(systemName: "chevron.right")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundColor(.zinc900)
+                                Text(order.address)
+                                    .font(.caption)
+                                    .foregroundColor(.zinc500)
+                                    .lineLimit(1)
                             }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption.weight(.bold))
+                                .foregroundColor(.zinc400)
                         }
                     }
                 }
+            }
 
-                if let selectedOrder {
-                    OrderCard(order: selectedOrder) {
-                        editingOrder = selectedOrder
-                    }
+            if let selectedOrder {
+                OrderCard(order: selectedOrder) {
+                    editingOrder = selectedOrder
                 }
             }
-            .padding()
         }
-        .background(AppBackground())
         .sheet(item: $editingOrder, onDismiss: refreshSelection) { order in
             OrderEditor(order: order, allowsLocationEditing: true)
         }
@@ -260,37 +276,42 @@ struct LocationSearchView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                SearchField("Enter address", text: $query)
+        PageScroll {
+            SectionHeader(title: "Location history", subtitle: "Review repeat addresses and saved tip patterns.")
 
-                if query.isEmpty && selectedLocation == nil {
-                    EmptyPrompt("Search for a location to display all orders and tips associated with that address.")
-                }
+            SearchField("Enter address", text: $query)
 
-                if !query.isEmpty {
-                    ResultsList(items: matches, emptyText: "No location found") { location in
-                        Button {
-                            selectedLocation = location
-                            query = location.address
-                        } label: {
-                            VStack(alignment: .leading, spacing: 4) {
+            if store.locations.isEmpty {
+                EmptyPrompt("No locations saved yet.")
+            } else {
+                ResultsList(items: matches, emptyText: "No location found") { location in
+                    Button {
+                        selectedLocation = location
+                        query = location.address
+                    } label: {
+                        HStack(spacing: 12) {
+                            AppIconTile(systemName: "building.2", tint: .tipGreen)
+                            VStack(alignment: .leading, spacing: 3) {
                                 Text(location.address)
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundColor(.zinc900)
+                                    .lineLimit(1)
                                 Text(location.orders.map(\.externalId).joined(separator: " | "))
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(.zinc500)
+                                    .lineLimit(1)
                             }
+                            Spacer()
+                            TipBadge(category: location.averageTip, compact: true)
                         }
                     }
                 }
-
-                if let selectedLocation {
-                    LocationCard(location: selectedLocation, editingOrder: $editingOrder)
-                }
             }
-            .padding()
+
+            if let selectedLocation {
+                LocationCard(location: selectedLocation, editingOrder: $editingOrder)
+            }
         }
-        .background(AppBackground())
         .sheet(item: $editingOrder, onDismiss: refreshSelection) { order in
             OrderEditor(order: order, allowsLocationEditing: false)
         }
@@ -316,45 +337,17 @@ struct ReportsView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                if store.orders.isEmpty {
-                    EmptyPrompt("No data to display")
-                } else {
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Tips by Type")
-                            .font(.title3.weight(.semibold))
+        PageScroll {
+            DashboardSummary()
 
-                        ForEach(buckets) { bucket in
-                            VStack(alignment: .leading, spacing: 6) {
-                                HStack {
-                                    Text(bucket.category.label)
-                                    Spacer()
-                                    Text("\(bucket.count)")
-                                        .font(.headline)
-                                }
-                                GeometryReader { proxy in
-                                    RoundedRectangle(cornerRadius: 6)
-                                        .fill(Color.tipGreen.opacity(0.25))
-                                        .overlay(alignment: .leading) {
-                                            RoundedRectangle(cornerRadius: 6)
-                                                .fill(Color.tipGreen)
-                                                .frame(width: proxy.size.width * CGFloat(bucket.count) / CGFloat(maxCount))
-                                        }
-                                }
-                                .frame(height: 12)
-                            }
-                        }
-                    }
-                    .appCard()
-                }
+            if store.orders.isEmpty {
+                EmptyPrompt("No report data yet.")
+            } else {
+                TipDistributionCard(buckets: buckets, maxCount: maxCount)
             }
-            .padding()
         }
-        .background(AppBackground())
     }
 }
-
 
 struct OrderEditor: View {
     @Environment(\.dismiss) private var dismiss
@@ -381,34 +374,68 @@ struct OrderEditor: View {
 
     var body: some View {
         NavigationView {
-            Form {
-                if allowsLocationEditing {
-                    Section("Address") {
-                        AddressLookupField(
-                            title: "Address",
-                            address: $address,
-                            latitude: $latitude,
-                            longitude: $longitude,
-                            search: addressSearch
-                        )
-                    }
-                }
+            ZStack {
+                AppBackground()
 
-                Section("Tip Amount") {
-                    Picker("Tip Amount", selection: $selectedTip) {
-                        ForEach(TipCategory.allCases) { category in
-                            Text(category.label).tag(category)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        SectionHeader(
+                            title: allowsLocationEditing ? "Edit Order #\(order.externalId)" : "Order #\(order.externalId)",
+                            subtitle: order.address
+                        )
+
+                        if allowsLocationEditing {
+                            AddressLookupField(
+                                title: "Address",
+                                address: $address,
+                                latitude: $latitude,
+                                longitude: $longitude,
+                                search: addressSearch
+                            )
+                            .appCard()
+                        }
+
+                        VStack(alignment: .leading, spacing: 14) {
+                            Text("Tip Amount")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundColor(.zinc800)
+
+                            VStack(spacing: 8) {
+                                ForEach(TipCategory.allCases) { category in
+                                    Button {
+                                        selectedTip = category
+                                    } label: {
+                                        HStack(spacing: 10) {
+                                            TipBadge(category: category, compact: true)
+                                            Text(category.label)
+                                                .font(.subheadline.weight(.semibold))
+                                                .foregroundColor(.zinc900)
+                                            Spacer()
+                                            if selectedTip == category {
+                                                Image(systemName: "check.circle.fill")
+                                                    .foregroundColor(.tipGreen)
+                                            }
+                                        }
+                                        .padding(.vertical, 8)
+                                    }
+                                    .buttonStyle(.plain)
+
+                                    if category.id != TipCategory.allCases.last?.id {
+                                        Divider()
+                                    }
+                                }
+                            }
+                        }
+                        .appCard()
+
+                        if let errorMessage {
+                            ErrorBanner(message: errorMessage)
                         }
                     }
-                    .pickerStyle(.inline)
-                }
-
-                if let errorMessage {
-                    Text(errorMessage)
-                        .foregroundColor(.red)
+                    .padding(TipTrackTheme.pagePadding)
                 }
             }
-            .navigationTitle(allowsLocationEditing ? "Edit Order #\(order.externalId)" : "Tip for Order #\(order.externalId)")
+            .navigationTitle(allowsLocationEditing ? "Edit Order" : "Update Tip")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -457,9 +484,9 @@ struct HelpView: View {
     var body: some View {
         NavigationView {
             List {
-                HelpSection(title: "Track Orders", text: "As orders are accepted, add the order to keep track of the order and its location. Locations with multiple orders show the full order history.")
-                HelpSection(title: "Record Tips", text: "Enter tips after every shift to build an accurate picture of your earnings patterns.")
-                HelpSection(title: "View Average Tips", text: "Use the locations tab to view the average tip for a specific address.")
+                HelpSection(title: "Track Orders", text: "Add each order with its delivery address.")
+                HelpSection(title: "Record Tips", text: "Update the tip after delivery or at the end of a shift.")
+                HelpSection(title: "Review Locations", text: "Use saved locations to spot repeat addresses and average tip patterns.")
             }
             .navigationTitle("Help")
             .toolbar {
@@ -482,5 +509,199 @@ struct HelpSection: View {
             Text(text)
         }
         .padding(.vertical, 6)
+    }
+}
+
+private struct PageScroll<Content: View>: View {
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                content
+            }
+            .padding(TipTrackTheme.pagePadding)
+            .padding(.top, 8)
+            .padding(.bottom, 12)
+        }
+        .background(AppBackground())
+    }
+}
+
+private struct SectionHeader: View {
+    let title: String
+    let subtitle: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(title)
+                .font(.title3.weight(.bold))
+                .foregroundColor(.zinc900)
+            Text(subtitle)
+                .font(.subheadline)
+                .foregroundColor(.zinc500)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct ErrorBanner: View {
+    let message: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundColor(.tipRose)
+            Text(message)
+                .font(.footnote.weight(.semibold))
+                .foregroundColor(.zinc900)
+            Spacer(minLength: 0)
+        }
+        .padding(12)
+        .background(Color.tipRose.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
+        .overlay(
+            RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius)
+                .stroke(Color.tipRose.opacity(0.18), lineWidth: 1)
+        )
+    }
+}
+
+private struct DashboardSummary: View {
+    @EnvironmentObject private var store: TipTrackStore
+
+    private var recordedTips: Int {
+        store.orders.filter { $0.tip != nil }.count
+    }
+
+    private var topCategory: TipCategory {
+        let categories = TipCategory.allCases
+        return categories.max { left, right in
+            store.orders.filter { ($0.tip ?? 0) == left.rawValue }.count
+                < store.orders.filter { ($0.tip ?? 0) == right.rawValue }.count
+        } ?? .none
+    }
+
+    private var topCategoryValue: String {
+        switch topCategory {
+        case .none:
+            return "No tip"
+        case .underFive:
+            return "< $5"
+        case .fiveToTen:
+            return "$5-$10"
+        case .overTen:
+            return "> $10"
+        case .overTwenty:
+            return "> $20"
+        }
+    }
+
+    var body: some View {
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+            StatTile(title: "Orders", value: "\(store.orders.count)", systemImage: "shippingbox", tint: .tipGreen)
+            StatTile(title: "Locations", value: "\(store.locations.count)", systemImage: "building.2", tint: .tipBlue)
+            StatTile(title: "Tips Logged", value: "\(recordedTips)", systemImage: "checkmark.seal", tint: .tipAmber)
+            StatTile(title: "Common Tip", value: topCategoryValue, systemImage: topCategory.symbolName, tint: .tipRose)
+        }
+    }
+}
+
+private struct RecentOrdersPreview: View {
+    @EnvironmentObject private var store: TipTrackStore
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(title: "Recent orders", subtitle: "Latest saved delivery entries.")
+
+            if store.orders.isEmpty {
+                EmptyPrompt("No orders saved yet.")
+            } else {
+                VStack(spacing: 10) {
+                    ForEach(store.orders.prefix(3)) { order in
+                        HStack(spacing: 12) {
+                            AppIconTile(systemName: "receipt", tint: .tipBlue)
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("Order #\(order.externalId)")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundColor(.zinc900)
+                                Text(order.address)
+                                    .font(.caption)
+                                    .foregroundColor(.zinc500)
+                                    .lineLimit(1)
+                            }
+                            Spacer()
+                            TipBadge(category: TipCategory(rawValue: order.tip ?? -1), compact: true)
+                        }
+                        .appCard(padding: 12)
+                    }
+                }
+            }
+        }
+    }
+}
+
+private struct TipDistributionCard: View {
+    let buckets: [TipBucket]
+    let maxCount: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            SectionHeader(title: "Tips by type", subtitle: "Distribution across saved orders.")
+
+            VStack(spacing: 14) {
+                ForEach(buckets) { bucket in
+                    TipBucketRow(bucket: bucket, maxCount: maxCount)
+                }
+            }
+        }
+        .appCard()
+    }
+}
+
+private struct TipBucketRow: View {
+    let bucket: TipBucket
+    let maxCount: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                TipBadge(category: bucket.category, compact: true)
+                Text(bucket.category.label)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(.zinc900)
+                Spacer()
+                Text("\(bucket.count)")
+                    .font(.subheadline.weight(.bold))
+                    .foregroundColor(.zinc900)
+            }
+
+            GeometryReader { proxy in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 5)
+                        .fill(Color.zinc100)
+                    RoundedRectangle(cornerRadius: 5)
+                        .fill(rowTint)
+                        .frame(width: proxy.size.width * CGFloat(bucket.count) / CGFloat(maxCount))
+                }
+            }
+            .frame(height: 10)
+        }
+    }
+
+    private var rowTint: Color {
+        switch bucket.category {
+        case .none:
+            return .zinc400
+        case .underFive:
+            return .tipAmber
+        case .fiveToTen:
+            return .tipBlue
+        case .overTen:
+            return .tipGreen
+        case .overTwenty:
+            return .tipRose
+        }
     }
 }
