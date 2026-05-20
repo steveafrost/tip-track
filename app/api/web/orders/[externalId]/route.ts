@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import {
-  getMobileDriverId,
   mobileJsonError,
   serializeOrder,
 } from "@/lib/mobile-api";
+import { getWebUserId } from "@/lib/web-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -16,13 +16,13 @@ type RouteContext = {
 
 export async function PATCH(request: NextRequest, { params }: RouteContext) {
   try {
-    const driverId = getMobileDriverId(request);
+    const userId = getWebUserId();
     const body = await request.json();
 
     const existingOrder = await prisma.order.findFirst({
       where: {
         externalId: params.externalId,
-        createdBy: driverId,
+        createdBy: userId,
       },
     });
 

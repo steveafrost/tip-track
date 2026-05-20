@@ -1,5 +1,6 @@
 "use client";
 
+import { SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import type React from "react";
 import {
@@ -27,11 +28,6 @@ import usePlacesAutocomplete, {
   getGeocode,
   getLatLng,
 } from "use-places-autocomplete";
-
-type Session = {
-  driverId: string;
-  displayName: string;
-};
 
 type TipOrder = {
   id: string;
@@ -63,9 +59,9 @@ type StoreKitEntitlement = {
 
 type Tab = "add" | "orders" | "locations" | "reports";
 
-const sessionKey = "tiptrack:web-session";
 const freeOrderLimit = 20;
 const googleMapsKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
+const isClerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
 type LocationValue = {
   address: string;
@@ -108,7 +104,21 @@ function averageTip(orders: TipOrder[]) {
 }
 
 export function WebApp() {
-  const [session, setSession] = useState<Session | null>(null);
+  if (!isClerkConfigured) {
+    return (
+      <SignInScreen
+        isClerkConfigured={false}
+        errorMessage={null}
+        isLoading={false}
+      />
+    );
+  }
+
+  return <AuthenticatedWebApp />;
+}
+
+function AuthenticatedWebApp() {
+  const { isLoaded, isSignedIn, user } = useUser();
   const [activeTab, setActiveTab] = useState<Tab>("add");
   const [orders, setOrders] = useState<TipOrder[]>([]);
   const [locations, setLocations] = useState<TipLocation[]>([]);
@@ -120,22 +130,19 @@ export function WebApp() {
 
   const selectedTab = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
   const isPro = entitlement?.isPro ?? false;
-
-  useEffect(() => {
-    const savedSession = window.localStorage.getItem(sessionKey);
-    if (savedSession) {
-      setSession(JSON.parse(savedSession) as Session);
-    }
-  }, []);
+  const displayName =
+    user?.fullName ??
+    user?.primaryEmailAddress?.emailAddress ??
+    user?.username ??
+    "TipTrack Driver";
 
   async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-    if (!session) throw new Error("Sign in first.");
+    if (!isSignedIn) throw new Error("Sign in first.");
 
     const response = await fetch(path, {
       ...init,
       headers: {
         "content-type": "application/json",
-        "x-tip-track-driver-id": session.driverId,
         ...init?.headers,
       },
     });
@@ -148,22 +155,16 @@ export function WebApp() {
     return data as T;
   }
 
-  const refreshData = useCallback(async (activeSession = session) => {
-    if (!activeSession) return;
+  const refreshData = useCallback(async () => {
+    if (!isSignedIn) return;
     setIsLoading(true);
     setErrorMessage(null);
 
     try {
       const [ordersResult, locationsResult, entitlementResult] = await Promise.all([
-        fetch("/api/web/orders", {
-          headers: { "x-tip-track-driver-id": activeSession.driverId },
-        }).then((response) => response.json()),
-        fetch("/api/web/locations", {
-          headers: { "x-tip-track-driver-id": activeSession.driverId },
-        }).then((response) => response.json()),
-        fetch("/api/web/entitlements", {
-          headers: { "x-tip-track-driver-id": activeSession.driverId },
-        }).then((response) => response.json()),
+        fetch("/api/web/orders").then((response) => response.json()),
+        fetch("/api/web/locations").then((response) => response.json()),
+        fetch("/api/web/entitlements").then((response) => response.json()),
       ]);
 
       if (ordersResult.error) throw new Error(ordersResult.error);
@@ -178,45 +179,18 @@ export function WebApp() {
     } finally {
       setIsLoading(false);
     }
-  }, [session]);
+  }, [isSignedIn]);
 
   useEffect(() => {
-    if (session) {
-      void refreshData(session);
+    if (isSignedIn) {
+      void refreshData();
+    } else {
+      setOrders([]);
+      setLocations([]);
+      setEntitlement(null);
+      setActiveTab("add");
     }
-  }, [refreshData, session]);
-
-  async function handleSignIn(displayName: string) {
-    setIsLoading(true);
-    setErrorMessage(null);
-
-    try {
-      const response = await fetch("/api/web/session", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ displayName }),
-      });
-      const data = await response.json();
-
-      if (!response.ok) throw new Error(data.error ?? "Could not sign in.");
-
-      window.localStorage.setItem(sessionKey, JSON.stringify(data));
-      setSession(data);
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Could not sign in.");
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  function handleSignOut() {
-    window.localStorage.removeItem(sessionKey);
-    setSession(null);
-    setOrders([]);
-    setLocations([]);
-    setEntitlement(null);
-    setActiveTab("add");
-  }
+  }, [refreshData, isSignedIn]);
 
   async function handleAddOrder(values: LocationValue & { orderId: string }) {
     await apiFetch<{ order: TipOrder }>("/api/web/orders", {
@@ -253,12 +227,20 @@ export function WebApp() {
     await refreshData();
   }
 
-  if (!session) {
+  if (!isLoaded) {
+    return (
+      <div className="app-background grid min-h-screen place-items-center px-4 text-zinc-950">
+        <LoadingBar />
+      </div>
+    );
+  }
+
+  if (!isSignedIn) {
     return (
       <SignInScreen
+        isClerkConfigured={true}
         errorMessage={errorMessage}
         isLoading={isLoading}
-        onSignIn={handleSignIn}
       />
     );
   }
@@ -273,7 +255,7 @@ export function WebApp() {
               {selectedTab.title}
             </h1>
             <p className="truncate text-xs font-medium text-zinc-500">
-              {session.displayName}
+              {displayName}
             </p>
           </div>
           <div className="ml-auto flex items-center gap-2">
@@ -302,14 +284,15 @@ export function WebApp() {
             >
               <HelpCircle className="h-5 w-5" />
             </button>
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="grid h-9 w-9 place-items-center rounded-md bg-zinc-100 text-zinc-800"
-              aria-label="Sign out"
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
+            <SignOutButton>
+              <button
+                type="button"
+                className="grid h-9 w-9 place-items-center rounded-md bg-zinc-100 text-zinc-800"
+                aria-label="Sign out"
+              >
+                <LogOut className="h-5 w-5" />
+              </button>
+            </SignOutButton>
           </div>
         </div>
       </header>
@@ -368,21 +351,14 @@ export function WebApp() {
 }
 
 function SignInScreen({
+  isClerkConfigured,
   errorMessage,
   isLoading,
-  onSignIn,
 }: {
+  isClerkConfigured: boolean;
   errorMessage: string | null;
   isLoading: boolean;
-  onSignIn: (displayName: string) => Promise<void>;
 }) {
-  const [name, setName] = useState("");
-
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault();
-    await onSignIn(name);
-  }
-
   return (
     <div className="app-background min-h-screen px-4 py-10 text-zinc-950">
       <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-md min-w-0 flex-col justify-center gap-6">
@@ -396,22 +372,21 @@ function SignInScreen({
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="app-card w-full min-w-0 space-y-4">
-          <Field label="Driver Name">
-            <input
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              className="app-input"
-              placeholder="Enter your name"
-              autoCapitalize="words"
-            />
-          </Field>
+        <div className="app-card w-full min-w-0 space-y-4">
           {errorMessage ? <Banner tone="error">{errorMessage}</Banner> : null}
-          <PrimaryButton disabled={isLoading}>
-            {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ChevronRight className="h-5 w-5" />}
-            {isLoading ? "Signing In" : "Sign In"}
-          </PrimaryButton>
-        </form>
+          {!isClerkConfigured ? (
+            <Banner tone="error">
+              Web sign-in is not configured. Set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY.
+            </Banner>
+          ) : (
+            <SignInButton mode="modal">
+              <PrimaryButton disabled={isLoading}>
+                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ChevronRight className="h-5 w-5" />}
+                {isLoading ? "Signing In" : "Sign In"}
+              </PrimaryButton>
+            </SignInButton>
+          )}
+        </div>
       </div>
     </div>
   );

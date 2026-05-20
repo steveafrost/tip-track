@@ -1,26 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
-import { mobileJsonError, slugDriverName } from "@/lib/mobile-api";
+import { currentUser } from "@clerk/nextjs";
+import { mobileJsonError, MobileApiError } from "@/lib/mobile-api";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const displayName =
-      typeof body.displayName === "string" ? body.displayName.trim() : "";
+    const user = await currentUser();
 
-    if (displayName.length < 2) {
-      return NextResponse.json(
-        { error: "Driver name must contain at least 2 characters" },
-        { status: 400 }
-      );
+    if (!user) {
+      throw new MobileApiError("Unauthorized", 401);
     }
 
     return NextResponse.json({
-      driverId: slugDriverName(displayName),
-      displayName,
+      userId: user.id,
+      displayName: getDisplayName(user),
     });
   } catch (error) {
     return mobileJsonError(error);
   }
+}
+
+function getDisplayName(user: Awaited<ReturnType<typeof currentUser>>) {
+  if (!user) return "TipTrack Driver";
+
+  const name = [user.firstName, user.lastName].filter(Boolean).join(" ");
+  const primaryEmail = user.emailAddresses.find((emailAddress) => {
+    return emailAddress.id === user.primaryEmailAddressId;
+  });
+
+  return name || primaryEmail?.emailAddress || user.username || "TipTrack Driver";
 }

@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStoreKitEntitlement } from "@/lib/app-store-entitlements";
-import { getMobileDriverId, mobileJsonError } from "@/lib/mobile-api";
+import { mobileJsonError } from "@/lib/mobile-api";
+import { getWebUserId } from "@/lib/web-auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
-    const driverId = getMobileDriverId(request);
-    const entitlement = await getStoreKitEntitlement(driverId);
+    const userId = getWebUserId();
+    const entitlement = await getStoreKitEntitlement(userId);
 
     return NextResponse.json({ entitlement });
   } catch (error) {

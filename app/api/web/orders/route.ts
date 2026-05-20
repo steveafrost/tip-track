@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import {
-  getMobileDriverId,
   mobileJsonError,
   serializeOrder,
 } from "@/lib/mobile-api";
+import { getWebUserId } from "@/lib/web-auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
-    const driverId = getMobileDriverId(request);
+    const userId = getWebUserId();
 
     const orders = await prisma.order.findMany({
-      where: { createdBy: driverId },
+      where: { createdBy: userId },
       include: { location: true },
       orderBy: { createdAt: "desc" },
     });
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const driverId = getMobileDriverId(request);
+    const userId = getWebUserId();
     const body = await request.json();
 
     const externalId =
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     const order = await prisma.order.create({
       data: {
         externalId,
-        createdBy: driverId,
+        createdBy: userId,
         location: {
           connectOrCreate: {
             where: { address },

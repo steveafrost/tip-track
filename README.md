@@ -113,6 +113,8 @@ POSTGRES_URL_NON_POOLING=
 NEXT_PUBLIC_GOOGLE_MAPS_KEY=
 ```
 
+The `/submit` web app uses Clerk OAuth for user identity. Web API routes under `/api/web` derive `Order.createdBy` and location visibility from Clerk's authenticated `userId`; the browser no longer sends or controls a driver ID.
+
 ## Verification
 
 ```bash

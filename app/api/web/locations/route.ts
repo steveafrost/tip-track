@@ -1,26 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import {
-  getMobileDriverId,
   mobileJsonError,
   serializeOrder,
 } from "@/lib/mobile-api";
+import { getWebUserId } from "@/lib/web-auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
-    const driverId = getMobileDriverId(request);
+    const userId = getWebUserId();
 
     const locations = await prisma.location.findMany({
       where: {
         orders: {
-          some: { createdBy: driverId },
+          some: { createdBy: userId },
         },
       },
       include: {
         orders: {
-          where: { createdBy: driverId },
+          where: { createdBy: userId },
           include: { location: true },
           orderBy: { createdAt: "desc" },
         },
