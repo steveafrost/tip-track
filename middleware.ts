@@ -1,8 +1,15 @@
 import { authMiddleware } from "@clerk/nextjs";
+import { NextResponse } from "next/server";
 
-export default authMiddleware({
+const clerkMiddleware = authMiddleware({
   publicRoutes: ["/", "/api/mobile(.*)", "/search", "/submit", "/reports"],
 });
+
+export default process.env.CLERK_SECRET_KEY
+  ? clerkMiddleware
+  : function middleware() {
+      return NextResponse.next();
+    };
 
 export const config = {
   matcher: ["/((?!.*\\..*|_next).*)", "/"],
