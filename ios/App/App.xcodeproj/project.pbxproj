@@ -15,6 +15,7 @@
 		A10000000000000000000006 /* AddressSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* AddressSearch.swift */; };
 		A10000000000000000000007 /* TipTrackAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* TipTrackAPIClient.swift */; };
 		A10000000000000000000008 /* MonetizationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000008 /* MonetizationStore.swift */; };
+		A10000000000000000000010 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = A30000000000000000000002 /* GoogleSignIn */; };
 		504EC3081FED79650016851F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC3071FED79650016851F /* AppDelegate.swift */; };
 		504EC30F1FED79650016851F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30E1FED79650016851F /* Assets.xcassets */; };
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
@@ -43,6 +44,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A10000000000000000000010 /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -103,6 +105,7 @@
 			);
 			name = App;
 			packageProductDependencies = (
+				A30000000000000000000002 /* GoogleSignIn */,
 			);
 			productName = "Tip Track";
 			productReference = 504EC3041FED79650016851F /* Tip Track.app */;
@@ -139,6 +142,7 @@
 			);
 			mainGroup = 504EC2FB1FED79650016851F;
 			packageReferences = (
+				A30000000000000000000001 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			productRefGroup = 504EC3051FED79650016851F /* Products */;
 			projectDirPath = "";
@@ -371,6 +375,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A30000000000000000000001 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A30000000000000000000002 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A30000000000000000000001 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 	};
 	rootObject = 504EC2FC1FED79650016851F /* Project object */;

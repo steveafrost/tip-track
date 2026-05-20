@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   authorizeMobileRequest,
   createMobileSessionToken,
-  MobileApiError,
   mobileJsonError,
   slugDriverName,
 } from "@/lib/mobile-api";
-import { verifyAppleIdentityToken } from "@/lib/apple-sign-in";
+import { resolveAuthIdentity, resolveLegacyOwner } from "@/lib/auth-resolver";
+import { verifyProviderIdentity } from "@/lib/provider-identities";
 
 export const dynamic = "force-dynamic";
 
@@ -19,32 +19,35 @@ export async function POST(request: NextRequest) {
       typeof body.displayName === "string" ? body.displayName.trim() : "";
     const identityToken =
       typeof body.identityToken === "string" ? body.identityToken.trim() : "";
+    const provider =
+      typeof body.provider === "string" ? body.provider.trim() : "apple";
     const rawNonce =
       typeof body.rawNonce === "string" ? body.rawNonce.trim() : undefined;
 
     if (identityToken) {
-      const appleIdentity = await verifyAppleIdentityToken({
+      const identity = await verifyProviderIdentity({
+        provider,
         identityToken,
         rawNonce,
-      }).catch(() => {
-        throw new MobileApiError("Invalid Apple sign-in", 401);
+        displayName,
       });
-      const driverId = `apple:${appleIdentity.subject}`;
+      const appUser = await resolveAuthIdentity(identity);
       const sessionToken = createMobileSessionToken({
-        driverId,
-        displayName: displayName || appleIdentity.email,
+        driverId: appUser.id,
+        displayName: appUser.displayName ?? identity.displayName,
       });
 
       return NextResponse.json({
-        driverId,
-        displayName: displayName || appleIdentity.email || "TipTrack Driver",
+        driverId: appUser.id,
+        displayName:
+          appUser.displayName ?? identity.displayName ?? "TipTrack Driver",
         sessionToken,
       });
     }
 
     if (process.env.MOBILE_ALLOW_NAME_SESSIONS !== "true") {
       return NextResponse.json(
-        { error: "Sign in with Apple is required" },
+        { error: "Sign in with Apple or Google is required" },
         { status: 400 }
       );
     }
@@ -56,12 +59,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const driverId = slugDriverName(displayName);
+    const appUser = await resolveLegacyOwner(slugDriverName(displayName));
 
     return NextResponse.json({
-      driverId,
-      displayName,
-      sessionToken: createMobileSessionToken({ driverId, displayName }),
+      driverId: appUser.id,
+      displayName: appUser.displayName ?? displayName,
+      sessionToken: createMobileSessionToken({
+        driverId: appUser.id,
+        displayName,
+      }),
     });
   } catch (error) {
     return mobileJsonError(error);

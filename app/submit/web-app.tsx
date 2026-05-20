@@ -1,6 +1,6 @@
 "use client";
 
-import { SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
+import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import type React from "react";
 import {
@@ -12,7 +12,6 @@ import {
   HelpCircle,
   Infinity,
   Loader2,
-  LogOut,
   MapPin,
   PackagePlus,
   Receipt,
@@ -284,15 +283,12 @@ function AuthenticatedWebApp() {
             >
               <HelpCircle className="h-5 w-5" />
             </button>
-            <SignOutButton>
-              <button
-                type="button"
-                className="grid h-9 w-9 place-items-center rounded-md bg-zinc-100 text-zinc-800"
-                aria-label="Sign out"
-              >
-                <LogOut className="h-5 w-5" />
-              </button>
-            </SignOutButton>
+            <div
+              className="grid h-9 w-9 place-items-center rounded-md bg-zinc-100 text-zinc-800"
+              title="Manage account"
+            >
+              <UserButton afterSignOutUrl="/submit" />
+            </div>
           </div>
         </div>
       </header>

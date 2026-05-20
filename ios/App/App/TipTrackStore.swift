@@ -83,6 +83,43 @@ final class TipTrackStore: ObservableObject {
         try await refreshOrders()
     }
 
+    func signInWithGoogle(identityToken: String, displayName: String?) async throws {
+        guard let apiClient else {
+            throw TipTrackAPIError.server("Cloud sync is not configured.")
+        }
+
+        session = try await apiClient.signInWithGoogle(
+            identityToken: identityToken,
+            displayName: displayName
+        )
+        saveSession()
+        try await refreshOrders()
+    }
+
+    func linkApple(identityToken: String, rawNonce: String, displayName: String?) async throws {
+        guard let apiClient, session.isSignedIn else { return }
+
+        try await apiClient.linkIdentity(
+            session: session,
+            provider: "apple",
+            identityToken: identityToken,
+            rawNonce: rawNonce,
+            displayName: displayName
+        )
+    }
+
+    func linkGoogle(identityToken: String, displayName: String?) async throws {
+        guard let apiClient, session.isSignedIn else { return }
+
+        try await apiClient.linkIdentity(
+            session: session,
+            provider: "google",
+            identityToken: identityToken,
+            rawNonce: nil,
+            displayName: displayName
+        )
+    }
+
     func signOut() {
         session = DriverSession(userId: nil, displayName: nil, sessionToken: nil)
         saveSession()

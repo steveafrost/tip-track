@@ -51,13 +51,14 @@ POSTGRES_PRISMA_URL=
 POSTGRES_URL_NON_POOLING=
 ```
 
-The native app uses Sign in with Apple. The backend verifies Apple's identity token, derives a stable user key from Apple's `sub` claim, then stores that key in `Order.createdBy` and `AppStoreEntitlement.driverId`.
+The native app uses Sign in with Apple or Google. The backend verifies the provider identity token, resolves it to an internal TipTrack user, then stores that internal user id in `Order.createdBy` and `AppStoreEntitlement.driverId`.
 
 Set these on the deployed web/API app:
 
 ```bash
 MOBILE_SESSION_SECRET=
 APPLE_SIGN_IN_AUDIENCE=com.steveafrost.tiptrack
+GOOGLE_SIGN_IN_AUDIENCE=
 MOBILE_REQUIRE_USER_AUTH=true
 ```
 
@@ -70,7 +71,13 @@ Configure the native app in `ios/App/App/Info.plist`:
 <string>https://usetiptrack.com</string>
 <key>TipTrackAPIToken</key>
 <string>optional same-value-as-MOBILE_API_TOKEN</string>
+<key>GIDClientID</key>
+<string>Google iOS client ID</string>
+<key>GIDServerClientID</key>
+<string>Optional Google web/server client ID</string>
 ```
+
+Set `GOOGLE_SIGN_IN_AUDIENCE` to the Google OAuth client id(s) expected in Google ID token `aud` claims. Multiple client ids can be comma-separated if iOS and web use different OAuth clients.
 
 If `TipTrackAPIBaseURL` is blank, the iOS app stays local-only and persists data with `UserDefaults`.
 
@@ -113,13 +120,20 @@ POSTGRES_URL_NON_POOLING=
 NEXT_PUBLIC_GOOGLE_MAPS_KEY=
 ```
 
-The `/submit` web app uses Clerk OAuth for user identity and requires Sign in with Apple for cross-device continuity. Web API routes under `/api/web` derive `Order.createdBy` and location visibility from Clerk's Apple external account id as `apple:<provider-user-id>`, matching the native iOS identity key. The browser no longer sends or controls a driver ID.
+The `/submit` web app uses Clerk OAuth for Apple or Google identity. Web API routes under `/api/web` resolve Clerk external accounts to the same internal TipTrack user model used by iOS. The browser no longer sends or controls a driver ID.
+
+After deploying the auth schema, run the idempotent backfill once to convert known legacy owner keys like `apple:<subject>` into internal TipTrack user ids:
+
+```bash
+pnpm auth:backfill
+```
 
 ## Verification
 
 ```bash
 pnpm run build
 pnpm exec tsc --noEmit
+pnpm auth:backfill
 swiftc -parse ios/App/App/AppDelegate.swift
 plutil -lint ios/App/App.xcodeproj/project.pbxproj ios/App/App/Info.plist
 ```

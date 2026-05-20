@@ -34,6 +34,7 @@ struct TipTrackAPIClient {
 
     func signInWithApple(identityToken: String, rawNonce: String, displayName: String?) async throws -> DriverSession {
         let requestBody = MobileSessionRequest(
+            provider: "apple",
             identityToken: identityToken,
             rawNonce: rawNonce,
             displayName: displayName
@@ -49,6 +50,48 @@ struct TipTrackAPIClient {
             userId: response.driverId,
             displayName: response.displayName,
             sessionToken: response.sessionToken
+        )
+    }
+
+    func signInWithGoogle(identityToken: String, displayName: String?) async throws -> DriverSession {
+        let requestBody = MobileSessionRequest(
+            provider: "google",
+            identityToken: identityToken,
+            rawNonce: nil,
+            displayName: displayName
+        )
+        let response: MobileSessionResponse = try await send(
+            path: "/api/mobile/session",
+            method: "POST",
+            body: requestBody,
+            session: nil
+        )
+
+        return DriverSession(
+            userId: response.driverId,
+            displayName: response.displayName,
+            sessionToken: response.sessionToken
+        )
+    }
+
+    func linkIdentity(
+        session driverSession: DriverSession,
+        provider: String,
+        identityToken: String,
+        rawNonce: String?,
+        displayName: String?
+    ) async throws {
+        let requestBody = MobileIdentityLinkRequest(
+            provider: provider,
+            identityToken: identityToken,
+            rawNonce: rawNonce,
+            displayName: displayName
+        )
+        let _: MobileIdentityLinkResponse = try await send(
+            path: "/api/mobile/identities/link",
+            method: "POST",
+            body: requestBody,
+            session: driverSession
         )
     }
 
@@ -232,8 +275,9 @@ enum TipTrackAPIError: LocalizedError {
 }
 
 private struct MobileSessionRequest: Encodable {
+    let provider: String
     let identityToken: String
-    let rawNonce: String
+    let rawNonce: String?
     let displayName: String?
 }
 
@@ -253,6 +297,18 @@ private struct MobileOrderResponse: Decodable {
 
 private struct MobileErrorResponse: Decodable {
     let error: String
+}
+
+private struct MobileIdentityLinkRequest: Encodable {
+    let provider: String
+    let identityToken: String
+    let rawNonce: String?
+    let displayName: String?
+}
+
+private struct MobileIdentityLinkResponse: Decodable {
+    let userId: String
+    let displayName: String
 }
 
 struct StoreKitEntitlement: Decodable {

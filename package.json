@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "build": "next build",
+    "auth:backfill": "tsx scripts/backfill-auth-users.ts",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",

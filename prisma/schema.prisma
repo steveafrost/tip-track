@@ -29,6 +29,33 @@ model Order {
   updatedAt  DateTime @updatedAt @map(name: "updated_at")
 }
 
+model AppUser {
+  id           String         @id @default(cuid())
+  displayName  String?        @map(name: "display_name")
+  primaryEmail String?        @map(name: "primary_email")
+  identities   AuthIdentity[]
+  createdAt    DateTime       @default(now()) @map(name: "created_at")
+  updatedAt    DateTime       @updatedAt @map(name: "updated_at")
+
+  @@map(name: "app_users")
+}
+
+model AuthIdentity {
+  id              String   @id @default(cuid())
+  user            AppUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String   @map(name: "user_id")
+  provider        String
+  providerSubject String   @map(name: "provider_subject")
+  email           String?
+  displayName     String?  @map(name: "display_name")
+  createdAt       DateTime @default(now()) @map(name: "created_at")
+  updatedAt       DateTime @updatedAt @map(name: "updated_at")
+
+  @@unique([provider, providerSubject])
+  @@index([userId])
+  @@map(name: "auth_identities")
+}
+
 model AppStoreEntitlement {
   id                    String    @id @default(cuid())
   driverId              String    @map(name: "driver_id")

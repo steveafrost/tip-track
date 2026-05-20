@@ -28,6 +28,19 @@
 	<string>https://usetiptrack.com</string>
 	<key>TipTrackAPIToken</key>
 	<string></string>
+	<key>GIDClientID</key>
+	<string>$(GID_CLIENT_ID)</string>
+	<key>GIDServerClientID</key>
+	<string>$(GID_SERVER_CLIENT_ID)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>$(GID_REVERSED_CLIENT_ID)</string>
+			</array>
+		</dict>
+	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>UILaunchStoryboardName</key>

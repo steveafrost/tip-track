@@ -22,6 +22,7 @@ struct AppShell: View {
     @State private var selectedTab = AppTab.submit
     @State private var showingHelp = false
     @State private var showingPaywall = false
+    @State private var showingAccount = false
 
     init() {
         let appearance = UITabBarAppearance()
@@ -39,7 +40,8 @@ struct AppShell: View {
             AppHeader(
                 selectedTab: selectedTab,
                 showingHelp: $showingHelp,
-                showingPaywall: $showingPaywall
+                showingPaywall: $showingPaywall,
+                showingAccount: $showingAccount
             )
 
             TabView(selection: $selectedTab) {
@@ -67,6 +69,9 @@ struct AppShell: View {
         .sheet(isPresented: $showingPaywall) {
             PaywallView()
         }
+        .sheet(isPresented: $showingAccount) {
+            AccountConnectionsView()
+        }
         .task {
             await monetizationStore.start()
             await monetizationStore.syncActiveEntitlements(with: store)
@@ -81,6 +86,7 @@ struct AppHeader: View {
     let selectedTab: AppTab
     @Binding var showingHelp: Bool
     @Binding var showingPaywall: Bool
+    @Binding var showingAccount: Bool
 
     var body: some View {
         HStack(spacing: 12) {
@@ -107,6 +113,17 @@ struct AppHeader: View {
             }
             .foregroundColor(monetizationStore.isPro ? .tipGreen : .zinc900)
             .accessibilityLabel(monetizationStore.isPro ? "TipTrack Pro active" : "Upgrade to TipTrack Pro")
+
+            Button {
+                showingAccount = true
+            } label: {
+                Image(systemName: "person.crop.circle")
+                    .font(.system(size: 18, weight: .semibold))
+                    .frame(width: 36, height: 36)
+                    .background(Color.zinc100)
+                    .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
+            }
+            .accessibilityLabel("Account")
 
             Button {
                 showingHelp = true

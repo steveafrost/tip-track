@@ -1,3 +1,4 @@
+import GoogleSignIn
 import SwiftUI
 import UIKit
 
@@ -22,5 +23,13 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         self.window = window
 
         return true
+    }
+
+    func application(
+        _ app: UIApplication,
+        open url: URL,
+        options: [UIApplication.OpenURLOptionsKey: Any] = [:]
+    ) -> Bool {
+        GIDSignIn.sharedInstance.handle(url)
     }
 }

@@ -1,7 +1,9 @@
 import AuthenticationServices
 import CryptoKit
+import GoogleSignIn
 import StoreKit
 import SwiftUI
+import UIKit
 
 struct SignInView: View {
     @EnvironmentObject private var store: TipTrackStore
@@ -53,6 +55,19 @@ struct SignInView: View {
                     .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
                     .disabled(isSubmitting)
 
+                    Button(action: signInWithGoogle) {
+                        HStack {
+                            Text("G")
+                                .font(.headline.weight(.bold))
+                            Text("Sign in with Google")
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.large)
+                    .disabled(isSubmitting)
+
                     if isSubmitting {
                         HStack(spacing: 8) {
                             ProgressView()
@@ -68,6 +83,44 @@ struct SignInView: View {
                 Spacer()
             }
             .padding(TipTrackTheme.pagePadding)
+        }
+    }
+
+    private func signInWithGoogle() {
+        guard let presentingViewController = UIApplication.shared.tipTrackTopViewController else {
+            errorMessage = "Could not present Google sign-in."
+            return
+        }
+
+        isSubmitting = true
+        errorMessage = nil
+
+        GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController) { result, error in
+            if let error {
+                errorMessage = error.localizedDescription
+                isSubmitting = false
+                return
+            }
+
+            guard let user = result?.user,
+                  let identityToken = user.idToken?.tokenString else {
+                errorMessage = "Google did not return a valid sign-in token."
+                isSubmitting = false
+                return
+            }
+
+            Task { @MainActor in
+                do {
+                    try await store.signInWithGoogle(
+                        identityToken: identityToken,
+                        displayName: user.profile?.name
+                    )
+                } catch {
+                    errorMessage = error.localizedDescription
+                }
+
+                isSubmitting = false
+            }
         }
     }
 
@@ -140,6 +193,224 @@ struct SignInView: View {
         let hashedData = SHA256.hash(data: inputData)
 
         return hashedData.map { String(format: "%02x", $0) }.joined()
+    }
+}
+
+struct AccountConnectionsView: View {
+    @EnvironmentObject private var store: TipTrackStore
+    @Environment(\.dismiss) private var dismiss
+    @State private var errorMessage: String?
+    @State private var isSubmitting = false
+    @State private var currentNonce: String?
+    @State private var successMessage: String?
+
+    var body: some View {
+        NavigationView {
+            VStack(alignment: .leading, spacing: 16) {
+                SectionHeader(title: "Connected logins", subtitle: "Connect Apple and Google to use the same TipTrack data from any sign-in method.")
+
+                if let successMessage {
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.tipGreen)
+                        Text(successMessage)
+                            .font(.footnote.weight(.semibold))
+                            .foregroundColor(.zinc900)
+                        Spacer(minLength: 0)
+                    }
+                    .padding(12)
+                    .background(Color.tipGreen.opacity(0.08))
+                    .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
+                }
+
+                if let errorMessage {
+                    ErrorBanner(message: errorMessage)
+                }
+
+                SignInWithAppleButton(.continue) { request in
+                    let nonce = randomNonce()
+                    currentNonce = nonce
+                    request.requestedScopes = [.fullName, .email]
+                    request.nonce = sha256(nonce)
+                    isSubmitting = true
+                    errorMessage = nil
+                    successMessage = nil
+                } onCompletion: { result in
+                    handleAppleLink(result)
+                }
+                .signInWithAppleButtonStyle(.black)
+                .frame(height: 52)
+                .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
+                .disabled(isSubmitting)
+
+                Button(action: linkGoogle) {
+                    HStack {
+                        Text("G")
+                            .font(.headline.weight(.bold))
+                        Text("Connect Google")
+                            .fontWeight(.semibold)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+                .disabled(isSubmitting)
+
+                Spacer()
+            }
+            .padding(TipTrackTheme.pagePadding)
+            .navigationTitle("Account")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+
+    private func handleAppleLink(_ result: Result<ASAuthorization, Error>) {
+        switch result {
+        case .success(let authorization):
+            guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+                  let identityTokenData = credential.identityToken,
+                  let identityToken = String(data: identityTokenData, encoding: .utf8),
+                  let nonce = currentNonce else {
+                errorMessage = "Apple did not return a valid sign-in token."
+                isSubmitting = false
+                return
+            }
+
+            let displayName = PersonNameComponentsFormatter().string(from: credential.fullName ?? PersonNameComponents())
+
+            Task {
+                do {
+                    try await store.linkApple(
+                        identityToken: identityToken,
+                        rawNonce: nonce,
+                        displayName: displayName.isEmpty ? nil : displayName
+                    )
+                    successMessage = "Apple is connected."
+                } catch {
+                    errorMessage = error.localizedDescription
+                }
+
+                isSubmitting = false
+                currentNonce = nil
+            }
+        case .failure(let error):
+            if let authorizationError = error as? ASAuthorizationError,
+               authorizationError.code == .canceled {
+                errorMessage = nil
+            } else {
+                errorMessage = error.localizedDescription
+            }
+
+            isSubmitting = false
+            currentNonce = nil
+        }
+    }
+
+    private func linkGoogle() {
+        guard let presentingViewController = UIApplication.shared.tipTrackTopViewController else {
+            errorMessage = "Could not present Google sign-in."
+            return
+        }
+
+        isSubmitting = true
+        errorMessage = nil
+        successMessage = nil
+
+        GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController) { result, error in
+            if let error {
+                errorMessage = error.localizedDescription
+                isSubmitting = false
+                return
+            }
+
+            guard let user = result?.user,
+                  let identityToken = user.idToken?.tokenString else {
+                errorMessage = "Google did not return a valid sign-in token."
+                isSubmitting = false
+                return
+            }
+
+            Task { @MainActor in
+                do {
+                    try await store.linkGoogle(
+                        identityToken: identityToken,
+                        displayName: user.profile?.name
+                    )
+                    successMessage = "Google is connected."
+                } catch {
+                    errorMessage = error.localizedDescription
+                }
+
+                isSubmitting = false
+            }
+        }
+    }
+
+    private func randomNonce(length: Int = 32) -> String {
+        precondition(length > 0)
+        let charset = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+        var result = ""
+        var remainingLength = length
+
+        while remainingLength > 0 {
+            var random: UInt8 = 0
+            let status = SecRandomCopyBytes(kSecRandomDefault, 1, &random)
+
+            if status != errSecSuccess {
+                fatalError("Unable to generate nonce.")
+            }
+
+            if random < UInt8(charset.count) {
+                result.append(charset[Int(random)])
+                remainingLength -= 1
+            }
+        }
+
+        return result
+    }
+
+    private func sha256(_ input: String) -> String {
+        let inputData = Data(input.utf8)
+        let hashedData = SHA256.hash(data: inputData)
+
+        return hashedData.map { String(format: "%02x", $0) }.joined()
+    }
+}
+
+private extension UIApplication {
+    var tipTrackTopViewController: UIViewController? {
+        connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .first { $0.isKeyWindow }?
+            .rootViewController?
+            .tipTrackTopMostViewController
+    }
+}
+
+private extension UIViewController {
+    var tipTrackTopMostViewController: UIViewController {
+        if let presentedViewController {
+            return presentedViewController.tipTrackTopMostViewController
+        }
+
+        if let navigationController = self as? UINavigationController,
+           let visibleViewController = navigationController.visibleViewController {
+            return visibleViewController.tipTrackTopMostViewController
+        }
+
+        if let tabBarController = self as? UITabBarController,
+           let selectedViewController = tabBarController.selectedViewController {
+            return selectedViewController.tipTrackTopMostViewController
+        }
+
+        return self
     }
 }
 

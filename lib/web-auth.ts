@@ -1,22 +1,10 @@
 import { currentUser } from "@clerk/nextjs";
+import { resolveLinkedAuthIdentities } from "@/lib/auth-resolver";
 import { MobileApiError } from "@/lib/mobile-api";
+import type { VerifiedIdentity } from "@/lib/auth-resolver";
 
 export async function getWebUserId() {
-  const user = await currentUser();
-
-  if (!user) {
-    throw new MobileApiError("Unauthorized", 401);
-  }
-
-  const appleAccount = user.externalAccounts.find((account) => {
-    return account.provider === "apple";
-  });
-
-  if (!appleAccount?.externalId) {
-    throw new MobileApiError("Sign in with Apple is required", 403);
-  }
-
-  return `apple:${appleAccount.externalId}`;
+  return (await getWebUserSession()).userId;
 }
 
 export async function getWebUserSession() {
@@ -26,17 +14,33 @@ export async function getWebUserSession() {
     throw new MobileApiError("Unauthorized", 401);
   }
 
-  const appleAccount = user.externalAccounts.find((account) => {
-    return account.provider === "apple";
-  });
+  const identities = user.externalAccounts
+    .map((account): VerifiedIdentity | null => {
+      if (account.provider !== "apple" && account.provider !== "google") {
+        return null;
+      }
 
-  if (!appleAccount?.externalId) {
-    throw new MobileApiError("Sign in with Apple is required", 403);
+      return {
+        provider: account.provider,
+        providerSubject: account.externalId,
+        email: account.emailAddress,
+        displayName:
+          [account.firstName, account.lastName].filter(Boolean).join(" ") ||
+          account.emailAddress ||
+          undefined,
+      };
+    })
+    .filter((identity): identity is VerifiedIdentity => Boolean(identity));
+
+  if (!identities.length) {
+    throw new MobileApiError("Sign in with Apple or Google is required", 403);
   }
 
+  const appUser = await resolveLinkedAuthIdentities(identities);
+
   return {
-    userId: `apple:${appleAccount.externalId}`,
-    displayName: getDisplayName(user),
+    userId: appUser.id,
+    displayName: appUser.displayName ?? getDisplayName(user),
   };
 }
 
