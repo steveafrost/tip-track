@@ -1,3 +1,4 @@
+import StoreKit
 import SwiftUI
 
 struct SignInView: View {
@@ -91,6 +92,7 @@ struct SignInView: View {
 
 struct AddOrderView: View {
     @EnvironmentObject private var store: TipTrackStore
+    @EnvironmentObject private var monetizationStore: MonetizationStore
     @StateObject private var addressSearch = AddressSearch()
     @State private var address = ""
     @State private var latitude = 0.0
@@ -99,10 +101,12 @@ struct AddOrderView: View {
     @State private var errorMessage: String?
     @State private var didAddOrder = false
     @State private var isSubmitting = false
+    @State private var showingPaywall = false
 
     var body: some View {
         PageScroll {
             DashboardSummary()
+            TrialStatusCard(showingPaywall: $showingPaywall)
 
             VStack(alignment: .leading, spacing: 16) {
                 SectionHeader(title: "New delivery", subtitle: "Log the order before the shift moves on.")
@@ -150,9 +154,17 @@ struct AddOrderView: View {
         .alert("Order added", isPresented: $didAddOrder) {
             Button("OK", role: .cancel) {}
         }
+        .sheet(isPresented: $showingPaywall) {
+            PaywallView()
+        }
     }
 
     private func addOrder() {
+        guard monetizationStore.canAddOrder(currentOrderCount: store.orders.count) else {
+            showingPaywall = true
+            return
+        }
+
         let trimmedAddress = address.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedOrderId = orderId.trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -498,6 +510,267 @@ struct HelpView: View {
     }
 }
 
+struct PaywallView: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var monetizationStore: MonetizationStore
+
+    var body: some View {
+        NavigationView {
+            ZStack {
+                AppBackground()
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 18) {
+                        VStack(alignment: .leading, spacing: 14) {
+                            AppIconTile(systemName: "checkmark.seal", tint: .tipGreen)
+                                .scaleEffect(1.12, anchor: .leading)
+
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(monetizationStore.isPro ? "TipTrack Pro is active" : "Keep logging with Pro")
+                                    .font(.title2.weight(.bold))
+                                    .foregroundColor(.zinc900)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                Text("Log your first 20 orders free, then upgrade when TipTrack is earning its place on your shift.")
+                                    .font(.subheadline)
+                                    .foregroundColor(.zinc500)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                        .appCard()
+
+                        VStack(alignment: .leading, spacing: 12) {
+                            PaywallFeatureRow(systemImage: "infinity", text: "Unlimited order logging")
+                            PaywallFeatureRow(systemImage: "building.2", text: "Location history across repeat addresses")
+                            PaywallFeatureRow(systemImage: "chart.pie", text: "Tip pattern reports for every saved order")
+                        }
+                        .appCard()
+
+                        if monetizationStore.isPro {
+                            SuccessBanner(message: "You have unlimited access on this Apple ID.")
+                        } else if monetizationStore.sortedProducts.isEmpty {
+                            ProductUnavailableCard()
+                        } else {
+                            VStack(spacing: 10) {
+                                ForEach(monetizationStore.sortedProducts, id: \.id) { product in
+                                    ProductOptionButton(product: product)
+                                }
+                            }
+                        }
+
+                        if let errorMessage = monetizationStore.errorMessage {
+                            ErrorBanner(message: errorMessage)
+                        }
+
+                        Button {
+                            Task {
+                                await monetizationStore.restorePurchases()
+                            }
+                        } label: {
+                            Text("Restore Purchases")
+                                .font(.subheadline.weight(.semibold))
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.large)
+                        .tint(.zinc800)
+                        .disabled(monetizationStore.isLoading)
+
+                        Text("Purchases are handled by the App Store. Pricing is shown before confirmation and can be managed from your Apple Account.")
+                            .font(.caption)
+                            .foregroundColor(.zinc500)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.horizontal, 4)
+                    }
+                    .padding(TipTrackTheme.pagePadding)
+                }
+            }
+            .navigationTitle("TipTrack Pro")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
+            .task {
+                await monetizationStore.refreshProducts()
+            }
+        }
+    }
+}
+
+private struct TrialStatusCard: View {
+    @EnvironmentObject private var store: TipTrackStore
+    @EnvironmentObject private var monetizationStore: MonetizationStore
+    @Binding var showingPaywall: Bool
+
+    var body: some View {
+        HStack(spacing: 12) {
+            AppIconTile(
+                systemName: monetizationStore.isPro ? "checkmark.seal" : "lock.open",
+                tint: monetizationStore.isPro ? .tipGreen : .tipAmber
+            )
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(.zinc900)
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundColor(.zinc500)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 8)
+
+            Button {
+                showingPaywall = true
+            } label: {
+                Text(monetizationStore.isPro ? "Active" : "Pro")
+                    .font(.caption.weight(.bold))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 7)
+                    .foregroundColor(monetizationStore.isPro ? .tipGreen : .zinc900)
+                    .background((monetizationStore.isPro ? Color.tipGreen : Color.tipAmber).opacity(0.12))
+                    .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(monetizationStore.isPro ? "TipTrack Pro active" : "Upgrade to TipTrack Pro")
+        }
+        .appCard(padding: 12)
+    }
+
+    private var title: String {
+        if monetizationStore.isPro {
+            return "TipTrack Pro"
+        }
+
+        let remaining = monetizationStore.remainingFreeOrders(currentOrderCount: store.orders.count)
+        return "\(remaining) free order\(remaining == 1 ? "" : "s") left"
+    }
+
+    private var subtitle: String {
+        if monetizationStore.isPro {
+            return "Unlimited logging is unlocked."
+        }
+
+        return "Use the ledger first. Upgrade when it becomes part of your shift."
+    }
+}
+
+private struct ProductUnavailableCard: View {
+    @EnvironmentObject private var monetizationStore: MonetizationStore
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(title: "Pro plans are loading", subtitle: "The App Store is preparing the current purchase options.")
+
+            Button {
+                Task {
+                    await monetizationStore.refreshProducts()
+                }
+            } label: {
+                Text(monetizationStore.isLoading ? "Loading" : "Try Again")
+                    .font(.subheadline.weight(.semibold))
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .tint(.tipGreen)
+            .disabled(monetizationStore.isLoading)
+        }
+        .appCard()
+    }
+}
+
+private struct ProductOptionButton: View {
+    @EnvironmentObject private var monetizationStore: MonetizationStore
+    let product: Product
+
+    var body: some View {
+        Button {
+            Task {
+                await monetizationStore.purchase(product)
+            }
+        } label: {
+            HStack(spacing: 12) {
+                AppIconTile(systemName: iconName, tint: tint)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(product.displayName)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundColor(.zinc900)
+                    Text(optionDetail)
+                        .font(.caption)
+                        .foregroundColor(.zinc500)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer()
+                Text(product.displayPrice)
+                    .font(.subheadline.weight(.bold))
+                    .foregroundColor(.zinc900)
+            }
+            .appCard(padding: 12)
+        }
+        .buttonStyle(.plain)
+        .disabled(monetizationStore.isLoading)
+    }
+
+    private var iconName: String {
+        product.id == MonetizationStore.annualProductID ? "calendar.badge.checkmark" : "calendar"
+    }
+
+    private var tint: Color {
+        product.id == MonetizationStore.annualProductID ? .tipGreen : .tipBlue
+    }
+
+    private var optionDetail: String {
+        if product.id == MonetizationStore.annualProductID {
+            return "Best value for drivers using TipTrack every week."
+        }
+
+        return "Flexible month-to-month access."
+    }
+}
+
+private struct PaywallFeatureRow: View {
+    let systemImage: String
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: systemImage)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundColor(.tipGreen)
+                .frame(width: 24)
+            Text(text)
+                .font(.subheadline.weight(.semibold))
+                .foregroundColor(.zinc900)
+            Spacer(minLength: 0)
+        }
+    }
+}
+
+private struct SuccessBanner: View {
+    let message: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundColor(.tipGreen)
+            Text(message)
+                .font(.footnote.weight(.semibold))
+                .foregroundColor(.zinc900)
+            Spacer(minLength: 0)
+        }
+        .padding(12)
+        .background(Color.tipGreen.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
+        .overlay(
+            RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius)
+                .stroke(Color.tipGreen.opacity(0.18), lineWidth: 1)
+        )
+    }
+}
+
 struct HelpSection: View {
     let title: String
     let text: String
@@ -522,7 +795,7 @@ private struct PageScroll<Content: View>: View {
             }
             .padding(TipTrackTheme.pagePadding)
             .padding(.top, 8)
-            .padding(.bottom, 12)
+            .padding(.bottom, 96)
         }
         .background(AppBackground())
     }

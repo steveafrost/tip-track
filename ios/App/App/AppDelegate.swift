@@ -10,8 +10,10 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
         let store = TipTrackStore()
+        let monetizationStore = MonetizationStore()
         let rootView = TipTrackAppView()
             .environmentObject(store)
+            .environmentObject(monetizationStore)
 
         let window = UIWindow(frame: UIScreen.main.bounds)
         window.rootViewController = UIHostingController(rootView: rootView)

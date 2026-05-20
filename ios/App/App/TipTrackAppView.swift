@@ -18,8 +18,10 @@ struct TipTrackAppView: View {
 
 struct AppShell: View {
     @EnvironmentObject private var store: TipTrackStore
+    @EnvironmentObject private var monetizationStore: MonetizationStore
     @State private var selectedTab = AppTab.submit
     @State private var showingHelp = false
+    @State private var showingPaywall = false
 
     init() {
         let appearance = UITabBarAppearance()
@@ -34,7 +36,11 @@ struct AppShell: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            AppHeader(selectedTab: selectedTab, showingHelp: $showingHelp)
+            AppHeader(
+                selectedTab: selectedTab,
+                showingHelp: $showingHelp,
+                showingPaywall: $showingPaywall
+            )
 
             TabView(selection: $selectedTab) {
                 AddOrderView()
@@ -58,7 +64,11 @@ struct AppShell: View {
         .sheet(isPresented: $showingHelp) {
             HelpView()
         }
+        .sheet(isPresented: $showingPaywall) {
+            PaywallView()
+        }
         .task {
+            await monetizationStore.start()
             try? await store.refreshOrders()
         }
     }
@@ -66,8 +76,10 @@ struct AppShell: View {
 
 struct AppHeader: View {
     @EnvironmentObject private var store: TipTrackStore
+    @EnvironmentObject private var monetizationStore: MonetizationStore
     let selectedTab: AppTab
     @Binding var showingHelp: Bool
+    @Binding var showingPaywall: Bool
 
     var body: some View {
         HStack(spacing: 12) {
@@ -83,6 +95,18 @@ struct AppHeader: View {
                     .lineLimit(1)
             }
             Spacer()
+            Button {
+                showingPaywall = true
+            } label: {
+                Image(systemName: monetizationStore.isPro ? "checkmark.seal.fill" : "lock.open")
+                    .font(.system(size: 18, weight: .semibold))
+                    .frame(width: 36, height: 36)
+                    .background(monetizationStore.isPro ? Color.tipGreen.opacity(0.12) : Color.zinc100)
+                    .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
+            }
+            .foregroundColor(monetizationStore.isPro ? .tipGreen : .zinc900)
+            .accessibilityLabel(monetizationStore.isPro ? "TipTrack Pro active" : "Upgrade to TipTrack Pro")
+
             Button {
                 showingHelp = true
             } label: {
