@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
+  Apple,
   BarChart3,
   Check,
   Download,
@@ -16,16 +17,16 @@ import {
 const appStoreUrl = "https://apps.apple.com/app/id6771138274";
 
 const ledgerRows = [
-  ["6:34 PM", "#8337", "3217 Elmwood Ave", "$8.25", "2.1", "Leave at door"],
-  ["6:58 PM", "#8338", "8687 Pinecrest Dr", "$5.00", "3.4", "Nice porch light"],
-  ["7:18 PM", "#8342", "1504 Brookside Dr", "$12.50", "2.3", "Cash tip"],
-  ["7:45 PM", "#8345", "412 Riverview Ln", "$7.75", "1.8", "Gate code needed"],
-  ["8:12 PM", "#8349", "9800 Maplewood Ave", "$18.24", "4.6", "Best tip tonight"],
+  ["6:34 PM", "#8337", "3217 Elmwood Ave", "$8.25", "Leave at door"],
+  ["6:58 PM", "#8338", "8687 Pinecrest Dr", "$5.00", "Nice porch light"],
+  ["7:18 PM", "#8342", "1504 Brookside Dr", "$12.50", "Cash tip"],
+  ["7:45 PM", "#8345", "412 Riverview Ln", "$7.75", "Gate code needed"],
+  ["8:12 PM", "#8349", "9800 Maplewood Ave", "$18.24", "Best tip tonight"],
 ];
 
 const fieldNotes = [
   "Log every order before the shift blurs together.",
-  "Track tips, miles, and repeat neighborhoods.",
+  "Track tips, addresses, and repeat neighborhoods.",
   "Keep private notes for the next time an address pops up.",
   "Use reports to spot which runs were actually worth it.",
 ];
@@ -57,10 +58,14 @@ function AppStoreButton({ compact = false }: { compact?: boolean }) {
   return (
     <a
       href={appStoreUrl}
-      className="inline-flex min-h-12 items-center justify-center gap-3 rounded-md border border-[#fff1c8]/45 bg-[#f8f1dc] px-5 py-3 text-sm font-black text-[#11150f] shadow-[0_18px_42px_rgba(0,0,0,0.28)] transition hover:-translate-y-0.5 hover:bg-white focus:outline-none focus:ring-4 focus:ring-[#8bc34a]/35"
+      className="inline-flex min-h-12 items-center justify-center gap-3 whitespace-nowrap rounded-md border border-[#fff1c8]/45 bg-[#f8f1dc] px-5 py-3 text-sm font-black text-[#11150f] shadow-[0_18px_42px_rgba(0,0,0,0.28)] transition hover:-translate-y-0.5 hover:bg-white focus:outline-none focus:ring-4 focus:ring-[#8bc34a]/35"
     >
-      <Download className="h-5 w-5" aria-hidden="true" />
-      <span>{compact ? "App Store" : "Download on the App Store"}</span>
+      {compact ? (
+        <Apple className="h-5 w-5" aria-hidden="true" />
+      ) : (
+        <Download className="h-5 w-5" aria-hidden="true" />
+      )}
+      <span>{compact ? "Download" : "Download on the App Store"}</span>
     </a>
   );
 }
@@ -281,10 +286,10 @@ export default function Home() {
             <span className="text-sm text-[#b8f26d]">18 orders / May 18, 2025</span>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[820px] border-collapse font-mono text-sm">
+            <table className="w-full min-w-[760px] border-collapse font-mono text-sm">
               <thead>
                 <tr className="border-b border-[#f5ead0]/18 text-left text-[#8bc34a]">
-                  {["Time", "Order", "Address", "Tip", "Miles", "Notes"].map((head) => (
+                  {["Time", "Order", "Address", "Tip", "Notes"].map((head) => (
                     <th key={head} className="px-4 py-4 font-black uppercase tracking-[0.16em]">
                       {head}
                     </th>
@@ -411,12 +416,12 @@ export default function Home() {
           <div className="flex flex-col gap-3 sm:flex-row md:justify-end">
             <Link
               href="/submit"
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-[#8bc34a]/60 px-5 py-3 text-sm font-black text-[#e7ffd1] transition hover:bg-[#8bc34a] hover:text-[#071007]"
+              className="inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-[#8bc34a]/60 px-5 py-3 text-sm font-black text-[#e7ffd1] transition hover:bg-[#8bc34a] hover:text-[#071007]"
             >
               <Search className="h-4 w-4" aria-hidden="true" />
               Open web app
             </Link>
-            <AppStoreButton />
+            <AppStoreButton compact />
           </div>
         </div>
         <div className="mx-auto mt-10 flex max-w-7xl items-center justify-between border-t border-[#f5ead0]/15 pt-5 font-mono text-xs uppercase tracking-[0.14em] text-[#847b65]">
