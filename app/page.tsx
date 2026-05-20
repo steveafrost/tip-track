@@ -5,87 +5,51 @@ import {
   BarChart3,
   Check,
   Download,
-  LockKeyhole,
   MapPin,
   NotebookPen,
   Route,
   Search,
   ShieldCheck,
-  Smartphone,
   WalletCards,
 } from "lucide-react";
 
 const appStoreUrl = "https://apps.apple.com/app/id6771138274";
 
-const workflow = [
-  {
-    icon: NotebookPen,
-    title: "Log the order",
-    copy: "Save order ID, address, time, tip, and notes while the shift is still moving.",
-  },
-  {
-    icon: BarChart3,
-    title: "See what is working",
-    copy: "Daily, weekly, and monthly reports show which runs are actually adding up.",
-  },
-  {
-    icon: MapPin,
-    title: "Spot repeat locations",
-    copy: "Build a practical memory for addresses that tend to tip well, poorly, or unpredictably.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Decide with confidence",
-    copy: "Keep the details private, simple, and ready before the next offer hits your screen.",
-  },
-];
-
-const trustPoints = [
-  {
-    icon: LockKeyhole,
-    title: "Private and secure",
-    copy: "Your shift data stays yours.",
-  },
-  {
-    icon: Smartphone,
-    title: "Works everywhere",
-    copy: "iPhone plus web access.",
-  },
-  {
-    icon: Route,
-    title: "Built for drivers",
-    copy: "Fast capture, useful memory.",
-  },
-];
-
 const ledgerRows = [
-  ["5:18 PM", "A1234B56", "123 Oak St", "$12.75"],
-  ["5:47 PM", "B9876C54", "456 Pine Ave", "$8.50"],
-  ["6:22 PM", "C2468D13", "709 Maple Dr", "$15.00"],
-  ["6:58 PM", "D1357E24", "321 Elm St", "$6.25"],
-  ["7:32 PM", "E8642F31", "654 Cedar St", "$10.16"],
+  ["6:34 PM", "#8337", "3217 Elmwood Ave", "$8.25", "2.1", "Leave at door"],
+  ["6:58 PM", "#8338", "8687 Pinecrest Dr", "$5.00", "3.4", "Nice porch light"],
+  ["7:18 PM", "#8342", "1504 Brookside Dr", "$12.50", "2.3", "Cash tip"],
+  ["7:45 PM", "#8345", "412 Riverview Ln", "$7.75", "1.8", "Gate code needed"],
+  ["8:12 PM", "#8349", "9800 Maplewood Ave", "$18.24", "4.6", "Best tip tonight"],
+];
+
+const fieldNotes = [
+  "Log every order before the shift blurs together.",
+  "Track tips, miles, and repeat neighborhoods.",
+  "Keep private notes for the next time an address pops up.",
+  "Use reports to spot which runs were actually worth it.",
 ];
 
 const faqs = [
   {
-    question: "How does the free start work?",
+    question: "How do the free orders work?",
     answer:
-      "The first 20 orders are free so you can use TipTrack during real shifts before paying.",
+      "Your first 20 orders are free. After that, unlock the full app for $4.99 once.",
   },
   {
-    question: "What does the $4.99 unlock include?",
+    question: "Is my data safe?",
     answer:
-      "Unlimited orders, full reports, saved location history, and continued use across iPhone and web.",
+      "TipTrack is built for a private shift ledger. Your routes, notes, and totals stay tied to your account.",
   },
   {
-    question: "Is this a subscription?",
+    question: "Can I use it on the web?",
     answer:
-      "No. TipTrack Pro is a one-time unlock. Pay once if it earns a spot in your workflow.",
+      "Yes. The web app is there when you are away from your phone or want a bigger screen.",
   },
   {
-    question: "Does TipTrack work on the web too?",
+    question: "Will this become a subscription later?",
     answer:
-      "Yes. The web app is available for quick access, and the native iPhone app is the main shift companion.",
+      "No. TipTrack Pro is a one-time unlock. No monthly fees, no surprise renewal.",
   },
 ];
 
@@ -93,7 +57,7 @@ function AppStoreButton({ compact = false }: { compact?: boolean }) {
   return (
     <a
       href={appStoreUrl}
-      className="inline-flex min-h-12 items-center justify-center gap-3 rounded-md bg-[#0d1b14] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(4,14,9,0.22)] transition hover:-translate-y-0.5 hover:bg-black focus:outline-none focus:ring-4 focus:ring-[#f3b44f]/40"
+      className="inline-flex min-h-12 items-center justify-center gap-3 rounded-md border border-[#fff1c8]/45 bg-[#f8f1dc] px-5 py-3 text-sm font-black text-[#11150f] shadow-[0_18px_42px_rgba(0,0,0,0.28)] transition hover:-translate-y-0.5 hover:bg-white focus:outline-none focus:ring-4 focus:ring-[#8bc34a]/35"
     >
       <Download className="h-5 w-5" aria-hidden="true" />
       <span>{compact ? "App Store" : "Download on the App Store"}</span>
@@ -112,9 +76,9 @@ function PhoneShot({
 }) {
   return (
     <div
-      className={`relative rounded-[2rem] border-[10px] border-[#101510] bg-[#101510] shadow-[0_34px_80px_rgba(0,0,0,0.36)] ${className}`}
+      className={`relative rounded-[2rem] border-[9px] border-[#070b08] bg-[#070b08] shadow-[0_34px_80px_rgba(0,0,0,0.42)] ${className}`}
     >
-      <div className="absolute left-1/2 top-2 z-10 h-5 w-24 -translate-x-1/2 rounded-b-2xl bg-[#101510]" />
+      <div className="absolute left-1/2 top-2 z-10 h-5 w-24 -translate-x-1/2 rounded-b-2xl bg-[#070b08]" />
       <Image
         src={src}
         alt={alt}
@@ -127,340 +91,348 @@ function PhoneShot({
   );
 }
 
+function BrandStamp() {
+  return (
+    <Link
+      href="/"
+      className="inline-flex rotate-[-2deg] items-center gap-3 border-2 border-[#8bc34a] bg-black/25 px-3 py-2 text-[#b8f26d] shadow-[0_0_24px_rgba(139,195,74,0.15)] backdrop-blur"
+    >
+      <Image
+        src="/images/logo-96.png"
+        alt=""
+        width={36}
+        height={36}
+        className="rounded-sm brightness-125"
+        priority
+      />
+      <span className="font-mono text-sm font-black uppercase leading-none tracking-[0.14em]">
+        TipTrack
+        <span className="block text-[0.62rem] tracking-[0.22em]">
+          Shift Ledger
+        </span>
+      </span>
+    </Link>
+  );
+}
+
+function TornEdge({ dark = false }: { dark?: boolean }) {
+  return (
+    <div
+      className={`h-8 ${dark ? "bg-[#0b0d0a]" : "bg-[#f4ead1]"} [clip-path:polygon(0_35%,4%_54%,9%_30%,15%_56%,21%_38%,27%_62%,34%_36%,41%_58%,48%_33%,56%_61%,63%_36%,71%_57%,79%_39%,87%_61%,94%_36%,100%_52%,100%_100%,0_100%)]`}
+    />
+  );
+}
+
 export default function Home() {
   return (
-    <main className="min-h-screen overflow-hidden bg-[#f7f5ee] text-[#102117]">
-      <header className="relative z-30 border-b border-[#102117]/10 bg-[#fbfaf6]/92 backdrop-blur">
-        <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
-          <Link href="/" className="flex items-center gap-3">
-            <Image
-              src="/images/logo-96.png"
-              alt=""
-              width={44}
-              height={44}
-              className="rounded-md"
-              priority
-            />
-            <div className="leading-none">
-              <div className="text-2xl font-black tracking-normal">
-                Tip<span className="text-[#168237]">Track</span>
-              </div>
-              <div className="mt-1 text-[0.62rem] font-bold uppercase tracking-[0.18em] text-[#546257]">
-                Shift Ledger
-              </div>
+    <main className="min-h-screen overflow-hidden bg-[#f4ead1] text-[#132114]">
+      <section className="relative min-h-[790px] overflow-hidden bg-[#050705] text-[#fff8df]">
+        <Image
+          src="/images/marketing/hero-dashboard.png"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.94)_0%,rgba(0,0,0,0.76)_38%,rgba(0,0,0,0.24)_72%,rgba(0,0,0,0.42)_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.42)_0%,transparent_28%,rgba(0,0,0,0.78)_100%)]" />
+        <div className="absolute left-0 top-0 h-full w-full opacity-[0.13] [background-image:linear-gradient(0deg,transparent_31px,rgba(168,255,93,0.24)_32px),linear-gradient(90deg,transparent_31px,rgba(168,255,93,0.14)_32px)] [background-size:33px_33px]" />
+
+        <header className="relative z-20">
+          <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-6 sm:px-8">
+            <BrandStamp />
+            <div className="hidden items-center gap-8 font-mono text-xs font-black uppercase tracking-[0.18em] text-[#fff8df] md:flex">
+              <a href="#sheet" className="hover:text-[#b8f26d]">
+                Sheet
+              </a>
+              <a href="#ledger" className="hover:text-[#b8f26d]">
+                Ledger
+              </a>
+              <a href="#pricing" className="hover:text-[#b8f26d]">
+                Pricing
+              </a>
+              <Link
+                href="/submit"
+                className="rounded-sm border border-[#b8f26d]/70 px-3 py-2 text-[#b8f26d] hover:bg-[#b8f26d] hover:text-[#101510]"
+              >
+                Open web app
+              </Link>
             </div>
-          </Link>
+          </nav>
+        </header>
 
-          <div className="hidden items-center gap-8 text-sm font-semibold text-[#2f3b33] md:flex">
-            <a href="#features" className="hover:text-[#147a34]">
-              Features
-            </a>
-            <a href="#pricing" className="hover:text-[#147a34]">
-              Pricing
-            </a>
-            <a href="#faq" className="hover:text-[#147a34]">
-              FAQ
-            </a>
-          </div>
-
-          <div className="hidden items-center gap-3 sm:flex">
-            <Link
-              href="/submit"
-              className="inline-flex min-h-11 items-center justify-center rounded-md border border-[#147a34] bg-white px-4 text-sm font-semibold text-[#11672d] transition hover:bg-[#eaf5ed] focus:outline-none focus:ring-4 focus:ring-[#147a34]/15"
-            >
-              Open web app
-            </Link>
-            <AppStoreButton compact />
-          </div>
-        </nav>
-      </header>
-
-      <section className="relative h-[calc(100vh-120px)] min-h-[680px] max-h-[780px] overflow-hidden bg-[#121811] text-white">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_22%,rgba(243,180,79,0.16),transparent_26%),linear-gradient(116deg,rgba(8,15,10,0.98)_0%,rgba(16,33,23,0.9)_48%,rgba(18,24,17,0.82)_100%)]" />
-        <div className="absolute inset-0 opacity-[0.16] [background-image:linear-gradient(0deg,transparent_24px,rgba(255,255,255,0.18)_25px),linear-gradient(90deg,transparent_24px,rgba(255,255,255,0.12)_25px)] [background-size:26px_26px]" />
-        <div className="absolute -left-16 top-20 h-[520px] w-[520px] rotate-[-8deg] rounded-md border border-[#f7f0df]/20 bg-[#ece4cf]/12 shadow-[0_30px_100px_rgba(0,0,0,0.24)]" />
-        <div className="absolute left-8 top-28 hidden rotate-[-8deg] font-mono text-xs uppercase tracking-[0.2em] text-[#d4c7a6]/55 md:block">
-          42.3314 N / 83.0458 W
-        </div>
-        <div className="absolute left-20 top-44 hidden h-24 w-40 rounded-full border border-dashed border-[#d4c7a6]/45 md:block" />
-        <div className="absolute bottom-0 left-0 right-0 h-20 bg-[linear-gradient(to_bottom,transparent,#f7f5ee)]" />
-
-        <div className="relative z-10 mx-auto grid max-w-7xl gap-12 px-5 pb-10 pt-12 sm:px-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start lg:pb-12 lg:pt-14">
-          <div className="max-w-2xl">
-            <h1 className="text-[2.85rem] font-black leading-[1.02] tracking-normal text-white sm:text-6xl lg:text-7xl">
-              TipTrack Shift Ledger
+        <div className="relative z-10 mx-auto grid max-w-7xl gap-10 px-5 pb-20 pt-10 sm:px-8 lg:grid-cols-[0.78fr_0.45fr] lg:items-end lg:pt-16">
+          <div className="min-w-0 max-w-[22rem] sm:max-w-3xl">
+            <h1 className="max-w-full text-[3.2rem] font-black leading-[0.9] tracking-normal text-white sm:text-[6.5rem] lg:text-[8.2rem]">
+              <span className="block">TipTrack</span>
+              <span className="block">Shift</span>
+              <span className="block">Ledger</span>
             </h1>
-            <p className="mt-6 max-w-[20rem] text-2xl font-bold leading-tight text-[#f5eddd] sm:max-w-xl sm:text-3xl">
+            <p className="mt-8 max-w-full font-mono text-2xl leading-tight text-[#fff1c8] sm:max-w-2xl sm:text-3xl">
               Know which deliveries are worth remembering.
             </p>
-            <p className="mt-5 max-w-[20rem] text-base leading-7 text-[#dfd8cb] sm:max-w-lg sm:text-lg">
-              Log orders, addresses, tips, and quick notes so the best repeat
-              locations stand out before the next shift starts.
+            <p className="mt-5 max-w-full text-lg leading-8 text-[#d8cba8] sm:max-w-xl">
+              A private order ledger for the parts of a delivery shift that
+              matter after the headlights, receipts, and addresses blur
+              together.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <AppStoreButton />
               <Link
                 href="/submit"
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-white/65 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-white hover:text-[#102117] focus:outline-none focus:ring-4 focus:ring-white/20"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-[#8bc34a]/80 bg-[#152416]/70 px-5 py-3 text-sm font-black text-[#e7ffd1] shadow-[0_18px_42px_rgba(0,0,0,0.22)] backdrop-blur transition hover:-translate-y-0.5 hover:bg-[#8bc34a] hover:text-[#071007] focus:outline-none focus:ring-4 focus:ring-[#8bc34a]/35"
               >
                 Open web app
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             </div>
+          </div>
 
-            <div className="mt-9 grid max-w-2xl gap-4 text-xs text-[#eee5d4] sm:grid-cols-3">
-              {trustPoints.map((item) => (
-                <div key={item.title} className="flex gap-3">
-                  <item.icon
-                    className="mt-0.5 h-5 w-5 shrink-0 text-[#f3b44f]"
+          <div className="relative hidden min-h-[400px] lg:block">
+            <div className="absolute right-0 top-0 w-64 rotate-[4deg] border border-[#d6c28d] bg-[#ead9a8] p-5 font-mono text-[#24311f] shadow-[0_24px_70px_rgba(0,0,0,0.36)]">
+              <div className="border-b border-[#7b6c4b]/30 pb-3 text-xs uppercase tracking-[0.2em]">
+                Order #8342
+              </div>
+              <div className="mt-4 text-5xl font-black">$12.50</div>
+              <div className="mt-2 text-sm">7:18 PM / 2.3 mi</div>
+              <ul className="mt-5 space-y-2 text-sm">
+                <li>[x] leave at door</li>
+                <li>[x] cash tip</li>
+                <li>[x] save address</li>
+              </ul>
+            </div>
+            <div className="absolute bottom-2 right-24 rotate-[-5deg] border-2 border-[#8f2d22] bg-[#f2e4be] px-8 py-5 text-center font-mono text-[#315020] shadow-[0_20px_60px_rgba(0,0,0,0.28)]">
+              <div className="text-xs uppercase tracking-[0.2em] text-[#8f2d22]">
+                Tonight&apos;s total
+              </div>
+              <div className="mt-2 text-5xl font-black">$156.78</div>
+              <div className="mt-2 inline-block border border-[#8f2d22] px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-[#8f2d22]">
+                Worth it
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="absolute bottom-0 left-0 right-0 z-20">
+          <TornEdge />
+        </div>
+      </section>
+
+      <section
+        id="sheet"
+        className="relative overflow-hidden bg-[#f4ead1] px-5 py-20 sm:px-8"
+      >
+        <div className="absolute inset-0 opacity-[0.2] [background-image:linear-gradient(115deg,transparent_0%,transparent_48%,rgba(17,78,38,0.22)_49%,transparent_50%)] [background-size:150px_150px]" />
+        <div className="relative mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.55fr_0.9fr_0.65fr] lg:items-center">
+          <div className="rotate-[-4deg] border border-[#c8b785] bg-[#eadfbe] p-6 font-mono shadow-[0_26px_70px_rgba(74,53,19,0.15)]">
+            <div className="h-64 border border-[#9bb678]/50 bg-[linear-gradient(135deg,rgba(20,105,47,0.1)_25%,transparent_25%),linear-gradient(225deg,rgba(20,105,47,0.08)_25%,transparent_25%)] bg-[length:42px_42px] p-5">
+              <Route className="h-20 w-20 text-[#2f7b35]" aria-hidden="true" />
+              <p className="mt-14 max-w-40 text-sm leading-6 text-[#26331f]">
+                Good tips live on this side of town.
+              </p>
+            </div>
+            <div className="mt-5 text-xs uppercase tracking-[0.22em] text-[#315020]">
+              42.3314 N
+              <br />
+              83.0458 W
+              <br />
+              Detroit, MI
+            </div>
+          </div>
+
+          <div>
+            <h2 className="font-mono text-4xl font-black uppercase leading-tight tracking-[0.08em] text-[#17351e] sm:text-5xl">
+              Your working shift, on paper.
+            </h2>
+            <p className="mt-5 max-w-xl text-lg leading-8 text-[#4f594b]">
+              TipTrack keeps the notebook feeling but removes the guessing. Log
+              the order, remember the address, and let the totals tell you where
+              the night actually paid off.
+            </p>
+            <div className="mt-8 space-y-3">
+              {fieldNotes.map((note) => (
+                <div key={note} className="flex gap-3 font-mono text-sm">
+                  <Check
+                    className="mt-0.5 h-5 w-5 shrink-0 text-[#2f7b35]"
                     aria-hidden="true"
                   />
-                  <div>
-                    <div className="font-bold text-white">{item.title}</div>
-                    <div className="mt-1 leading-5 text-[#d9d0bd]">
-                      {item.copy}
-                    </div>
-                  </div>
+                  <span>{note}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="relative min-h-[520px] lg:min-h-[610px]">
-            <div className="absolute right-2 top-0 hidden w-52 rotate-[5deg] rounded-md bg-[#efe4ca] p-5 font-mono text-xs text-[#384336] shadow-[0_24px_50px_rgba(0,0,0,0.2)] md:block">
-              <div className="mb-3 flex items-center justify-between border-b border-[#796b50]/30 pb-2">
-                <span>TODAY</span>
-                <span>MAY 18</span>
-              </div>
-              <div className="space-y-2">
-                {ledgerRows.slice(0, 4).map(([time, order, , tip]) => (
-                  <div key={order} className="grid grid-cols-[1fr_1.3fr_1fr] gap-2">
-                    <span>{time}</span>
-                    <span>{order}</span>
-                    <span className="text-right font-bold">{tip}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <PhoneShot
-              src="/images/marketing/reports.png"
-              alt="TipTrack reports screen showing weekly tips and top locations."
-              className="absolute left-0 top-14 hidden h-[470px] w-[218px] rotate-[-5deg] md:block"
-            />
+          <div className="relative min-h-[520px]">
             <PhoneShot
               src="/images/marketing/add-order.png"
-              alt="TipTrack add order form with order ID, address, tip amount, date, and notes fields."
-              className="absolute left-1/2 top-0 h-[540px] w-[250px] -translate-x-1/2 md:h-[580px] md:w-[268px]"
+              alt="TipTrack add order screen."
+              className="absolute left-0 top-0 h-[500px] w-[232px] rotate-[-3deg]"
             />
             <PhoneShot
               src="/images/marketing/locations.png"
-              alt="TipTrack locations list showing saved addresses, order counts, and tip values."
-              className="absolute right-0 top-20 hidden h-[470px] w-[218px] rotate-[5deg] md:block"
+              alt="TipTrack saved locations screen."
+              className="absolute right-0 top-14 h-[470px] w-[218px] rotate-[4deg]"
             />
           </div>
         </div>
       </section>
 
-      <section
-        id="features"
-        className="relative overflow-hidden border-b border-[#102117]/10 bg-[#f7f5ee] px-5 py-20 sm:px-8"
-      >
-        <div className="absolute inset-0 opacity-[0.28] [background-image:linear-gradient(115deg,transparent_0%,transparent_47%,rgba(20,122,52,0.16)_48%,transparent_49%),linear-gradient(25deg,transparent_0%,transparent_56%,rgba(16,33,23,0.12)_57%,transparent_58%)] [background-size:190px_190px]" />
-        <div className="relative mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <div>
-            <h2 className="text-4xl font-black leading-tight tracking-normal text-[#12321f] sm:text-5xl">
-              Built for the middle of a shift
-            </h2>
-            <p className="mt-4 max-w-lg text-lg leading-8 text-[#5b655d]">
-              Capture the order now. Decide later with a ledger that remembers
-              what your memory should not have to.
-            </p>
-
-            <div className="mt-10 space-y-6">
-              {workflow.map((item, index) => (
-                <div key={item.title} className="grid grid-cols-[3rem_1fr] gap-4">
-                  <div className="relative flex justify-center">
-                    {index < workflow.length - 1 ? (
-                      <div className="absolute bottom-[-1.5rem] top-12 border-l border-dashed border-[#147a34]/50" />
-                    ) : null}
-                    <div className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full bg-[#147a34] text-white shadow-[0_10px_30px_rgba(20,122,52,0.22)]">
-                      <item.icon className="h-5 w-5" aria-hidden="true" />
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-black text-[#102117]">
-                      {index + 1}. {item.title}
-                    </h3>
-                    <p className="mt-1 max-w-md leading-7 text-[#5b655d]">
-                      {item.copy}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+      <section id="ledger" className="bg-[#0b0d0a] px-5 py-16 text-[#f5ead0] sm:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-6 flex flex-wrap items-end justify-between gap-4 border-b border-[#f5ead0]/20 pb-5 font-mono uppercase tracking-[0.16em]">
+            <h2 className="text-2xl font-black">Today&apos;s ledger</h2>
+            <span className="text-sm text-[#b8f26d]">18 orders / May 18, 2025</span>
           </div>
-
-          <div className="relative">
-            <div className="absolute -right-12 -top-8 h-36 w-36 rounded-full border border-dashed border-[#147a34]/35" />
-            <div className="relative rotate-[-1deg] rounded-md border border-[#d0c3a6] bg-[#f1e6c9] p-5 shadow-[0_24px_55px_rgba(49,41,24,0.18)] sm:p-8">
-              <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-[#88785a]/35 pb-4 font-mono text-sm uppercase tracking-[0.16em] text-[#564f3e]">
-                <span>Today</span>
-                <span>May 18, 2025</span>
-              </div>
-              <div className="overflow-hidden rounded-md border border-[#8d7d61]/35 bg-[#fff9e9]/75">
-                <div className="grid grid-cols-[0.9fr_1.1fr_1.6fr_0.9fr] border-b border-[#8d7d61]/30 bg-[#e5d7b7]/45 px-4 py-3 font-mono text-[0.68rem] font-bold uppercase tracking-[0.14em] text-[#514631]">
-                  <span>Time</span>
-                  <span>Order ID</span>
-                  <span>Address</span>
-                  <span className="text-right">Tip</span>
-                </div>
-                {ledgerRows.map(([time, order, address, tip]) => (
-                  <div
-                    key={order}
-                    className="grid grid-cols-[0.9fr_1.1fr_1.6fr_0.9fr] border-b border-[#8d7d61]/20 px-4 py-4 font-mono text-xs text-[#2c342b] last:border-b-0 sm:text-sm"
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[820px] border-collapse font-mono text-sm">
+              <thead>
+                <tr className="border-b border-[#f5ead0]/18 text-left text-[#8bc34a]">
+                  {["Time", "Order", "Address", "Tip", "Miles", "Notes"].map((head) => (
+                    <th key={head} className="px-4 py-4 font-black uppercase tracking-[0.16em]">
+                      {head}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {ledgerRows.map((row) => (
+                  <tr
+                    key={row[1]}
+                    className={`border-b border-[#f5ead0]/12 ${row[1] === "#8342" ? "bg-[#244b1f]/42 text-[#b8f26d]" : ""}`}
                   >
-                    <span>{time}</span>
-                    <span>{order}</span>
-                    <span>{address}</span>
-                    <span className="text-right font-black text-[#147a34]">
-                      {tip}
-                    </span>
-                  </div>
+                    {row.map((cell) => (
+                      <td key={cell} className="px-4 py-5">
+                        {cell}
+                      </td>
+                    ))}
+                  </tr>
                 ))}
-              </div>
-              <div className="mt-6 grid gap-3 sm:grid-cols-[1fr_1fr]">
-                <div className="rounded-md border border-[#147a34] bg-[#fff9e9]/65 p-5">
-                  <div className="font-mono text-xs uppercase tracking-[0.2em] text-[#69705f]">
-                    Orders
-                  </div>
-                  <div className="mt-2 text-4xl font-black text-[#102117]">
-                    5
-                  </div>
-                </div>
-                <div className="rounded-md border border-[#147a34] bg-[#fff9e9]/65 p-5">
-                  <div className="font-mono text-xs uppercase tracking-[0.2em] text-[#69705f]">
-                    Total tips
-                  </div>
-                  <div className="mt-2 text-4xl font-black text-[#147a34]">
-                    $52.66
-                  </div>
-                </div>
-              </div>
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-8 flex flex-wrap items-center justify-between gap-5">
+            <div className="rotate-[-2deg] border border-[#d7c79c] bg-[#ead9a8] px-6 py-5 font-mono text-[#24311f]">
+              Fueled by coffee and determination.
             </div>
-            <div className="absolute -bottom-8 right-8 hidden rotate-[-7deg] rounded-md border-2 border-[#c5923b] px-5 py-3 font-mono text-sm font-black uppercase tracking-[0.12em] text-[#8f6220] opacity-80 sm:block">
-              Log it. Learn it.
-            </div>
+            <div className="font-mono text-2xl text-[#f5ead0]">Keep going.</div>
           </div>
         </div>
       </section>
 
       <section
         id="pricing"
-        className="bg-[#0f351d] px-5 py-14 text-white sm:px-8"
+        className="relative overflow-hidden bg-[#f4ead1] px-5 py-20 sm:px-8"
       >
-        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.85fr_0.25fr_0.9fr] lg:items-center">
-          <div className="relative rounded-md border border-[#f1e6c9]/45 bg-[#f1e6c9] p-8 text-[#102117] shadow-[0_24px_60px_rgba(0,0,0,0.18)]">
-            <div className="absolute -left-2 top-0 h-full w-4 bg-[radial-gradient(circle,#0f351d_4px,transparent_5px)] [background-size:16px_18px]" />
-            <div className="font-mono text-sm uppercase tracking-[0.22em] text-[#796c51]">
-              No credit card first
+        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.65fr_0.7fr_0.45fr] lg:items-center">
+          <div className="relative rotate-[-3deg] border border-[#c7b37b] bg-[#ead9a8] p-8 font-mono shadow-[0_26px_80px_rgba(74,53,19,0.18)]">
+            <div className="absolute -left-2 top-0 h-full w-4 bg-[radial-gradient(circle,#f4ead1_4px,transparent_5px)] [background-size:16px_18px]" />
+            <div className="text-sm uppercase tracking-[0.28em] text-[#746240]">
+              First 20 orders
             </div>
-            <div className="mt-3 text-5xl font-black leading-none">
-              First 20 orders free
+            <div className="mt-3 text-7xl font-black uppercase leading-none">
+              Free
             </div>
-            <p className="mt-4 max-w-md text-[#5a604f]">
-              Put TipTrack through a real dinner rush before deciding whether it
-              belongs on your phone.
+            <div className="mt-5 border-t border-dashed border-[#746240]/55 pt-5 text-sm">
+              Then a one-time unlock.
+            </div>
+            <div className="mt-4 text-7xl font-black text-[#315020]">$4.99</div>
+            <div className="mt-5 inline-block rotate-[-2deg] border-2 border-[#8f2d22] px-4 py-2 text-sm font-black uppercase tracking-[0.14em] text-[#8f2d22]">
+              One-time unlock
+            </div>
+          </div>
+
+          <div>
+            <h2 className="font-mono text-4xl font-black uppercase leading-tight tracking-[0.08em] text-[#17351e]">
+              Unlock the full ledger
+            </h2>
+            <p className="mt-5 max-w-xl text-lg leading-8 text-[#4f594b]">
+              After 20 orders, keep unlimited logging, full reports, and saved
+              address history with a single purchase. No subscription rhythm
+              hiding inside a simple app.
             </p>
-          </div>
-
-          <div className="hidden justify-center lg:flex">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/45 text-[#f3b44f]">
-              <ArrowRight className="h-7 w-7" aria-hidden="true" />
-            </div>
-          </div>
-
-          <div className="grid gap-6 sm:grid-cols-[0.7fr_1fr] sm:items-center">
-            <div>
-              <div className="text-sm font-bold uppercase tracking-[0.18em] text-[#f3b44f]">
-                Unlock everything
-              </div>
-              <div className="mt-2 text-7xl font-black leading-none">$4.99</div>
-              <div className="mt-3 text-[#dbe9d8]">
-                One-time payment. Yours forever.
-              </div>
-            </div>
-            <div className="space-y-4">
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
               {[
                 "Unlimited orders",
-                "All reports",
                 "Location history",
+                "Shift and weekly reports",
                 "Works on iPhone and web",
               ].map((item) => (
-                <div key={item} className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-[#f3b44f]" aria-hidden="true" />
-                  <span className="font-semibold">{item}</span>
+                <div key={item} className="flex items-center gap-3 font-mono text-sm">
+                  <Check className="h-5 w-5 text-[#2f7b35]" aria-hidden="true" />
+                  <span>{item}</span>
                 </div>
               ))}
             </div>
           </div>
+
+          <PhoneShot
+            src="/images/marketing/reports.png"
+            alt="TipTrack reports screen showing weekly totals."
+            className="mx-auto h-[500px] w-[232px] rotate-[3deg]"
+          />
         </div>
       </section>
 
-      <section id="faq" className="bg-[#fbfaf6] px-5 py-20 sm:px-8">
-        <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[0.35fr_0.65fr]">
-          <div>
-            <h2 className="text-4xl font-black text-[#102117]">FAQ</h2>
-            <p className="mt-4 leading-7 text-[#667066]">
-              Short answers for the practical stuff before TipTrack shows up in
-              the App Store.
-            </p>
-          </div>
-          <div className="divide-y divide-[#102117]/14 border-y border-[#102117]/14">
+      <section id="faq" className="bg-[#f4ead1] px-5 pb-20 sm:px-8">
+        <div className="mx-auto max-w-7xl border-t border-[#1b2a1c]/25 pt-12">
+          <h2 className="font-mono text-3xl font-black uppercase tracking-[0.1em]">
+            FAQ
+          </h2>
+          <div className="mt-8 grid gap-8 md:grid-cols-4">
             {faqs.map((faq) => (
-              <details key={faq.question} className="group py-5">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-black text-[#102117]">
+              <div key={faq.question} className="border-l border-[#1b2a1c]/30 pl-5">
+                <h3 className="font-mono text-sm font-black uppercase leading-6">
                   {faq.question}
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#102117]/18 text-[#147a34] transition group-open:rotate-45">
-                    +
-                  </span>
-                </summary>
-                <p className="mt-3 max-w-2xl leading-7 text-[#5b655d]">
-                  {faq.answer}
-                </p>
-              </details>
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-[#4f594b]">{faq.answer}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      <footer className="border-t border-[#102117]/10 bg-[#f7f5ee] px-5 py-10 sm:px-8">
-        <div className="mx-auto flex max-w-7xl flex-col gap-8 md:flex-row md:items-center md:justify-between">
+      <footer className="relative bg-[#0b0d0a] px-5 py-10 text-[#f5ead0] sm:px-8">
+        <TornEdge dark />
+        <div className="mx-auto mt-6 grid max-w-7xl gap-10 md:grid-cols-[0.9fr_0.6fr_0.8fr] md:items-end">
           <div>
-            <div className="flex items-center gap-3">
-              <WalletCards className="h-8 w-8 text-[#147a34]" aria-hidden="true" />
-              <div className="text-3xl font-black">
-                Tip<span className="text-[#168237]">Track</span>
-              </div>
-            </div>
-            <p className="mt-3 max-w-sm leading-7 text-[#5b655d]">
-              Built for drivers. Backed by data. Keep more of what you earn.
-            </p>
-            <p className="mt-5 text-sm text-[#7d847b]">
-              (c) 2026 TipTrack. All rights reserved.
+            <BrandStamp />
+            <p className="mt-5 max-w-sm text-sm leading-7 text-[#b9ad8f]">
+              Track today. Remember tomorrow. Earn more.
             </p>
           </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="grid gap-2 font-mono text-xs uppercase tracking-[0.16em] text-[#b9ad8f]">
+            <a href="#sheet" className="hover:text-[#b8f26d]">
+              Sheet
+            </a>
+            <a href="#ledger" className="hover:text-[#b8f26d]">
+              Ledger
+            </a>
+            <a href="#pricing" className="hover:text-[#b8f26d]">
+              Pricing
+            </a>
+            <Link href="/submit" className="hover:text-[#b8f26d]">
+              Open web app
+            </Link>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row md:justify-end">
             <Link
               href="/submit"
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-[#147a34] bg-white px-5 py-3 text-sm font-semibold text-[#11672d] transition hover:bg-[#eaf5ed] focus:outline-none focus:ring-4 focus:ring-[#147a34]/15"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-[#8bc34a]/60 px-5 py-3 text-sm font-black text-[#e7ffd1] transition hover:bg-[#8bc34a] hover:text-[#071007]"
             >
               <Search className="h-4 w-4" aria-hidden="true" />
               Open web app
             </Link>
             <AppStoreButton />
           </div>
+        </div>
+        <div className="mx-auto mt-10 flex max-w-7xl items-center justify-between border-t border-[#f5ead0]/15 pt-5 font-mono text-xs uppercase tracking-[0.14em] text-[#847b65]">
+          <span>(c) 2026 TipTrack</span>
+          <span className="hidden sm:inline-flex items-center gap-2">
+            <WalletCards className="h-4 w-4" aria-hidden="true" />
+            Built for drivers
+          </span>
         </div>
       </footer>
     </main>
