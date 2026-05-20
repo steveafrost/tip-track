@@ -1,0 +1,107 @@
+#!/usr/bin/env node
+import { execFileSync } from "node:child_process";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { dirname, join } from "node:path";
+import { sign } from "node:crypto";
+
+const bundleId = "com.steveafrost.tiptrack";
+const keyId = "38R6G5B784";
+const issuerId = "4e8ddd0a-9e6c-4877-ae9d-3f7168c02256";
+const keyPath = join(homedir(), ".appstoreconnect", "private_keys", `AuthKey_${keyId}.p8`);
+const statePath = join(process.cwd(), ".tmp", "app-store-status.json");
+const shouldNotify = process.argv.includes("--notify");
+
+function base64Url(value) {
+  return Buffer.from(value).toString("base64url");
+}
+
+function createToken() {
+  const privateKey = readFileSync(keyPath, "utf8");
+  const now = Math.floor(Date.now() / 1000);
+  const header = { alg: "ES256", kid: keyId, typ: "JWT" };
+  const payload = {
+    iss: issuerId,
+    iat: now - 30,
+    exp: now + 20 * 60,
+    aud: "appstoreconnect-v1",
+  };
+  const signingInput = `${base64Url(JSON.stringify(header))}.${base64Url(JSON.stringify(payload))}`;
+  const signature = sign("sha256", Buffer.from(signingInput), {
+    key: privateKey,
+    dsaEncoding: "ieee-p1363",
+  });
+  return `${signingInput}.${signature.toString("base64url")}`;
+}
+
+async function appStoreConnect(path, token) {
+  const response = await fetch(`https://api.appstoreconnect.apple.com${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const body = await response.text();
+  if (!response.ok) {
+    throw new Error(`${response.status} ${response.statusText}: ${body}`);
+  }
+  return JSON.parse(body);
+}
+
+function notify(title, message) {
+  if (!shouldNotify) return;
+  execFileSync("/usr/bin/osascript", [
+    "-e",
+    `display notification ${JSON.stringify(message)} with title ${JSON.stringify(title)}`,
+  ]);
+}
+
+function readPreviousState() {
+  try {
+    return JSON.parse(readFileSync(statePath, "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+function writeCurrentState(status) {
+  mkdirSync(dirname(statePath), { recursive: true });
+  writeFileSync(statePath, `${JSON.stringify(status, null, 2)}\n`);
+}
+
+const token = createToken();
+const apps = await appStoreConnect(`/v1/apps?filter[bundleId]=${bundleId}`, token);
+const app = apps.data[0];
+
+if (!app) {
+  throw new Error(`No App Store Connect app found for ${bundleId}`);
+}
+
+const versions = await appStoreConnect(`/v1/apps/${app.id}/appStoreVersions?limit=10`, token);
+const iosVersion = versions.data.find((version) => version.attributes.platform === "IOS") ?? versions.data[0];
+
+if (!iosVersion) {
+  throw new Error(`No App Store versions found for ${app.attributes.name}`);
+}
+
+const status = {
+  checkedAt: new Date().toISOString(),
+  appId: app.id,
+  appName: app.attributes.name,
+  bundleId: app.attributes.bundleId,
+  versionId: iosVersion.id,
+  versionString: iosVersion.attributes.versionString,
+  appStoreState: iosVersion.attributes.appStoreState,
+  releaseType: iosVersion.attributes.releaseType,
+};
+
+const previous = readPreviousState();
+writeCurrentState(status);
+
+const stateChanged = previous?.appStoreState && previous.appStoreState !== status.appStoreState;
+const isLive = status.appStoreState === "READY_FOR_SALE";
+
+if (isLive) {
+  notify("TipTrack is live", `${status.appName} ${status.versionString} is READY_FOR_SALE.`);
+} else if (stateChanged) {
+  notify("TipTrack App Store status changed", `${previous.appStoreState} -> ${status.appStoreState}`);
+}
+
+console.log(`${status.checkedAt} ${status.appName} ${status.versionString}: ${status.appStoreState}`);
