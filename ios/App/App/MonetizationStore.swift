@@ -3,8 +3,7 @@ import StoreKit
 
 @MainActor
 final class MonetizationStore: ObservableObject {
-    static let monthlyProductID = "com.steveafrost.tiptrack.pro.monthly"
-    static let annualProductID = "com.steveafrost.tiptrack.pro.annual"
+    static let unlockProductID = "com.steveafrost.tiptrack.pro.unlock"
     static let freeOrderLimit = 20
 
     @Published private(set) var products: [Product] = []
@@ -25,7 +24,7 @@ final class MonetizationStore: ObservableObject {
     }
 
     private static var productIDs: Set<String> {
-        [monthlyProductID, annualProductID]
+        [unlockProductID]
     }
 
     init() {
@@ -130,12 +129,10 @@ final class MonetizationStore: ObservableObject {
 
     private func productRank(_ productID: String) -> Int {
         switch productID {
-        case Self.annualProductID:
+        case Self.unlockProductID:
             return 0
-        case Self.monthlyProductID:
-            return 1
         default:
-            return 2
+            return 1
         }
     }
 }

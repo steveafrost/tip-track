@@ -542,6 +542,7 @@ struct PaywallView: View {
                             PaywallFeatureRow(systemImage: "infinity", text: "Unlimited order logging")
                             PaywallFeatureRow(systemImage: "building.2", text: "Location history across repeat addresses")
                             PaywallFeatureRow(systemImage: "chart.pie", text: "Tip pattern reports for every saved order")
+                            PaywallFeatureRow(systemImage: "checkmark.seal", text: "One-time unlock. No subscription.")
                         }
                         .appCard()
 
@@ -575,7 +576,7 @@ struct PaywallView: View {
                         .tint(.zinc800)
                         .disabled(monetizationStore.isLoading)
 
-                        Text("Purchases are handled by the App Store. Pricing is shown before confirmation and can be managed from your Apple Account.")
+                        Text("Purchases are handled by the App Store. The one-time price is shown before confirmation and can be restored from your Apple Account.")
                             .font(.caption)
                             .foregroundColor(.zinc500)
                             .fixedSize(horizontal: false, vertical: true)
@@ -715,19 +716,25 @@ private struct ProductOptionButton: View {
     }
 
     private var iconName: String {
-        product.id == MonetizationStore.annualProductID ? "calendar.badge.checkmark" : "calendar"
+        switch product.id {
+        case MonetizationStore.unlockProductID:
+            return "sparkles"
+        default:
+            return "checkmark.seal"
+        }
     }
 
     private var tint: Color {
-        product.id == MonetizationStore.annualProductID ? .tipGreen : .tipBlue
+        switch product.id {
+        case MonetizationStore.unlockProductID:
+            return .tipAmber
+        default:
+            return .tipGreen
+        }
     }
 
     private var optionDetail: String {
-        if product.id == MonetizationStore.annualProductID {
-            return "Best value for drivers using TipTrack every week."
-        }
-
-        return "Flexible month-to-month access."
+        "Pay once and keep Pro for this Apple ID."
     }
 }
 
