@@ -513,6 +513,7 @@ struct HelpView: View {
 struct PaywallView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var monetizationStore: MonetizationStore
+    @EnvironmentObject private var store: TipTrackStore
 
     var body: some View {
         NavigationView {
@@ -565,6 +566,7 @@ struct PaywallView: View {
                         Button {
                             Task {
                                 await monetizationStore.restorePurchases()
+                                await monetizationStore.syncActiveEntitlements(with: store)
                             }
                         } label: {
                             Text("Restore Purchases")
@@ -685,12 +687,14 @@ private struct ProductUnavailableCard: View {
 
 private struct ProductOptionButton: View {
     @EnvironmentObject private var monetizationStore: MonetizationStore
+    @EnvironmentObject private var store: TipTrackStore
     let product: Product
 
     var body: some View {
         Button {
             Task {
                 await monetizationStore.purchase(product)
+                await monetizationStore.syncActiveEntitlements(with: store)
             }
         } label: {
             HStack(spacing: 12) {

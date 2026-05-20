@@ -53,6 +53,14 @@ type TipLocation = {
   orders: TipOrder[];
 };
 
+type StoreKitEntitlement = {
+  isPro: boolean;
+  productId: string;
+  environment: string | null;
+  purchasedAt: string | null;
+  revokedAt: string | null;
+};
+
 type Tab = "add" | "orders" | "locations" | "reports";
 
 const sessionKey = "tiptrack:web-session";
@@ -104,12 +112,14 @@ export function WebApp() {
   const [activeTab, setActiveTab] = useState<Tab>("add");
   const [orders, setOrders] = useState<TipOrder[]>([]);
   const [locations, setLocations] = useState<TipLocation[]>([]);
+  const [entitlement, setEntitlement] = useState<StoreKitEntitlement | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
 
   const selectedTab = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
+  const isPro = entitlement?.isPro ?? false;
 
   useEffect(() => {
     const savedSession = window.localStorage.getItem(sessionKey);
@@ -144,20 +154,25 @@ export function WebApp() {
     setErrorMessage(null);
 
     try {
-      const [ordersResult, locationsResult] = await Promise.all([
+      const [ordersResult, locationsResult, entitlementResult] = await Promise.all([
         fetch("/api/web/orders", {
           headers: { "x-tip-track-driver-id": activeSession.driverId },
         }).then((response) => response.json()),
         fetch("/api/web/locations", {
           headers: { "x-tip-track-driver-id": activeSession.driverId },
         }).then((response) => response.json()),
+        fetch("/api/web/entitlements", {
+          headers: { "x-tip-track-driver-id": activeSession.driverId },
+        }).then((response) => response.json()),
       ]);
 
       if (ordersResult.error) throw new Error(ordersResult.error);
       if (locationsResult.error) throw new Error(locationsResult.error);
+      if (entitlementResult.error) throw new Error(entitlementResult.error);
 
       setOrders(ordersResult.orders ?? []);
       setLocations(locationsResult.locations ?? []);
+      setEntitlement(entitlementResult.entitlement ?? null);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Could not load your shift ledger.");
     } finally {
@@ -199,6 +214,7 @@ export function WebApp() {
     setSession(null);
     setOrders([]);
     setLocations([]);
+    setEntitlement(null);
     setActiveTab("add");
   }
 
@@ -264,11 +280,19 @@ export function WebApp() {
             <button
               type="button"
               onClick={() => setPaywallOpen(true)}
-              className="grid h-9 w-9 place-items-center rounded-md bg-zinc-100 text-zinc-800"
-              aria-label="TipTrack Pro"
+              className={`grid h-9 w-9 place-items-center rounded-md ${
+                isPro
+                  ? "bg-emerald-600/10 text-emerald-700"
+                  : "bg-zinc-100 text-zinc-800"
+              }`}
+              aria-label={isPro ? "TipTrack Pro active" : "TipTrack Pro"}
               title="First 20 orders free, then $4.99 once."
             >
-              <Unlock className="h-5 w-5" />
+              {isPro ? (
+                <ShieldCheck className="h-5 w-5" />
+              ) : (
+                <Unlock className="h-5 w-5" />
+              )}
             </button>
             <button
               type="button"
@@ -297,6 +321,7 @@ export function WebApp() {
         {activeTab === "add" ? (
           <AddOrderPanel
             orders={orders}
+            isPro={isPro}
             onShowPaywall={() => setPaywallOpen(true)}
             onAddOrder={handleAddOrder}
             onUpdateOrder={handleUpdateOrder}
@@ -335,7 +360,9 @@ export function WebApp() {
       </nav>
 
       {helpOpen ? <HelpDialog onClose={() => setHelpOpen(false)} /> : null}
-      {paywallOpen ? <PaywallDialog onClose={() => setPaywallOpen(false)} /> : null}
+      {paywallOpen ? (
+        <PaywallDialog isPro={isPro} onClose={() => setPaywallOpen(false)} />
+      ) : null}
     </div>
   );
 }
@@ -392,11 +419,13 @@ function SignInScreen({
 
 function AddOrderPanel({
   orders,
+  isPro,
   onShowPaywall,
   onAddOrder,
   onUpdateOrder,
 }: {
   orders: TipOrder[];
+  isPro: boolean;
   onShowPaywall: () => void;
   onAddOrder: (values: LocationValue & { orderId: string }) => Promise<void>;
   onUpdateOrder: (order: TipOrder, tip: number, location?: LocationValue) => Promise<void>;
@@ -413,7 +442,7 @@ function AddOrderPanel({
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (orders.length >= freeOrderLimit) {
+    if (!isPro && orders.length >= freeOrderLimit) {
       onShowPaywall();
       return;
     }
@@ -435,7 +464,7 @@ function AddOrderPanel({
   return (
       <div className="space-y-4">
       <DashboardSummary orders={orders} />
-      <TrialCard orderCount={orders.length} onOpen={onShowPaywall} />
+      <TrialCard isPro={isPro} orderCount={orders.length} onOpen={onShowPaywall} />
 
       <form onSubmit={handleSubmit} className="app-card space-y-4">
         <SectionHeader
@@ -664,27 +693,44 @@ function DashboardSummary({ orders }: { orders: TipOrder[] }) {
   );
 }
 
-function TrialCard({ orderCount, onOpen }: { orderCount: number; onOpen: () => void }) {
+function TrialCard({
+  isPro,
+  orderCount,
+  onOpen,
+}: {
+  isPro: boolean;
+  orderCount: number;
+  onOpen: () => void;
+}) {
   const remaining = Math.max(freeOrderLimit - orderCount, 0);
   return (
     <div className="app-card flex items-center gap-3">
-      <IconTile icon={remaining ? Unlock : ShieldCheck} tint={remaining ? "amber" : "green"} />
+      <IconTile
+        icon={isPro ? ShieldCheck : Unlock}
+        tint={isPro ? "green" : "amber"}
+      />
       <div className="min-w-0 flex-1">
         <h2 className="text-sm font-semibold text-zinc-900">
-          {remaining ? `${remaining} free order${remaining === 1 ? "" : "s"} left` : "TipTrack Pro unlock"}
+          {isPro
+            ? "TipTrack Pro"
+            : `${remaining} free order${remaining === 1 ? "" : "s"} left`}
         </h2>
         <p className="text-xs leading-5 text-zinc-500">
-          {remaining
-            ? "Use the ledger first. Upgrade when it becomes part of your shift."
-            : "Unlimited logging requires the one-time app unlock."}
+          {isPro
+            ? "Verified StoreKit unlock is active for this driver."
+            : "Use the ledger first. Upgrade when it becomes part of your shift."}
         </p>
       </div>
       <button
         type="button"
         onClick={onOpen}
-        className="rounded-full bg-amber-500/12 px-3 py-1.5 text-xs font-bold text-zinc-900"
+        className={`rounded-full px-3 py-1.5 text-xs font-bold ${
+          isPro
+            ? "bg-emerald-600/10 text-emerald-700"
+            : "bg-amber-500/12 text-zinc-900"
+        }`}
       >
-        Pro
+        {isPro ? "Active" : "Pro"}
       </button>
     </div>
   );
@@ -1220,7 +1266,13 @@ function HelpDialog({ onClose }: { onClose: () => void }) {
   );
 }
 
-function PaywallDialog({ onClose }: { onClose: () => void }) {
+function PaywallDialog({
+  isPro,
+  onClose,
+}: {
+  isPro: boolean;
+  onClose: () => void;
+}) {
   return (
     <div className="fixed inset-0 z-50 flex items-end bg-black/30 p-3 backdrop-blur-sm sm:items-center sm:justify-center">
       <div className="app-background max-h-[92vh] w-full max-w-md overflow-y-auto rounded-lg shadow-2xl">
@@ -1235,9 +1287,13 @@ function PaywallDialog({ onClose }: { onClose: () => void }) {
           <div className="app-card space-y-4">
             <IconTile icon={ShieldCheck} large />
             <div>
-              <h3 className="text-2xl font-bold text-zinc-950">Keep logging with Pro</h3>
+              <h3 className="text-2xl font-bold text-zinc-950">
+                {isPro ? "TipTrack Pro is active" : "Keep logging with Pro"}
+              </h3>
               <p className="mt-2 text-sm leading-6 text-zinc-500">
-                Log your first 20 orders free, then upgrade when TipTrack is earning its place on your shift.
+                {isPro
+                  ? "Your web dashboard is reading the verified App Store unlock synced from the iOS app."
+                  : "Log your first 20 orders free, then upgrade when TipTrack is earning its place on your shift."}
               </p>
             </div>
           </div>
@@ -1249,20 +1305,26 @@ function PaywallDialog({ onClose }: { onClose: () => void }) {
             <PaywallFeature icon={ShieldCheck} text="One-time unlock. No subscription." />
           </div>
 
-          <a
-            href="/#download"
-            className="app-card flex items-center gap-3 p-3 no-underline"
-            onClick={onClose}
-          >
-            <IconTile icon={Sparkles} tint="amber" />
-            <div className="min-w-0 flex-1">
-              <h3 className="text-sm font-semibold text-zinc-900">TipTrack Pro Unlock</h3>
-              <p className="text-xs leading-5 text-zinc-500">
-                Pay once in the iOS app and keep Pro for this Apple ID.
-              </p>
+          {isPro ? (
+            <div className="rounded-md border border-emerald-600/20 bg-emerald-600/10 p-3 text-sm font-semibold text-zinc-900">
+              Verified StoreKit entitlement active.
             </div>
-            <span className="text-sm font-bold text-zinc-900">$4.99</span>
-          </a>
+          ) : (
+            <a
+              href="/#download"
+              className="app-card flex items-center gap-3 p-3 no-underline"
+              onClick={onClose}
+            >
+              <IconTile icon={Sparkles} tint="amber" />
+              <div className="min-w-0 flex-1">
+                <h3 className="text-sm font-semibold text-zinc-900">TipTrack Pro Unlock</h3>
+                <p className="text-xs leading-5 text-zinc-500">
+                  Buy once in the iOS app. StoreKit verifies it, then this dashboard unlocks.
+                </p>
+              </div>
+              <span className="text-sm font-bold text-zinc-900">$4.99</span>
+            </a>
+          )}
 
           <button
             type="button"
@@ -1273,7 +1335,7 @@ function PaywallDialog({ onClose }: { onClose: () => void }) {
           </button>
 
           <p className="px-1 text-xs leading-5 text-zinc-500">
-            Purchases are handled by the App Store. The web dashboard mirrors the app experience, but purchase and restore actions happen in the iOS app.
+            Purchases are handled by native StoreKit in the iOS app. The web dashboard reads the server-verified StoreKit entitlement.
           </p>
         </div>
       </div>

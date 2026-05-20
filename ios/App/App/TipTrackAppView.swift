@@ -69,6 +69,7 @@ struct AppShell: View {
         }
         .task {
             await monetizationStore.start()
+            await monetizationStore.syncActiveEntitlements(with: store)
             try? await store.refreshOrders()
         }
     }

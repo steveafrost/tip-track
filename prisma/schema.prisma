@@ -28,3 +28,19 @@ model Order {
   createdAt  DateTime @default(now()) @map(name: "created_at")
   updatedAt  DateTime @updatedAt @map(name: "updated_at")
 }
+
+model AppStoreEntitlement {
+  id                    String    @id @default(cuid())
+  driverId              String    @map(name: "driver_id")
+  productId             String    @map(name: "product_id")
+  transactionId         String    @unique @map(name: "transaction_id")
+  originalTransactionId String    @map(name: "original_transaction_id")
+  environment           String
+  purchasedAt           DateTime  @map(name: "purchased_at")
+  revokedAt             DateTime? @map(name: "revoked_at")
+  createdAt             DateTime  @default(now()) @map(name: "created_at")
+  updatedAt             DateTime  @updatedAt @map(name: "updated_at")
+
+  @@unique([driverId, productId])
+  @@index([driverId])
+}

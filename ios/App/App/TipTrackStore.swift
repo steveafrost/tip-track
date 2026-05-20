@@ -93,6 +93,19 @@ final class TipTrackStore: ObservableObject {
         saveOrders()
     }
 
+    func fetchAppleEntitlement() async throws -> StoreKitEntitlement? {
+        guard let apiClient, session.isSignedIn else { return nil }
+        return try await apiClient.fetchAppleEntitlement(session: session)
+    }
+
+    func syncAppleEntitlement(signedTransactionInfo: String) async throws -> StoreKitEntitlement? {
+        guard let apiClient, session.isSignedIn else { return nil }
+        return try await apiClient.syncAppleEntitlement(
+            session: session,
+            signedTransactionInfo: signedTransactionInfo
+        )
+    }
+
     func addOrder(address: String, latitude: Double, longitude: Double, externalId: String) async throws {
         guard let userId = session.userId else { return }
 

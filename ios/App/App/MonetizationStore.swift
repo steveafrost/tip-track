@@ -108,6 +108,21 @@ final class MonetizationStore: ObservableObject {
         max(Self.freeOrderLimit - currentOrderCount, 0)
     }
 
+    func syncActiveEntitlements(with store: TipTrackStore) async {
+        for await result in Transaction.currentEntitlements {
+            guard case .verified(let transaction) = result else { continue }
+            guard Self.productIDs.contains(transaction.productID) else { continue }
+
+            do {
+                _ = try await store.syncAppleEntitlement(
+                    signedTransactionInfo: result.jwsRepresentation
+                )
+            } catch {
+                errorMessage = "Unable to sync Pro unlock to the web dashboard."
+            }
+        }
+    }
+
     private func refreshEntitlements() async {
         var activeProductIDs = Set<String>()
 

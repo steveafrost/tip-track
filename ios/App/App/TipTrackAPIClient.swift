@@ -108,6 +108,35 @@ struct TipTrackAPIClient {
         return response.order
     }
 
+    func fetchAppleEntitlement(session driverSession: DriverSession) async throws -> StoreKitEntitlement {
+        let response: MobileEntitlementResponse = try await send(
+            path: "/api/mobile/entitlements/apple",
+            method: "GET",
+            body: Optional<String>.none,
+            driverId: driverSession.userId
+        )
+
+        return response.entitlement
+    }
+
+    func syncAppleEntitlement(
+        session driverSession: DriverSession,
+        signedTransactionInfo: String
+    ) async throws -> StoreKitEntitlement {
+        let requestBody = MobileAppleEntitlementRequest(
+            signedTransactionInfo: signedTransactionInfo
+        )
+
+        let response: MobileEntitlementResponse = try await send(
+            path: "/api/mobile/entitlements/apple",
+            method: "POST",
+            body: requestBody,
+            driverId: driverSession.userId
+        )
+
+        return response.entitlement
+    }
+
     private func send<Response: Decodable, Body: Encodable>(
         path: String,
         method: String,
@@ -213,6 +242,18 @@ private struct MobileErrorResponse: Decodable {
     let error: String
 }
 
+struct StoreKitEntitlement: Decodable {
+    let isPro: Bool
+    let productId: String
+    let environment: String?
+    let purchasedAt: String?
+    let revokedAt: String?
+}
+
+private struct MobileEntitlementResponse: Decodable {
+    let entitlement: StoreKitEntitlement
+}
+
 private struct MobileLocationRequest: Encodable {
     let address: String
     let latitude: Double
@@ -229,9 +270,12 @@ private struct MobileOrderUpdateRequest: Encodable {
     let location: MobileLocationRequest
 }
 
+private struct MobileAppleEntitlementRequest: Encodable {
+    let signedTransactionInfo: String
+}
+
 private extension String {
     var urlPathEncoded: String {
         addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? self
     }
 }
-
