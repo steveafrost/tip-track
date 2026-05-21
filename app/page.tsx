@@ -153,7 +153,7 @@ export default function Home() {
                 Pricing
               </a>
               <Link
-                href="/submit"
+                href="/app"
                 className="rounded-sm border border-[#b8f26d]/70 px-3 py-2 text-[#b8f26d] hover:bg-[#b8f26d] hover:text-[#101510]"
               >
                 Open web app
@@ -181,7 +181,7 @@ export default function Home() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <AppStoreButton />
               <Link
-                href="/submit"
+                href="/app"
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-[#8bc34a]/80 bg-[#152416]/70 px-5 py-3 text-sm font-black text-[#e7ffd1] shadow-[0_18px_42px_rgba(0,0,0,0.22)] backdrop-blur transition hover:-translate-y-0.5 hover:bg-[#8bc34a] hover:text-[#071007] focus:outline-none focus:ring-4 focus:ring-[#8bc34a]/35"
               >
                 Open web app
@@ -409,13 +409,13 @@ export default function Home() {
             <a href="#pricing" className="hover:text-[#b8f26d]">
               Pricing
             </a>
-            <Link href="/submit" className="hover:text-[#b8f26d]">
+            <Link href="/app" className="hover:text-[#b8f26d]">
               Open web app
             </Link>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row md:justify-end">
             <Link
-              href="/submit"
+              href="/app"
               className="inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-[#8bc34a]/60 px-5 py-3 text-sm font-black text-[#e7ffd1] transition hover:bg-[#8bc34a] hover:text-[#071007]"
             >
               <Search className="h-4 w-4" aria-hidden="true" />

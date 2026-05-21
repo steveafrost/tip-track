@@ -22,7 +22,7 @@ export const Navigation = () => {
         asChild
         data-active={pathname.includes("submit")}
       >
-        <Link href="/submit">
+        <Link href="/app">
           <LucidePackagePlus size={36} />
         </Link>
       </Button>

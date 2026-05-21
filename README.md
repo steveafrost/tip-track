@@ -120,7 +120,7 @@ POSTGRES_URL_NON_POOLING=
 NEXT_PUBLIC_GOOGLE_MAPS_KEY=
 ```
 
-The `/submit` web app uses Clerk OAuth for Apple or Google identity. Web API routes under `/api/web` resolve Clerk external accounts to the same internal TipTrack user model used by iOS. The browser no longer sends or controls a driver ID.
+The `/app` web app uses Clerk OAuth for Apple or Google identity. Web API routes under `/api/web` resolve Clerk external accounts to the same internal TipTrack user model used by iOS. The browser no longer sends or controls a driver ID.
 
 After deploying the auth schema, run the idempotent backfill once to convert known legacy owner keys like `apple:<subject>` into internal TipTrack user ids:
 

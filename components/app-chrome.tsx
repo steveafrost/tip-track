@@ -16,7 +16,7 @@ import { Navigation } from "@/components/navigation";
 export function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  if (pathname === "/" || pathname === "/submit") {
+  if (pathname === "/" || pathname === "/app" || pathname === "/submit") {
     return <>{children}</>;
   }
 

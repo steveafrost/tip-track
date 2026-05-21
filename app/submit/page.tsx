@@ -1,5 +1,5 @@
-import { WebApp } from "./web-app";
+import { redirect } from "next/navigation";
 
 export default function SubmitPage() {
-  return <WebApp />;
+  redirect("/app");
 }
