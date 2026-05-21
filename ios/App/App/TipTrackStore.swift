@@ -16,6 +16,10 @@ final class TipTrackStore: ObservableObject {
         apiClient != nil
     }
 
+    var isCloudSessionActive: Bool {
+        apiClient != nil && session.sessionToken != nil
+    }
+
     var orders: [TipOrder] {
         guard let userId = session.userId else { return [] }
         return allOrders.filter { $0.createdBy == userId }
@@ -69,6 +73,22 @@ final class TipTrackStore: ObservableObject {
         }
     }
 
+    func startDemoSession() {
+        session = DriverSession(
+            userId: "app-store-demo",
+            displayName: "App Store Demo",
+            sessionToken: nil
+        )
+
+        if !allOrders.contains(where: { $0.createdBy == "app-store-demo" }) {
+            allOrders.append(contentsOf: TipTrackStore.makeDemoOrders())
+            allOrders.sort { $0.createdAt > $1.createdAt }
+            saveOrders()
+        }
+
+        saveSession()
+    }
+
     func signInWithApple(identityToken: String, rawNonce: String, displayName: String?) async throws {
         guard let apiClient else {
             throw TipTrackAPIError.server("Cloud sync is not configured.")
@@ -97,7 +117,16 @@ final class TipTrackStore: ObservableObject {
     }
 
     func linkApple(identityToken: String, rawNonce: String, displayName: String?) async throws {
-        guard let apiClient, session.isSignedIn else { return }
+        guard isCloudSessionActive else {
+            try await signInWithApple(
+                identityToken: identityToken,
+                rawNonce: rawNonce,
+                displayName: displayName
+            )
+            return
+        }
+
+        guard let apiClient else { return }
 
         try await apiClient.linkIdentity(
             session: session,
@@ -109,7 +138,12 @@ final class TipTrackStore: ObservableObject {
     }
 
     func linkGoogle(identityToken: String, displayName: String?) async throws {
-        guard let apiClient, session.isSignedIn else { return }
+        guard isCloudSessionActive else {
+            try await signInWithGoogle(identityToken: identityToken, displayName: displayName)
+            return
+        }
+
+        guard let apiClient else { return }
 
         try await apiClient.linkIdentity(
             session: session,
@@ -130,18 +164,18 @@ final class TipTrackStore: ObservableObject {
     }
 
     func refreshOrders() async throws {
-        guard let apiClient, session.isSignedIn else { return }
+        guard let apiClient, isCloudSessionActive else { return }
         allOrders = try await apiClient.fetchOrders(session: session)
         saveOrders()
     }
 
     func fetchAppleEntitlement() async throws -> StoreKitEntitlement? {
-        guard let apiClient, session.isSignedIn else { return nil }
+        guard let apiClient, isCloudSessionActive else { return nil }
         return try await apiClient.fetchAppleEntitlement(session: session)
     }
 
     func syncAppleEntitlement(signedTransactionInfo: String) async throws -> StoreKitEntitlement? {
-        guard let apiClient, session.isSignedIn else { return nil }
+        guard let apiClient, isCloudSessionActive else { return nil }
         return try await apiClient.syncAppleEntitlement(
             session: session,
             signedTransactionInfo: signedTransactionInfo
@@ -151,7 +185,7 @@ final class TipTrackStore: ObservableObject {
     func addOrder(address: String, latitude: Double, longitude: Double, externalId: String) async throws {
         guard let userId = session.userId else { return }
 
-        if let apiClient {
+        if let apiClient, isCloudSessionActive {
             let order = try await apiClient.addOrder(
                 session: session,
                 address: address,
@@ -184,7 +218,7 @@ final class TipTrackStore: ObservableObject {
     func updateOrder(id: String, address: String, latitude: Double, longitude: Double, tip: Int) async throws {
         guard let index = allOrders.firstIndex(where: { $0.id == id }) else { return }
 
-        if let apiClient {
+        if let apiClient, isCloudSessionActive {
             let order = try await apiClient.updateOrder(
                 session: session,
                 order: allOrders[index],
@@ -227,7 +261,6 @@ final class TipTrackStore: ObservableObject {
         }
     }
 
-#if DEBUG
     private static func makeDemoOrders() -> [TipOrder] {
         let formatter = ISO8601DateFormatter()
         return [
@@ -266,5 +299,4 @@ final class TipTrackStore: ObservableObject {
             )
         ]
     }
-#endif
 }

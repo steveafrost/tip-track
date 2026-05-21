@@ -68,6 +68,18 @@ struct SignInView: View {
                     .controlSize(.large)
                     .disabled(isSubmitting)
 
+                    Button(action: startDemo) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "eye")
+                            Text("Preview demo log")
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.large)
+                    .disabled(isSubmitting)
+
                     if isSubmitting {
                         HStack(spacing: 8) {
                             ProgressView()
@@ -84,6 +96,10 @@ struct SignInView: View {
             }
             .padding(TipTrackTheme.pagePadding)
         }
+    }
+
+    private func startDemo() {
+        store.startDemoSession()
     }
 
     private func signInWithGoogle() {

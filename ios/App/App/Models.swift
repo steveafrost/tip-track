@@ -88,6 +88,6 @@ struct DriverSession: Codable {
     var sessionToken: String?
 
     var isSignedIn: Bool {
-        userId != nil && sessionToken != nil
+        userId != nil
     }
 }
