@@ -7,7 +7,7 @@ import {
   UserButton,
   useUser,
 } from "@clerk/nextjs";
-import Image from "next/image";
+import { LogoImage } from "@/components/static-images";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import type React from "react";
 import {
@@ -365,14 +365,7 @@ function SignInScreen({
     <div className="app-background min-h-screen px-4 py-10 text-zinc-950">
       <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-md min-w-0 flex-col justify-center gap-6">
         <div className="space-y-5">
-          <Image
-            src="/images/logo-192.png"
-            alt="TipTrack"
-            width={72}
-            height={72}
-            priority
-            className="h-16 w-16 rounded-md"
-          />
+          <LogoImage className="h-16 w-16 rounded-md" priority />
           <div>
             <h1 className="text-5xl font-bold leading-none">Tip Track</h1>
             <p className="mt-3 max-w-sm text-lg font-medium leading-7 text-zinc-500">

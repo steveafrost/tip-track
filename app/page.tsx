@@ -1,5 +1,9 @@
-import Image from "next/image";
 import Link from "next/link";
+import {
+  LogoImage,
+  MarketingHeroImage,
+  PhoneScreenshot,
+} from "@/components/static-images";
 import {
   ArrowRight,
   Apple,
@@ -71,11 +75,11 @@ function AppStoreButton({ compact = false }: { compact?: boolean }) {
 }
 
 function PhoneShot({
-  src,
+  image,
   alt,
   className = "",
 }: {
-  src: string;
+  image: "add-order" | "locations" | "reports";
   alt: string;
   className?: string;
 }) {
@@ -84,13 +88,11 @@ function PhoneShot({
       className={`relative rounded-[2rem] border-[9px] border-[#070b08] bg-[#070b08] shadow-[0_34px_80px_rgba(0,0,0,0.42)] ${className}`}
     >
       <div className="absolute left-1/2 top-2 z-10 h-5 w-24 -translate-x-1/2 rounded-b-2xl bg-[#070b08]" />
-      <Image
-        src={src}
+      <PhoneScreenshot
+        image={image}
         alt={alt}
-        width={1284}
-        height={2778}
         className="h-full w-full rounded-[1.35rem] object-cover"
-        priority={src.includes("add-order")}
+        priority={image === "add-order"}
       />
     </div>
   );
@@ -103,14 +105,7 @@ function BrandStamp() {
       className="inline-flex items-center"
       aria-label="TipTrack home"
     >
-      <Image
-        src="/images/logo-192.png"
-        alt="TipTrack"
-        width={72}
-        height={72}
-        className="rounded-md"
-        priority
-      />
+      <LogoImage className="rounded-md" priority />
     </Link>
   );
 }
@@ -127,14 +122,7 @@ export default function Home() {
   return (
     <main className="min-h-screen overflow-hidden bg-[#f4ead1] text-[#132114]">
       <section className="relative min-h-[790px] overflow-hidden bg-[#050705] text-[#fff8df]">
-        <Image
-          src="/images/marketing/hero-dashboard.png"
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-center"
-        />
+        <MarketingHeroImage />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.94)_0%,rgba(0,0,0,0.76)_38%,rgba(0,0,0,0.24)_72%,rgba(0,0,0,0.42)_100%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.42)_0%,transparent_28%,rgba(0,0,0,0.78)_100%)]" />
         <div className="absolute left-0 top-0 h-full w-full opacity-[0.13] [background-image:linear-gradient(0deg,transparent_31px,rgba(168,255,93,0.24)_32px),linear-gradient(90deg,transparent_31px,rgba(168,255,93,0.14)_32px)] [background-size:33px_33px]" />
@@ -266,12 +254,12 @@ export default function Home() {
 
           <div className="relative mx-auto min-h-[980px] w-full max-w-[18rem] sm:min-h-[520px] sm:max-w-[28rem] lg:mx-0 lg:max-w-none">
             <PhoneShot
-              src="/images/marketing/add-order.png"
+              image="add-order"
               alt="TipTrack add order screen."
               className="absolute left-1/2 top-0 h-[500px] w-[232px] -translate-x-1/2 rotate-[-3deg] sm:-translate-x-[84%] lg:left-0 lg:translate-x-0"
             />
             <PhoneShot
-              src="/images/marketing/locations.png"
+              image="locations"
               alt="TipTrack saved locations screen."
               className="absolute left-1/2 top-[500px] h-[470px] w-[218px] -translate-x-1/2 rotate-[4deg] sm:top-14 sm:-translate-x-[16%] lg:left-auto lg:right-0 lg:translate-x-0"
             />
@@ -365,7 +353,7 @@ export default function Home() {
           </div>
 
           <PhoneShot
-            src="/images/marketing/reports.png"
+            image="reports"
             alt="TipTrack reports screen showing weekly totals."
             className="mx-auto h-[500px] w-[232px] rotate-[3deg]"
           />
