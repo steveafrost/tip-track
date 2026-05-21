@@ -19,7 +19,7 @@ struct SignInView: View {
                 Spacer()
 
                 VStack(alignment: .leading, spacing: 18) {
-                    AppIconTile(systemName: "wallet.pass", tint: .tipGreen)
+                    AppIconTile(systemName: "map", tint: .tipGreen)
                         .scaleEffect(1.2, anchor: .leading)
 
                     VStack(alignment: .leading, spacing: 8) {
@@ -28,7 +28,7 @@ struct SignInView: View {
                             .foregroundColor(.zinc900)
                             .lineLimit(1)
                             .minimumScaleFactor(0.82)
-                        Text("A shift ledger for delivery orders, locations, and tip history.")
+                        Text("A delivery log for orders, locations, and tip history.")
                             .font(.headline)
                             .foregroundColor(.zinc500)
                             .fixedSize(horizontal: false, vertical: true)
@@ -980,7 +980,7 @@ private struct TrialStatusCard: View {
             return "Unlimited logging is unlocked."
         }
 
-        return "Use the ledger first. Upgrade when it becomes part of your shift."
+        return "Use the log first. Upgrade when it becomes part of your shift."
     }
 }
 
