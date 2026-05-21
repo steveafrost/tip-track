@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BadgeInfoIcon, WalletIcon } from "lucide-react";
+import { BadgeInfoIcon, MapIcon } from "lucide-react";
 
 import { Button } from "@/components/button";
 import {
@@ -30,7 +30,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
           asChild
         >
           <Link href="/">
-            <WalletIcon
+            <MapIcon
               size={50}
               className="stroke-zinc-800 drop-shadow-md"
             />

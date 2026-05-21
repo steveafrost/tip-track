@@ -8,17 +8,17 @@ import { AppChrome } from "@/components/app-chrome";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://usetiptrack.com"),
-  title: "TipTrack Shift Ledger",
+  title: "TipTrack Delivery Log",
   description:
-    "A delivery driver tip ledger for logging orders, addresses, and tip patterns.",
+    "A delivery driver tip tracker for logging orders, addresses, and tip patterns.",
   manifest: "/manifest.json",
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "TipTrack Shift Ledger",
+    title: "TipTrack Delivery Log",
     description:
-      "A delivery driver tip ledger for logging orders, addresses, and tip patterns.",
+      "A delivery driver tip tracker for logging orders, addresses, and tip patterns.",
     url: "https://usetiptrack.com",
     siteName: "TipTrack",
     type: "website",

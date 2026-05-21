@@ -180,7 +180,7 @@ function AuthenticatedWebApp() {
       setLocations(locationsResult.locations ?? []);
       setEntitlement(entitlementResult.entitlement ?? null);
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Could not load your shift ledger.");
+      setErrorMessage(error instanceof Error ? error.message : "Could not load your delivery log.");
     } finally {
       setIsLoading(false);
     }
@@ -376,7 +376,7 @@ function SignInScreen({
           <div>
             <h1 className="text-5xl font-bold leading-none">Tip Track</h1>
             <p className="mt-3 max-w-sm text-lg font-medium leading-7 text-zinc-500">
-              A shift ledger for delivery orders, locations, and tip history.
+              A delivery log for orders, locations, and tip history.
             </p>
           </div>
         </div>
@@ -712,7 +712,7 @@ function TrialCard({
         <p className="text-xs leading-5 text-zinc-500">
           {isPro
             ? "Verified StoreKit unlock is active for this driver."
-            : "Use the ledger first. Upgrade when it becomes part of your shift."}
+            : "Use the log first. Upgrade when it becomes part of your shift."}
         </p>
       </div>
       <button
@@ -1236,7 +1236,7 @@ function LoadingBar() {
   return (
     <div className="mb-4 flex items-center gap-2 rounded-md bg-zinc-100 px-3 py-2 text-sm font-medium text-zinc-500">
       <Loader2 className="h-4 w-4 animate-spin" />
-      Syncing shift ledger
+      Syncing delivery log
     </div>
   );
 }

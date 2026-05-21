@@ -11,12 +11,12 @@ import {
   Route,
   Search,
   ShieldCheck,
-  WalletCards,
+  Truck,
 } from "lucide-react";
 
 const appStoreUrl = "https://apps.apple.com/app/id6771138274";
 
-const ledgerRows = [
+const logRows = [
   ["6:34 PM", "#8337", "3217 Elmwood Ave", "$8.25", "Leave at door"],
   ["6:58 PM", "#8338", "8687 Pinecrest Dr", "$5.00", "Nice porch light"],
   ["7:18 PM", "#8342", "1504 Brookside Dr", "$12.50", "Cash tip"],
@@ -40,7 +40,7 @@ const faqs = [
   {
     question: "Is my data safe?",
     answer:
-      "TipTrack is built for a private shift ledger. Your routes, notes, and totals stay tied to your account.",
+      "TipTrack is built for a private delivery log. Your routes, notes, and totals stay tied to your account.",
   },
   {
     question: "Can I use it on the web?",
@@ -146,8 +146,8 @@ export default function Home() {
               <a href="#sheet" className="hover:text-[#b8f26d]">
                 Sheet
               </a>
-              <a href="#ledger" className="hover:text-[#b8f26d]">
-                Ledger
+              <a href="#log" className="hover:text-[#b8f26d]">
+                Log
               </a>
               <a href="#pricing" className="hover:text-[#b8f26d]">
                 Pricing
@@ -167,13 +167,13 @@ export default function Home() {
             <h1 className="max-w-full text-[3.2rem] font-black leading-[0.9] tracking-normal text-white sm:text-[6.5rem] lg:text-[8.2rem]">
               <span className="block">TipTrack</span>
               <span className="block">Shift</span>
-              <span className="block">Ledger</span>
+              <span className="block">Log</span>
             </h1>
             <p className="mt-8 max-w-full font-mono text-2xl leading-tight text-[#fff1c8] sm:max-w-2xl sm:text-3xl">
               Know which deliveries are worth remembering.
             </p>
             <p className="mt-5 max-w-full text-lg leading-8 text-[#d8cba8] sm:max-w-xl">
-              A private order ledger for the parts of a delivery shift that
+              A private order log for the parts of a delivery shift that
               matter after the headlights, receipts, and addresses blur
               together.
             </p>
@@ -279,10 +279,10 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="ledger" className="bg-[#0b0d0a] px-5 py-16 text-[#f5ead0] sm:px-8">
+      <section id="log" className="bg-[#0b0d0a] px-5 py-16 text-[#f5ead0] sm:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="mb-6 flex flex-wrap items-end justify-between gap-4 border-b border-[#f5ead0]/20 pb-5 font-mono uppercase tracking-[0.16em]">
-            <h2 className="text-2xl font-black">Today&apos;s ledger</h2>
+            <h2 className="text-2xl font-black">Today&apos;s delivery log</h2>
             <span className="text-sm text-[#b8f26d]">18 orders / May 18, 2025</span>
           </div>
           <div className="overflow-x-auto">
@@ -297,7 +297,7 @@ export default function Home() {
                 </tr>
               </thead>
               <tbody>
-                {ledgerRows.map((row) => (
+                {logRows.map((row) => (
                   <tr
                     key={row[1]}
                     className={`border-b border-[#f5ead0]/12 ${row[1] === "#8342" ? "bg-[#244b1f]/42 text-[#b8f26d]" : ""}`}
@@ -342,7 +342,7 @@ export default function Home() {
 
           <div>
             <h2 className="font-mono text-4xl font-black uppercase leading-tight tracking-[0.08em] text-[#17351e]">
-              Unlock the full ledger
+              Unlock the full log
             </h2>
             <p className="mt-5 max-w-xl text-lg leading-8 text-[#4f594b]">
               After 20 orders, keep unlimited logging, full reports, and saved
@@ -403,8 +403,8 @@ export default function Home() {
             <a href="#sheet" className="hover:text-[#b8f26d]">
               Sheet
             </a>
-            <a href="#ledger" className="hover:text-[#b8f26d]">
-              Ledger
+            <a href="#log" className="hover:text-[#b8f26d]">
+              Log
             </a>
             <a href="#pricing" className="hover:text-[#b8f26d]">
               Pricing
@@ -427,7 +427,7 @@ export default function Home() {
         <div className="mx-auto mt-10 flex max-w-7xl items-center justify-between border-t border-[#f5ead0]/15 pt-5 font-mono text-xs uppercase tracking-[0.14em] text-[#847b65]">
           <span>(c) 2026 TipTrack</span>
           <span className="hidden sm:inline-flex items-center gap-2">
-            <WalletCards className="h-4 w-4" aria-hidden="true" />
+            <Truck className="h-4 w-4" aria-hidden="true" />
             Built for drivers
           </span>
         </div>
