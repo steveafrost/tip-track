@@ -1,6 +1,12 @@
 "use client";
 
-import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
+import {
+  ClerkLoaded,
+  ClerkLoading,
+  SignInButton,
+  UserButton,
+  useUser,
+} from "@clerk/nextjs";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import type React from "react";
 import {
@@ -375,12 +381,22 @@ function SignInScreen({
               Web sign-in is not configured. Set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY.
             </Banner>
           ) : (
-            <SignInButton mode="modal">
-              <PrimaryButton disabled={isLoading}>
-                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ChevronRight className="h-5 w-5" />}
-                {isLoading ? "Signing In" : "Sign In"}
-              </PrimaryButton>
-            </SignInButton>
+            <>
+              <ClerkLoading>
+                <PrimaryButton disabled>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Loading Sign In
+                </PrimaryButton>
+              </ClerkLoading>
+              <ClerkLoaded>
+                <SignInButton mode="modal">
+                  <PrimaryButton disabled={isLoading}>
+                    {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <ChevronRight className="h-5 w-5" />}
+                    {isLoading ? "Signing In" : "Sign In"}
+                  </PrimaryButton>
+                </SignInButton>
+              </ClerkLoaded>
+            </>
           )}
         </div>
       </div>
@@ -1105,14 +1121,15 @@ function SearchBox({
 function PrimaryButton({
   children,
   disabled,
-}: {
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
   children: React.ReactNode;
-  disabled?: boolean;
 }) {
   return (
     <button
       type="submit"
       disabled={disabled}
+      {...props}
       className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(4,120,87,0.18)] transition hover:bg-emerald-800 disabled:opacity-60"
     >
       {children}
