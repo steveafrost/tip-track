@@ -5,6 +5,12 @@ import StoreKit
 import SwiftUI
 import UIKit
 
+private func isGoogleSignInCancellation(_ error: Error) -> Bool {
+    let nsError = error as NSError
+    return nsError.domain == kGIDSignInErrorDomain &&
+        nsError.code == GIDSignInError.canceled.rawValue
+}
+
 struct SignInView: View {
     @EnvironmentObject private var store: TipTrackStore
     @State private var errorMessage: String?
@@ -118,7 +124,7 @@ struct SignInView: View {
 
         GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController) { result, error in
             if let error {
-                errorMessage = error.localizedDescription
+                errorMessage = isGoogleSignInCancellation(error) ? nil : error.localizedDescription
                 isSubmitting = false
                 return
             }
@@ -358,7 +364,7 @@ struct AccountConnectionsView: View {
 
         GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController) { result, error in
             if let error {
-                errorMessage = error.localizedDescription
+                errorMessage = isGoogleSignInCancellation(error) ? nil : error.localizedDescription
                 isSubmitting = false
                 return
             }
@@ -471,9 +477,6 @@ struct AddOrderView: View {
 
     var body: some View {
         PageScroll {
-            DashboardSummary()
-            TrialStatusCard(showingPaywall: $showingPaywall)
-
             VStack(alignment: .leading, spacing: 16) {
                 SectionHeader(title: "New delivery", subtitle: "Log the order before the shift moves on.")
 
@@ -515,6 +518,8 @@ struct AddOrderView: View {
             }
             .appCard()
 
+            DashboardSummary()
+            TrialStatusCard(showingPaywall: $showingPaywall)
             RecentOrdersPreview()
         }
         .alert("Order added", isPresented: $didAddOrder) {
@@ -1249,7 +1254,7 @@ private struct DashboardSummary: View {
     }
 
     var body: some View {
-        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
             StatTile(title: "Orders", value: "\(store.orders.count)", systemImage: "shippingbox", tint: .tipGreen)
             StatTile(title: "Locations", value: "\(store.locations.count)", systemImage: "building.2", tint: .tipBlue)
             StatTile(title: "Tips Logged", value: "\(recordedTips)", systemImage: "checkmark.seal", tint: .tipAmber)

@@ -361,7 +361,7 @@ struct StatTile: View {
     var tint: Color = .tipGreen
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 8) {
             AppIconTile(systemName: systemImage, tint: tint)
             VStack(alignment: .leading, spacing: 2) {
                 Text(value)
@@ -375,7 +375,7 @@ struct StatTile: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .appCard(padding: 14)
+        .appCard(padding: 12)
     }
 }
 
