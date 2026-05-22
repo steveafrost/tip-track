@@ -310,7 +310,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = 4QJ25Y85MX;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -335,8 +335,11 @@
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = 4QJ25Y85MX;
+				GID_CLIENT_ID = "235559068133-9ocgpdl176esgo6cvbq8s6qpip3cdgl3.apps.googleusercontent.com";
+				GID_REVERSED_CLIENT_ID = "com.googleusercontent.apps.235559068133-9ocgpdl176esgo6cvbq8s6qpip3cdgl3";
+				GID_SERVER_CLIENT_ID = "235559068133-b2tdfe7avn6nbjf9fv200fh7r56o35vh.apps.googleusercontent.com";
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (

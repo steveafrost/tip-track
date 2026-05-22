@@ -103,6 +103,11 @@ struct SignInView: View {
     }
 
     private func signInWithGoogle() {
+        guard isGoogleSignInConfigured else {
+            errorMessage = "Google sign-in is not configured for this build."
+            return
+        }
+
         guard let presentingViewController = UIApplication.shared.tipTrackTopViewController else {
             errorMessage = "Could not present Google sign-in."
             return
@@ -179,6 +184,14 @@ struct SignInView: View {
             isSubmitting = false
             currentNonce = nil
         }
+    }
+
+    private var isGoogleSignInConfigured: Bool {
+        guard let clientID = Bundle.main.object(forInfoDictionaryKey: "GIDClientID") as? String else {
+            return false
+        }
+
+        return !clientID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private func randomNonce(length: Int = 32) -> String {
@@ -329,6 +342,11 @@ struct AccountConnectionsView: View {
     }
 
     private func linkGoogle() {
+        guard isGoogleSignInConfigured else {
+            errorMessage = "Google sign-in is not configured for this build."
+            return
+        }
+
         guard let presentingViewController = UIApplication.shared.tipTrackTopViewController else {
             errorMessage = "Could not present Google sign-in."
             return
@@ -389,6 +407,14 @@ struct AccountConnectionsView: View {
         }
 
         return result
+    }
+
+    private var isGoogleSignInConfigured: Bool {
+        guard let clientID = Bundle.main.object(forInfoDictionaryKey: "GIDClientID") as? String else {
+            return false
+        }
+
+        return !clientID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private func sha256(_ input: String) -> String {
