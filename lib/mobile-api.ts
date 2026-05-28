@@ -26,7 +26,7 @@ export function getMobileDriverId(request: NextRequest) {
     return verifyMobileSessionToken(sessionToken).driverId;
   }
 
-  if (process.env.MOBILE_REQUIRE_USER_AUTH === "true") {
+  if (process.env.MOBILE_ALLOW_LEGACY_DRIVER_HEADER !== "true") {
     throw new MobileApiError("Missing user session", 401);
   }
 
