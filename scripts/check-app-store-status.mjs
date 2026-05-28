@@ -11,6 +11,8 @@ const issuerId = "4e8ddd0a-9e6c-4877-ae9d-3f7168c02256";
 const keyPath = join(homedir(), ".appstoreconnect", "private_keys", `AuthKey_${keyId}.p8`);
 const statePath = join(process.cwd(), ".tmp", "app-store-status.json");
 const shouldNotify = process.argv.includes("--notify");
+const shouldTestIMessage = process.argv.includes("--test-imessage");
+const iMessageRecipient = process.env.APP_STORE_STATUS_IMESSAGE_TO;
 
 function base64Url(value) {
   return Buffer.from(value).toString("base64url");
@@ -45,12 +47,45 @@ async function appStoreConnect(path, token) {
   return JSON.parse(body);
 }
 
-function notify(title, message) {
-  if (!shouldNotify) return;
+function sendMacNotification(title, message) {
   execFileSync("/usr/bin/osascript", [
     "-e",
     `display notification ${JSON.stringify(message)} with title ${JSON.stringify(title)}`,
   ]);
+}
+
+function sendIMessage(message) {
+  if (!iMessageRecipient) {
+    throw new Error("APP_STORE_STATUS_IMESSAGE_TO is required for iMessage notifications.");
+  }
+
+  execFileSync("/usr/bin/osascript", [
+    "-e",
+    `
+      on run argv
+        set recipientHandle to item 1 of argv
+        set messageText to item 2 of argv
+        tell application "Messages"
+          set targetService to 1st service whose service type = iMessage
+          set targetBuddy to buddy recipientHandle of targetService
+          send messageText to targetBuddy
+        end tell
+      end run
+    `,
+    iMessageRecipient,
+    message,
+  ]);
+}
+
+function notify(title, message) {
+  if (!shouldNotify) return;
+
+  if (iMessageRecipient) {
+    sendIMessage(`${title}: ${message}`);
+    return;
+  }
+
+  sendMacNotification(title, message);
 }
 
 function readPreviousState() {
@@ -64,6 +99,12 @@ function readPreviousState() {
 function writeCurrentState(status) {
   mkdirSync(dirname(statePath), { recursive: true });
   writeFileSync(statePath, `${JSON.stringify(status, null, 2)}\n`);
+}
+
+if (shouldTestIMessage) {
+  sendIMessage("TipTrack App Store watcher test: iMessage notifications are active.");
+  console.log("Sent TipTrack App Store watcher iMessage test.");
+  process.exit(0);
 }
 
 const token = createToken();
@@ -93,15 +134,16 @@ const status = {
 };
 
 const previous = readPreviousState();
-writeCurrentState(status);
 
 const stateChanged = previous?.appStoreState && previous.appStoreState !== status.appStoreState;
 const isLive = status.appStoreState === "READY_FOR_SALE";
 
-if (isLive) {
+if (stateChanged && isLive) {
   notify("TipTrack is live", `${status.appName} ${status.versionString} is READY_FOR_SALE.`);
 } else if (stateChanged) {
   notify("TipTrack App Store status changed", `${previous.appStoreState} -> ${status.appStoreState}`);
 }
+
+writeCurrentState(status);
 
 console.log(`${status.checkedAt} ${status.appName} ${status.versionString}: ${status.appStoreState}`);
