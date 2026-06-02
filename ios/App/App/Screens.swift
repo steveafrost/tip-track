@@ -11,11 +11,20 @@ private func isGoogleSignInCancellation(_ error: Error) -> Bool {
         nsError.code == GIDSignInError.canceled.rawValue
 }
 
+private func appleSignInErrorMessage(_ error: Error) -> String {
+    if let authorizationError = error as? ASAuthorizationError,
+       authorizationError.code == .unknown {
+        return "Sign in to your Apple Account in Settings, then try again."
+    }
+
+    return error.localizedDescription
+}
+
 struct SignInView: View {
     @EnvironmentObject private var store: TipTrackStore
+    @StateObject private var appleSignIn = AppleSignInCoordinator()
     @State private var errorMessage: String?
     @State private var isSubmitting = false
-    @State private var currentNonce: String?
 
     var body: some View {
         ZStack {
@@ -46,17 +55,9 @@ struct SignInView: View {
                         ErrorBanner(message: errorMessage)
                     }
 
-                    SignInWithAppleButton(.signIn) { request in
-                        let nonce = randomNonce()
-                        currentNonce = nonce
-                        request.requestedScopes = [.fullName, .email]
-                        request.nonce = sha256(nonce)
-                        isSubmitting = true
-                        errorMessage = nil
-                    } onCompletion: { result in
-                        handleAppleSignIn(result)
+                    AppleAuthorizationButton(type: .signIn) {
+                        startAppleSignIn()
                     }
-                    .signInWithAppleButtonStyle(.black)
                     .frame(height: 52)
                     .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
                     .disabled(isSubmitting)
@@ -101,6 +102,15 @@ struct SignInView: View {
                 Spacer()
             }
             .padding(TipTrackTheme.pagePadding)
+        }
+    }
+
+    private func startAppleSignIn() {
+        isSubmitting = true
+        errorMessage = nil
+
+        appleSignIn.start(requestedScopes: [.fullName, .email]) { result in
+            handleAppleSignIn(result)
         }
     }
 
@@ -151,44 +161,31 @@ struct SignInView: View {
         }
     }
 
-    private func handleAppleSignIn(_ result: Result<ASAuthorization, Error>) {
+    private func handleAppleSignIn(_ result: Result<AppleSignInCredential, Error>) {
         switch result {
-        case .success(let authorization):
-            guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
-                  let identityTokenData = credential.identityToken,
-                  let identityToken = String(data: identityTokenData, encoding: .utf8),
-                  let nonce = currentNonce else {
-                errorMessage = "Apple did not return a valid sign-in token."
-                isSubmitting = false
-                return
-            }
-
-            let displayName = PersonNameComponentsFormatter().string(from: credential.fullName ?? PersonNameComponents())
-
-            Task {
+        case .success(let credential):
+            Task { @MainActor in
                 do {
                     try await store.signInWithApple(
-                        identityToken: identityToken,
-                        rawNonce: nonce,
-                        displayName: displayName.isEmpty ? nil : displayName
+                        identityToken: credential.identityToken,
+                        rawNonce: credential.rawNonce,
+                        displayName: credential.displayName
                     )
                 } catch {
                     errorMessage = error.localizedDescription
                 }
 
                 isSubmitting = false
-                currentNonce = nil
             }
         case .failure(let error):
             if let authorizationError = error as? ASAuthorizationError,
                authorizationError.code == .canceled {
                 errorMessage = nil
             } else {
-                errorMessage = error.localizedDescription
+                errorMessage = appleSignInErrorMessage(error)
             }
 
             isSubmitting = false
-            currentNonce = nil
         }
     }
 
@@ -200,43 +197,14 @@ struct SignInView: View {
         return !clientID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    private func randomNonce(length: Int = 32) -> String {
-        precondition(length > 0)
-        let charset = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
-        var result = ""
-        var remainingLength = length
-
-        while remainingLength > 0 {
-            var random: UInt8 = 0
-            let status = SecRandomCopyBytes(kSecRandomDefault, 1, &random)
-
-            if status != errSecSuccess {
-                fatalError("Unable to generate nonce.")
-            }
-
-            if random < UInt8(charset.count) {
-                result.append(charset[Int(random)])
-                remainingLength -= 1
-            }
-        }
-
-        return result
-    }
-
-    private func sha256(_ input: String) -> String {
-        let inputData = Data(input.utf8)
-        let hashedData = SHA256.hash(data: inputData)
-
-        return hashedData.map { String(format: "%02x", $0) }.joined()
-    }
 }
 
 struct AccountConnectionsView: View {
     @EnvironmentObject private var store: TipTrackStore
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var appleSignIn = AppleSignInCoordinator()
     @State private var errorMessage: String?
     @State private var isSubmitting = false
-    @State private var currentNonce: String?
     @State private var successMessage: String?
 
     var body: some View {
@@ -262,18 +230,9 @@ struct AccountConnectionsView: View {
                     ErrorBanner(message: errorMessage)
                 }
 
-                SignInWithAppleButton(.continue) { request in
-                    let nonce = randomNonce()
-                    currentNonce = nonce
-                    request.requestedScopes = [.fullName, .email]
-                    request.nonce = sha256(nonce)
-                    isSubmitting = true
-                    errorMessage = nil
-                    successMessage = nil
-                } onCompletion: { result in
-                    handleAppleLink(result)
+                AppleAuthorizationButton(type: .continue) {
+                    startAppleLink()
                 }
-                .signInWithAppleButtonStyle(.black)
                 .frame(height: 52)
                 .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
                 .disabled(isSubmitting)
@@ -305,26 +264,25 @@ struct AccountConnectionsView: View {
         }
     }
 
-    private func handleAppleLink(_ result: Result<ASAuthorization, Error>) {
+    private func startAppleLink() {
+        isSubmitting = true
+        errorMessage = nil
+        successMessage = nil
+
+        appleSignIn.start(requestedScopes: [.fullName, .email]) { result in
+            handleAppleLink(result)
+        }
+    }
+
+    private func handleAppleLink(_ result: Result<AppleSignInCredential, Error>) {
         switch result {
-        case .success(let authorization):
-            guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
-                  let identityTokenData = credential.identityToken,
-                  let identityToken = String(data: identityTokenData, encoding: .utf8),
-                  let nonce = currentNonce else {
-                errorMessage = "Apple did not return a valid sign-in token."
-                isSubmitting = false
-                return
-            }
-
-            let displayName = PersonNameComponentsFormatter().string(from: credential.fullName ?? PersonNameComponents())
-
-            Task {
+        case .success(let credential):
+            Task { @MainActor in
                 do {
                     try await store.linkApple(
-                        identityToken: identityToken,
-                        rawNonce: nonce,
-                        displayName: displayName.isEmpty ? nil : displayName
+                        identityToken: credential.identityToken,
+                        rawNonce: credential.rawNonce,
+                        displayName: credential.displayName
                     )
                     successMessage = "Apple is connected."
                 } catch {
@@ -332,18 +290,16 @@ struct AccountConnectionsView: View {
                 }
 
                 isSubmitting = false
-                currentNonce = nil
             }
         case .failure(let error):
             if let authorizationError = error as? ASAuthorizationError,
                authorizationError.code == .canceled {
                 errorMessage = nil
             } else {
-                errorMessage = error.localizedDescription
+                errorMessage = appleSignInErrorMessage(error)
             }
 
             isSubmitting = false
-            currentNonce = nil
         }
     }
 
@@ -392,6 +348,50 @@ struct AccountConnectionsView: View {
         }
     }
 
+    private var isGoogleSignInConfigured: Bool {
+        guard let clientID = Bundle.main.object(forInfoDictionaryKey: "GIDClientID") as? String else {
+            return false
+        }
+
+        return !clientID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+}
+
+struct AppleSignInCredential {
+    let identityToken: String
+    let rawNonce: String
+    let displayName: String?
+}
+
+final class AppleSignInCoordinator: NSObject, ObservableObject {
+    private var currentNonce: String?
+    private var completion: ((Result<AppleSignInCredential, Error>) -> Void)?
+
+    func start(
+        requestedScopes: [ASAuthorization.Scope],
+        completion: @escaping (Result<AppleSignInCredential, Error>) -> Void
+    ) {
+        let nonce = randomNonce()
+        currentNonce = nonce
+        self.completion = completion
+
+        let request = ASAuthorizationAppleIDProvider().createRequest()
+        request.requestedScopes = requestedScopes
+        request.nonce = sha256(nonce)
+
+        let controller = ASAuthorizationController(authorizationRequests: [request])
+        controller.delegate = self
+        controller.presentationContextProvider = self
+        controller.performRequests()
+    }
+
+    private func finish(_ result: Result<AppleSignInCredential, Error>) {
+        let completion = completion
+        currentNonce = nil
+        self.completion = nil
+        completion?(result)
+    }
+
     private func randomNonce(length: Int = 32) -> String {
         precondition(length > 0)
         let charset = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
@@ -415,14 +415,6 @@ struct AccountConnectionsView: View {
         return result
     }
 
-    private var isGoogleSignInConfigured: Bool {
-        guard let clientID = Bundle.main.object(forInfoDictionaryKey: "GIDClientID") as? String else {
-            return false
-        }
-
-        return !clientID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
-
     private func sha256(_ input: String) -> String {
         let inputData = Data(input.utf8)
         let hashedData = SHA256.hash(data: inputData)
@@ -431,12 +423,100 @@ struct AccountConnectionsView: View {
     }
 }
 
+extension AppleSignInCoordinator: ASAuthorizationControllerDelegate {
+    func authorizationController(
+        controller: ASAuthorizationController,
+        didCompleteWithAuthorization authorization: ASAuthorization
+    ) {
+        guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+              let identityTokenData = credential.identityToken,
+              let identityToken = String(data: identityTokenData, encoding: .utf8),
+              let nonce = currentNonce else {
+            finish(.failure(TipTrackAppleSignInError.missingToken))
+            return
+        }
+
+        let displayName = PersonNameComponentsFormatter()
+            .string(from: credential.fullName ?? PersonNameComponents())
+
+        finish(.success(AppleSignInCredential(
+            identityToken: identityToken,
+            rawNonce: nonce,
+            displayName: displayName.isEmpty ? nil : displayName
+        )))
+    }
+
+    func authorizationController(
+        controller: ASAuthorizationController,
+        didCompleteWithError error: Error
+    ) {
+        finish(.failure(error))
+    }
+}
+
+extension AppleSignInCoordinator: ASAuthorizationControllerPresentationContextProviding {
+    func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+        UIApplication.shared.tipTrackKeyWindow ?? ASPresentationAnchor()
+    }
+}
+
+private enum TipTrackAppleSignInError: LocalizedError {
+    case missingToken
+
+    var errorDescription: String? {
+        switch self {
+        case .missingToken:
+            return "Apple did not return a valid sign-in token."
+        }
+    }
+}
+
+struct AppleAuthorizationButton: UIViewRepresentable {
+    let type: ASAuthorizationAppleIDButton.ButtonType
+    let action: () -> Void
+
+    func makeUIView(context: Context) -> ASAuthorizationAppleIDButton {
+        let button = ASAuthorizationAppleIDButton(type: type, style: .black)
+        button.cornerRadius = TipTrackTheme.controlRadius
+        button.addTarget(
+            context.coordinator,
+            action: #selector(Coordinator.performAction),
+            for: .touchUpInside
+        )
+        return button
+    }
+
+    func updateUIView(_ uiView: ASAuthorizationAppleIDButton, context: Context) {
+        context.coordinator.action = action
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(action: action)
+    }
+
+    final class Coordinator: NSObject {
+        var action: () -> Void
+
+        init(action: @escaping () -> Void) {
+            self.action = action
+        }
+
+        @objc func performAction() {
+            action()
+        }
+    }
+}
+
 private extension UIApplication {
-    var tipTrackTopViewController: UIViewController? {
+    var tipTrackKeyWindow: UIWindow? {
         connectedScenes
             .compactMap { $0 as? UIWindowScene }
             .flatMap(\.windows)
-            .first { $0.isKeyWindow }?
+            .first { $0.isKeyWindow }
+    }
+
+    var tipTrackTopViewController: UIViewController? {
+        tipTrackKeyWindow?
             .rootViewController?
             .tipTrackTopMostViewController
     }
