@@ -11,9 +11,17 @@ private func isGoogleSignInCancellation(_ error: Error) -> Bool {
         nsError.code == GIDSignInError.canceled.rawValue
 }
 
+private func isAppleSignInCancellation(_ error: Error) -> Bool {
+    let nsError = error as NSError
+    return nsError.domain == ASAuthorizationError.errorDomain &&
+        nsError.code == ASAuthorizationError.canceled.rawValue
+}
+
 private func appleSignInErrorMessage(_ error: Error) -> String {
-    if let authorizationError = error as? ASAuthorizationError,
-       authorizationError.code == .unknown {
+    let nsError = error as NSError
+
+    if nsError.domain == ASAuthorizationError.errorDomain &&
+        nsError.code == ASAuthorizationError.unknown.rawValue {
         return "Sign in to your Apple Account in Settings, then try again."
     }
 
@@ -134,15 +142,19 @@ struct SignInView: View {
 
         GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController) { result, error in
             if let error {
-                errorMessage = isGoogleSignInCancellation(error) ? nil : error.localizedDescription
-                isSubmitting = false
+                Task { @MainActor in
+                    errorMessage = isGoogleSignInCancellation(error) ? nil : error.localizedDescription
+                    isSubmitting = false
+                }
                 return
             }
 
             guard let user = result?.user,
                   let identityToken = user.idToken?.tokenString else {
-                errorMessage = "Google did not return a valid sign-in token."
-                isSubmitting = false
+                Task { @MainActor in
+                    errorMessage = "Google did not return a valid sign-in token."
+                    isSubmitting = false
+                }
                 return
             }
 
@@ -178,8 +190,7 @@ struct SignInView: View {
                 isSubmitting = false
             }
         case .failure(let error):
-            if let authorizationError = error as? ASAuthorizationError,
-               authorizationError.code == .canceled {
+            if isAppleSignInCancellation(error) {
                 errorMessage = nil
             } else {
                 errorMessage = appleSignInErrorMessage(error)
@@ -292,8 +303,7 @@ struct AccountConnectionsView: View {
                 isSubmitting = false
             }
         case .failure(let error):
-            if let authorizationError = error as? ASAuthorizationError,
-               authorizationError.code == .canceled {
+            if isAppleSignInCancellation(error) {
                 errorMessage = nil
             } else {
                 errorMessage = appleSignInErrorMessage(error)
@@ -320,15 +330,19 @@ struct AccountConnectionsView: View {
 
         GIDSignIn.sharedInstance.signIn(withPresenting: presentingViewController) { result, error in
             if let error {
-                errorMessage = isGoogleSignInCancellation(error) ? nil : error.localizedDescription
-                isSubmitting = false
+                Task { @MainActor in
+                    errorMessage = isGoogleSignInCancellation(error) ? nil : error.localizedDescription
+                    isSubmitting = false
+                }
                 return
             }
 
             guard let user = result?.user,
                   let identityToken = user.idToken?.tokenString else {
-                errorMessage = "Google did not return a valid sign-in token."
-                isSubmitting = false
+                Task { @MainActor in
+                    errorMessage = "Google did not return a valid sign-in token."
+                    isSubmitting = false
+                }
                 return
             }
 
@@ -371,7 +385,15 @@ final class AppleSignInCoordinator: NSObject, ObservableObject {
         requestedScopes: [ASAuthorization.Scope],
         completion: @escaping (Result<AppleSignInCredential, Error>) -> Void
     ) {
-        let nonce = randomNonce()
+        let nonce: String
+
+        do {
+            nonce = try randomNonce()
+        } catch {
+            completion(.failure(error))
+            return
+        }
+
         currentNonce = nonce
         self.completion = completion
 
@@ -392,7 +414,7 @@ final class AppleSignInCoordinator: NSObject, ObservableObject {
         completion?(result)
     }
 
-    private func randomNonce(length: Int = 32) -> String {
+    private func randomNonce(length: Int = 32) throws -> String {
         precondition(length > 0)
         let charset = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
         var result = ""
@@ -403,7 +425,7 @@ final class AppleSignInCoordinator: NSObject, ObservableObject {
             let status = SecRandomCopyBytes(kSecRandomDefault, 1, &random)
 
             if status != errSecSuccess {
-                fatalError("Unable to generate nonce.")
+                throw TipTrackAppleSignInError.nonceGenerationFailed
             }
 
             if random < UInt8(charset.count) {
@@ -461,10 +483,13 @@ extension AppleSignInCoordinator: ASAuthorizationControllerPresentationContextPr
 }
 
 private enum TipTrackAppleSignInError: LocalizedError {
+    case nonceGenerationFailed
     case missingToken
 
     var errorDescription: String? {
         switch self {
+        case .nonceGenerationFailed:
+            return "Apple sign-in could not start securely. Please try again."
         case .missingToken:
             return "Apple did not return a valid sign-in token."
         }
