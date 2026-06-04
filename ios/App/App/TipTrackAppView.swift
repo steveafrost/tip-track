@@ -89,26 +89,34 @@ struct AppHeader: View {
     @Binding var showingAccount: Bool
     @State private var showingSignOutConfirmation = false
 
+    private let headerIconSize: CGFloat = 36
+    private let actionButtonSize: CGFloat = 34
+
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 8) {
             AppIconTile(systemName: selectedTab.systemImage, tint: .tipGreen)
+                .frame(width: headerIconSize, height: headerIconSize)
             VStack(alignment: .leading, spacing: 2) {
                 Text(selectedTab.title)
                     .font(.title2.weight(.bold))
                     .foregroundColor(.zinc900)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.82)
+                    .layoutPriority(2)
                 Text(store.session.displayName ?? "Tip Track")
                     .font(.caption.weight(.medium))
                     .foregroundColor(.zinc500)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.88)
             }
+            .layoutPriority(1)
             Spacer()
             Button {
                 showingPaywall = true
             } label: {
                 Image(systemName: monetizationStore.isPro ? "checkmark.seal.fill" : "lock.open")
                     .font(.system(size: 18, weight: .semibold))
-                    .frame(width: 36, height: 36)
+                    .frame(width: actionButtonSize, height: actionButtonSize)
                     .background(monetizationStore.isPro ? Color.tipGreen.opacity(0.12) : Color.zinc100)
                     .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
             }
@@ -120,7 +128,7 @@ struct AppHeader: View {
             } label: {
                 Image(systemName: "person.crop.circle")
                     .font(.system(size: 18, weight: .semibold))
-                    .frame(width: 36, height: 36)
+                    .frame(width: actionButtonSize, height: actionButtonSize)
                     .background(Color.zinc100)
                     .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
             }
@@ -131,7 +139,7 @@ struct AppHeader: View {
             } label: {
                 Image(systemName: "info.circle")
                     .font(.system(size: 18, weight: .semibold))
-                    .frame(width: 36, height: 36)
+                    .frame(width: actionButtonSize, height: actionButtonSize)
                     .background(Color.zinc100)
                     .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
             }
@@ -142,7 +150,7 @@ struct AppHeader: View {
             } label: {
                 Image(systemName: "rectangle.portrait.and.arrow.right")
                     .font(.system(size: 18, weight: .semibold))
-                    .frame(width: 36, height: 36)
+                    .frame(width: actionButtonSize, height: actionButtonSize)
                     .background(Color.zinc100)
                     .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
             }
