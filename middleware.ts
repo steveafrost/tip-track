@@ -5,6 +5,7 @@ const clerkMiddleware = authMiddleware({
   publicRoutes: [
     "/",
     "/api/mobile(.*)",
+    "/api/web(.*)",
     "/app(.*)",
     "/search(.*)",
     "/submit(.*)",

@@ -8,6 +8,10 @@ export async function getWebUserId() {
 }
 
 export async function getWebUserSession() {
+  if (!process.env.CLERK_SECRET_KEY) {
+    throw new MobileApiError("Web sign-in is not configured", 503);
+  }
+
   const user = await currentUser();
 
   if (!user) {
