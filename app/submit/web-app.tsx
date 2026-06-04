@@ -362,13 +362,15 @@ function SignInScreen({
   isLoading: boolean;
 }) {
   return (
-    <div className="app-background min-h-screen px-4 py-10 text-zinc-950">
-      <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-md min-w-0 flex-col justify-center gap-6">
+    <div className="app-background min-h-screen overflow-x-hidden px-4 py-10 text-zinc-950">
+      <div
+        className="mx-0 flex min-h-[calc(100vh-5rem)] w-full min-w-0 max-w-[21rem] flex-col justify-center gap-6 sm:mx-auto sm:max-w-md"
+      >
         <div className="space-y-5">
           <LogoImage className="h-16 w-16 rounded-md" priority />
-          <div>
+          <div className="min-w-0">
             <h1 className="text-5xl font-bold leading-none">Tip Track</h1>
-            <p className="mt-3 max-w-sm text-lg font-medium leading-7 text-zinc-500">
+            <p className="mt-3 max-w-full break-words text-base font-medium leading-7 text-zinc-500 sm:text-lg">
               A delivery log for orders, locations, and tip history.
             </p>
           </div>
@@ -378,7 +380,7 @@ function SignInScreen({
           {errorMessage ? <Banner tone="error">{errorMessage}</Banner> : null}
           {!isClerkConfigured ? (
             <Banner tone="error">
-              Web sign-in is not configured. Set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY.
+              Web sign-in is not configured.
             </Banner>
           ) : (
             <>
@@ -1214,7 +1216,7 @@ function Banner({
 }) {
   return (
     <div
-      className={`rounded-md border px-3 py-2 text-sm font-medium ${
+      className={`min-w-0 overflow-hidden break-words rounded-md border px-3 py-2 text-sm font-medium leading-6 ${
         tone === "error"
           ? "border-red-200 bg-red-50 text-red-700"
           : "border-emerald-200 bg-emerald-50 text-emerald-700"
