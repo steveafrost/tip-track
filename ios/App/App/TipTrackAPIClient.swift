@@ -50,7 +50,8 @@ struct TipTrackAPIClient {
             userId: response.driverId,
             displayName: response.displayName,
             sessionToken: response.sessionToken,
-            authProvider: "apple"
+            authProvider: "apple",
+            connectedProviders: ["apple"]
         )
     }
 
@@ -72,7 +73,8 @@ struct TipTrackAPIClient {
             userId: response.driverId,
             displayName: response.displayName,
             sessionToken: response.sessionToken,
-            authProvider: "google"
+            authProvider: "google",
+            connectedProviders: ["google"]
         )
     }
 

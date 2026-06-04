@@ -87,6 +87,7 @@ struct AppHeader: View {
     @Binding var showingHelp: Bool
     @Binding var showingPaywall: Bool
     @Binding var showingAccount: Bool
+    @State private var showingSignOutConfirmation = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -137,7 +138,7 @@ struct AppHeader: View {
             .accessibilityLabel("Help")
 
             Button {
-                store.signOut()
+                showingSignOutConfirmation = true
             } label: {
                 Image(systemName: "rectangle.portrait.and.arrow.right")
                     .font(.system(size: 18, weight: .semibold))
@@ -155,6 +156,12 @@ struct AppHeader: View {
             Rectangle()
                 .fill(Color.zinc200)
                 .frame(height: 1)
+        }
+        .confirmationDialog("Sign out?", isPresented: $showingSignOutConfirmation, titleVisibility: .visible) {
+            Button("Sign out", role: .destructive) {
+                store.signOut()
+            }
+            Button("Cancel", role: .cancel) {}
         }
     }
 }

@@ -241,7 +241,7 @@ struct AccountConnectionsView: View {
                     ErrorBanner(message: errorMessage)
                 }
 
-                if store.session.authProvider == "apple" {
+                if store.session.isProviderConnected("apple") {
                     ConnectedProviderRow(systemImage: "apple.logo", title: "Apple connected")
                 } else {
                     AppleAuthorizationButton(type: .continue) {
@@ -252,7 +252,7 @@ struct AccountConnectionsView: View {
                     .disabled(isSubmitting)
                 }
 
-                if store.session.authProvider == "google" {
+                if store.session.isProviderConnected("google") {
                     ConnectedProviderRow(systemImage: "checkmark.circle.fill", title: "Google connected")
                 } else {
                     Button(action: linkGoogle) {

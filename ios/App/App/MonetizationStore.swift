@@ -47,6 +47,7 @@ final class MonetizationStore: ObservableObject {
     }
 
     func refreshProducts() async {
+        guard !isLoading else { return }
         guard products.isEmpty else { return }
 
         isLoading = true

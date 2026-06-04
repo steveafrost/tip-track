@@ -52,7 +52,8 @@ final class TipTrackStore: ObservableObject {
                 userId: "app-store-demo",
                 displayName: "App Store Demo",
                 sessionToken: "demo-session",
-                authProvider: "demo"
+                authProvider: "demo",
+                connectedProviders: ["demo"]
             )
             allOrders = TipTrackStore.makeDemoOrders()
             return
@@ -63,7 +64,13 @@ final class TipTrackStore: ObservableObject {
            let decodedSession = try? decoder.decode(DriverSession.self, from: sessionData) {
             session = decodedSession
         } else {
-            session = DriverSession(userId: nil, displayName: nil, sessionToken: nil, authProvider: nil)
+            session = DriverSession(
+                userId: nil,
+                displayName: nil,
+                sessionToken: nil,
+                authProvider: nil,
+                connectedProviders: nil
+            )
         }
 
         if let orderData = defaults.data(forKey: ordersKey),
@@ -79,7 +86,8 @@ final class TipTrackStore: ObservableObject {
             userId: "app-store-demo",
             displayName: "App Store Demo",
             sessionToken: nil,
-            authProvider: "demo"
+            authProvider: "demo",
+            connectedProviders: ["demo"]
         )
 
         if !allOrders.contains(where: { $0.createdBy == "app-store-demo" }) {
@@ -137,6 +145,7 @@ final class TipTrackStore: ObservableObject {
             rawNonce: rawNonce,
             displayName: displayName
         )
+        markProviderConnected("apple")
     }
 
     func linkGoogle(identityToken: String, displayName: String?) async throws {
@@ -154,10 +163,17 @@ final class TipTrackStore: ObservableObject {
             rawNonce: nil,
             displayName: displayName
         )
+        markProviderConnected("google")
     }
 
     func signOut() {
-        session = DriverSession(userId: nil, displayName: nil, sessionToken: nil, authProvider: nil)
+        session = DriverSession(
+            userId: nil,
+            displayName: nil,
+            sessionToken: nil,
+            authProvider: nil,
+            connectedProviders: nil
+        )
         saveSession()
     }
 
@@ -255,6 +271,20 @@ final class TipTrackStore: ObservableObject {
         if let data = try? encoder.encode(session) {
             UserDefaults.standard.set(data, forKey: sessionKey)
         }
+    }
+
+    private func markProviderConnected(_ provider: String) {
+        var providers = session.connectedProviders ?? []
+        if let authProvider = session.authProvider, !providers.contains(authProvider) {
+            providers.append(authProvider)
+        }
+
+        if !providers.contains(provider) {
+            providers.append(provider)
+        }
+
+        session.connectedProviders = providers
+        saveSession()
     }
 
     private func saveOrders() {

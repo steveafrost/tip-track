@@ -87,8 +87,17 @@ struct DriverSession: Codable {
     var displayName: String?
     var sessionToken: String?
     var authProvider: String?
+    var connectedProviders: [String]?
 
     var isSignedIn: Bool {
         userId != nil
+    }
+
+    func isProviderConnected(_ provider: String) -> Bool {
+        if authProvider == provider {
+            return true
+        }
+
+        return connectedProviders?.contains(provider) == true
     }
 }
