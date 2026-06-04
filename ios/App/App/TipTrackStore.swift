@@ -51,7 +51,8 @@ final class TipTrackStore: ObservableObject {
             session = DriverSession(
                 userId: "app-store-demo",
                 displayName: "App Store Demo",
-                sessionToken: "demo-session"
+                sessionToken: "demo-session",
+                authProvider: "demo"
             )
             allOrders = TipTrackStore.makeDemoOrders()
             return
@@ -62,7 +63,7 @@ final class TipTrackStore: ObservableObject {
            let decodedSession = try? decoder.decode(DriverSession.self, from: sessionData) {
             session = decodedSession
         } else {
-            session = DriverSession(userId: nil, displayName: nil, sessionToken: nil)
+            session = DriverSession(userId: nil, displayName: nil, sessionToken: nil, authProvider: nil)
         }
 
         if let orderData = defaults.data(forKey: ordersKey),
@@ -77,7 +78,8 @@ final class TipTrackStore: ObservableObject {
         session = DriverSession(
             userId: "app-store-demo",
             displayName: "App Store Demo",
-            sessionToken: nil
+            sessionToken: nil,
+            authProvider: "demo"
         )
 
         if !allOrders.contains(where: { $0.createdBy == "app-store-demo" }) {
@@ -155,7 +157,7 @@ final class TipTrackStore: ObservableObject {
     }
 
     func signOut() {
-        session = DriverSession(userId: nil, displayName: nil, sessionToken: nil)
+        session = DriverSession(userId: nil, displayName: nil, sessionToken: nil, authProvider: nil)
         saveSession()
     }
 

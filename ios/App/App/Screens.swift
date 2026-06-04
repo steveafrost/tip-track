@@ -241,25 +241,33 @@ struct AccountConnectionsView: View {
                     ErrorBanner(message: errorMessage)
                 }
 
-                AppleAuthorizationButton(type: .continue) {
-                    startAppleLink()
-                }
-                .frame(height: 52)
-                .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
-                .disabled(isSubmitting)
-
-                Button(action: linkGoogle) {
-                    HStack {
-                        Text("G")
-                            .font(.headline.weight(.bold))
-                        Text("Connect Google")
-                            .fontWeight(.semibold)
+                if store.session.authProvider == "apple" {
+                    ConnectedProviderRow(systemImage: "apple.logo", title: "Apple connected")
+                } else {
+                    AppleAuthorizationButton(type: .continue) {
+                        startAppleLink()
                     }
-                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
+                    .disabled(isSubmitting)
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.large)
-                .disabled(isSubmitting)
+
+                if store.session.authProvider == "google" {
+                    ConnectedProviderRow(systemImage: "checkmark.circle.fill", title: "Google connected")
+                } else {
+                    Button(action: linkGoogle) {
+                        HStack {
+                            Text("G")
+                                .font(.headline.weight(.bold))
+                            Text("Connect Google")
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.large)
+                    .disabled(isSubmitting)
+                }
 
                 Spacer()
             }
@@ -368,6 +376,34 @@ struct AccountConnectionsView: View {
         }
 
         return !clientID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+}
+
+private struct ConnectedProviderRow: View {
+    let systemImage: String
+    let title: String
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: systemImage)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(.tipGreen)
+                .frame(width: 24)
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundColor(.zinc900)
+            Spacer(minLength: 0)
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundColor(.tipGreen)
+        }
+        .padding(.horizontal, 14)
+        .frame(height: 52)
+        .background(Color.tipGreen.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
+        .overlay(
+            RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius)
+                .stroke(Color.tipGreen.opacity(0.18), lineWidth: 1)
+        )
     }
 }
 
@@ -1141,7 +1177,7 @@ private struct ProductUnavailableCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: "Pro plans are loading", subtitle: "The App Store is preparing the current purchase options.")
+            SectionHeader(title: title, subtitle: subtitle)
 
             Button {
                 Task {
@@ -1158,6 +1194,18 @@ private struct ProductUnavailableCard: View {
             .disabled(monetizationStore.isLoading)
         }
         .appCard()
+    }
+
+    private var title: String {
+        monetizationStore.isLoading ? "Loading TipTrack Pro" : "TipTrack Pro could not load"
+    }
+
+    private var subtitle: String {
+        if monetizationStore.isLoading {
+            return "The App Store is preparing the current purchase option."
+        }
+
+        return "Check your connection and try again. Purchases are loaded directly from the App Store."
     }
 }
 

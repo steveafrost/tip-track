@@ -86,6 +86,7 @@ struct DriverSession: Codable {
     var userId: String?
     var displayName: String?
     var sessionToken: String?
+    var authProvider: String?
 
     var isSignedIn: Bool {
         userId != nil

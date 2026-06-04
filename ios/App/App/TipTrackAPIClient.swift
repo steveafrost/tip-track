@@ -49,7 +49,8 @@ struct TipTrackAPIClient {
         return DriverSession(
             userId: response.driverId,
             displayName: response.displayName,
-            sessionToken: response.sessionToken
+            sessionToken: response.sessionToken,
+            authProvider: "apple"
         )
     }
 
@@ -70,7 +71,8 @@ struct TipTrackAPIClient {
         return DriverSession(
             userId: response.driverId,
             displayName: response.displayName,
-            sessionToken: response.sessionToken
+            sessionToken: response.sessionToken,
+            authProvider: "google"
         )
     }
 

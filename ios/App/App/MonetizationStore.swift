@@ -5,6 +5,7 @@ import StoreKit
 final class MonetizationStore: ObservableObject {
     static let unlockProductID = "com.steveafrost.tiptrack.pro.unlock"
     static let freeOrderLimit = 20
+    private static let productLoadTimeoutNanoseconds: UInt64 = 12_000_000_000
 
     @Published private(set) var products: [Product] = []
     @Published private(set) var purchasedProductIDs: Set<String> = []
@@ -49,10 +50,16 @@ final class MonetizationStore: ObservableObject {
         guard products.isEmpty else { return }
 
         isLoading = true
+        errorMessage = nil
         defer { isLoading = false }
 
         do {
-            products = try await Product.products(for: Array(Self.productIDs))
+            let loadedProducts = try await Self.loadProductsWithTimeout()
+            products = loadedProducts
+
+            if loadedProducts.isEmpty {
+                errorMessage = "TipTrack Pro is not available from the App Store yet. Please try again in a moment."
+            }
         } catch {
             errorMessage = "Unable to load Pro options. Please try again."
         }
@@ -150,4 +157,28 @@ final class MonetizationStore: ObservableObject {
             return 1
         }
     }
+
+    private static func loadProductsWithTimeout() async throws -> [Product] {
+        try await withThrowingTaskGroup(of: [Product].self) { group in
+            group.addTask {
+                try await Product.products(for: Array(productIDs))
+            }
+
+            group.addTask {
+                try await Task.sleep(nanoseconds: productLoadTimeoutNanoseconds)
+                throw StoreKitProductLoadError.timeout
+            }
+
+            guard let products = try await group.next() else {
+                throw StoreKitProductLoadError.timeout
+            }
+
+            group.cancelAll()
+            return products
+        }
+    }
+}
+
+private enum StoreKitProductLoadError: Error {
+    case timeout
 }
