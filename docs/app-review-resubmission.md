@@ -50,8 +50,8 @@ Recording must show:
 - `pnpm build`
 - iOS Release archive/export for build 14
 - iOS Release archive/export/upload for build 15
-- StoreKit product ID present in archived binary
-- Sign in with Apple entitlement present in archived binary
+- StoreKit product ID present in exported build 15 IPA
+- Sign in with Apple entitlement present in exported build 15 IPA
 - iPad simulator Release launch
 - iPadOS 26.5 simulator Release launch
 - Local production route/API checks
