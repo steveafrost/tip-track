@@ -16,6 +16,8 @@ Current App Store Connect state:
 
 Use this in the App Review Information notes field:
 
+Status: App Store Connect review notes have already been updated for build `15`.
+
 ```
 This resubmission addresses the issues reported for the prior reviewed build.
 
