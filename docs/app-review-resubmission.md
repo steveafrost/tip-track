@@ -5,8 +5,8 @@ Current App Store Connect state:
 - App: TipTrack Delivery Log
 - Bundle ID: `com.steveafrost.tiptrack`
 - Version: `1.0`
-- Attached build: `15` after the StoreKit retry/logging build is uploaded and selected
-- Build processing state: pending upload for build `15`
+- Attached build: `15`
+- Build processing state: `VALID`
 - In-app purchase: `com.steveafrost.tiptrack.pro.unlock`
 - IAP state: `WAITING_FOR_REVIEW`
 - IAP type: non-consumable
