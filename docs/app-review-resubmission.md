@@ -5,7 +5,7 @@ Current App Store Connect state:
 - App: TipTrack Delivery Log
 - Bundle ID: `com.steveafrost.tiptrack`
 - Version: `1.0`
-- Attached build: `15`
+- Attached build: `16` after the next archive/upload
 - Build processing state: `VALID`
 - In-app purchase: `com.steveafrost.tiptrack.pro.unlock`
 - IAP state: `WAITING_FOR_REVIEW`
@@ -16,16 +16,18 @@ Current App Store Connect state:
 
 Use this in the App Review Information notes field:
 
-Status: App Store Connect review notes have already been updated for build `15`.
+Status: App Store Connect review notes must be updated for build `16` after upload.
 
 ```
 This resubmission addresses the issues reported for the prior reviewed build.
 
-Changes in build 15:
+Changes in build 16:
 - Sign in with Apple account connection state is now tracked using connected provider data, so users are not prompted to connect Apple again after signing in with Apple.
 - The TipTrack Pro StoreKit product loader now uses bounded retry attempts, a timeout, StoreKit logging, and a user-facing fallback state instead of loading indefinitely.
+- The Xcode target explicitly enables the In-App Purchase capability for the submitted binary.
 - The submitted binary contains the non-consumable StoreKit product ID: com.steveafrost.tiptrack.pro.unlock.
 - App Store Connect metadata was repaired for TipTrack Pro Unlock: the rejected `en-US` IAP localization was deleted, recreated, and resubmitted for review.
+- Order entry now supports adding a tip immediately or leaving it for later, dismisses the keyboard after saving, and shows clear selected states for tip choices.
 
 The attached screen recording was captured on a physical device. It starts from the Home Screen, launches TipTrack, demonstrates the core app flow, and shows a successful sandbox purchase for TipTrack Pro Unlock.
 ```
@@ -50,8 +52,11 @@ Recording must show:
 - `pnpm build`
 - iOS Release archive/export for build 14
 - iOS Release archive/export/upload for build 15
-- StoreKit product ID present in exported build 15 IPA
-- Sign in with Apple entitlement present in exported build 15 IPA
+- iOS simulator build/run for build 16 after order-entry UX fixes
+- iOS Release archive/export for build 16
+- Web lint/build after order-entry UX fixes
+- StoreKit product ID present in exported build 16 IPA
+- Sign in with Apple entitlement present in exported build 16 IPA
 - iPad simulator Release launch
 - iPadOS 26.5 simulator Release launch
 - Local production route/API checks
@@ -88,7 +93,7 @@ If all Business statuses are active/complete and Pro still fails to load after p
 
 After attaching the recording:
 
-1. Confirm build `15` is selected for version `1.0`.
+1. Confirm build `16` is selected for version `1.0`.
 2. Confirm `TipTrack Pro Unlock` is included with the submission.
 3. Confirm App Review notes include the text above.
 4. Resubmit the existing unresolved review submission `1aa47c93-fbf8-4f26-839e-9f9e4dda74a9`. App Store Connect reports version `1.0` is already part of that submission, so do not use the empty draft submission `7cf36728-3927-49c2-abed-7538f80f79df`.
