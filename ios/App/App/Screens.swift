@@ -1426,7 +1426,7 @@ private struct ProductOptionButton: View {
 
     private var iconName: String {
         switch product.id {
-        case MonetizationStore.unlockProductID:
+        case MonetizationStore.unlockProductID, MonetizationStore.legacyUnlockProductID:
             return "sparkles"
         default:
             return "checkmark.seal"
@@ -1437,6 +1437,8 @@ private struct ProductOptionButton: View {
         switch product.id {
         case MonetizationStore.unlockProductID:
             return .tipAmber
+        case MonetizationStore.legacyUnlockProductID:
+            return .tipGreen
         default:
             return .tipGreen
         }

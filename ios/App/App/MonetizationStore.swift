@@ -4,7 +4,8 @@ import StoreKit
 
 @MainActor
 final class MonetizationStore: ObservableObject {
-    static let unlockProductID = "com.steveafrost.tiptrack.pro.unlock"
+    static let unlockProductID = "com.steveafrost.tiptrack.pro.unlock.v2"
+    static let legacyUnlockProductID = "com.steveafrost.tiptrack.pro.unlock"
     static let freeOrderLimit = 20
     private static let logger = Logger(subsystem: "com.steveafrost.tiptrack", category: "StoreKit")
     private static let productLoadAttempts = 3
@@ -30,7 +31,7 @@ final class MonetizationStore: ObservableObject {
     }
 
     private static var productIDs: Set<String> {
-        [unlockProductID]
+        [unlockProductID, legacyUnlockProductID]
     }
 
     init() {
@@ -66,12 +67,12 @@ final class MonetizationStore: ObservableObject {
 
             if loadedProducts.isEmpty {
                 Self.logger.error("StoreKit returned zero products after all retry attempts.")
-                productLoadDiagnostic = "StoreKit returned no product for \(Self.unlockProductID). Confirm the Paid Apps Agreement is active and the in-app purchase is cleared for testing/review in App Store Connect."
+                productLoadDiagnostic = "StoreKit returned no product for \(Self.productIDs.sorted().joined(separator: ", ")). Confirm the Paid Apps Agreement is active and the in-app purchases are cleared for testing/review in App Store Connect."
                 errorMessage = "TipTrack Pro is not available from the App Store yet. Please try again in a moment."
             }
         } catch {
             Self.logger.error("StoreKit product loading failed: \(String(describing: error), privacy: .public)")
-            productLoadDiagnostic = "StoreKit product request failed for \(Self.unlockProductID): \(Self.describeStoreKitError(error))."
+            productLoadDiagnostic = "StoreKit product request failed for \(Self.productIDs.sorted().joined(separator: ", ")): \(Self.describeStoreKitError(error))."
             errorMessage = "Unable to load Pro options. Please try again."
         }
     }
@@ -164,8 +165,10 @@ final class MonetizationStore: ObservableObject {
         switch productID {
         case Self.unlockProductID:
             return 0
-        default:
+        case Self.legacyUnlockProductID:
             return 1
+        default:
+            return 2
         }
     }
 
