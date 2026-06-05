@@ -115,10 +115,12 @@ struct TipTrackAPIClient {
         address: String,
         latitude: Double,
         longitude: Double,
-        externalId: String
+        externalId: String,
+        tip: Int?
     ) async throws -> TipOrder {
         let requestBody = MobileOrderCreateRequest(
             externalId: externalId,
+            tip: tip,
             location: MobileLocationRequest(
                 address: address,
                 latitude: latitude,
@@ -335,6 +337,7 @@ private struct MobileLocationRequest: Encodable {
 
 private struct MobileOrderCreateRequest: Encodable {
     let externalId: String
+    let tip: Int?
     let location: MobileLocationRequest
 }
 

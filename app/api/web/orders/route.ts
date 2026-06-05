@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
         : "";
     const latitude = Number(body.location?.latitude ?? 0);
     const longitude = Number(body.location?.longitude ?? 0);
+    const tip = body.tip === null || body.tip === undefined ? null : Number(body.tip);
 
     if (externalId.length < 2) {
       return NextResponse.json(
@@ -50,6 +51,10 @@ export async function POST(request: NextRequest) {
         { error: "Please enter a delivery address" },
         { status: 400 }
       );
+    }
+
+    if (tip !== null && (!Number.isInteger(tip) || tip < 0 || tip > 4)) {
+      return NextResponse.json({ error: "Invalid tip value" }, { status: 400 });
     }
 
     const existingOrder = await prisma.order.findUnique({
@@ -67,6 +72,7 @@ export async function POST(request: NextRequest) {
     const order = await prisma.order.create({
       data: {
         externalId,
+        tip,
         createdBy: userId,
         location: {
           connectOrCreate: {

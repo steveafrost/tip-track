@@ -193,7 +193,10 @@ struct LocationCard: View {
                             Spacer()
                             TipBadge(category: TipCategory(rawValue: order.tip ?? -1), compact: true)
                         }
-                        .padding(.vertical, 2)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
 
@@ -238,6 +241,8 @@ struct ResultsList<Item: Identifiable, Row: View>: View {
                 ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                     row(item)
                         .buttonStyle(.plain)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
                         .padding()
 
                     if index < items.count - 1 {

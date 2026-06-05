@@ -8,7 +8,7 @@ const orderLocationSchema = {
 
 export const orderUpdateFormSchema = z.object({
   ...orderLocationSchema,
-  tip: z.string(),
+  tip: z.string().min(1, { message: "Choose a tip amount" }),
 });
 
 export const orderAddFormSchema = z.object({
@@ -16,6 +16,7 @@ export const orderAddFormSchema = z.object({
   orderId: z
     .string()
     .min(2, { message: "Order ID must contain at least 2 characters" }),
+  tip: z.string().optional(),
 });
 
 export type LocationLookup = {

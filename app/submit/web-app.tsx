@@ -15,6 +15,7 @@ import {
   Building2,
   CheckCircle2,
   ChevronRight,
+  Clock,
   Edit3,
   HelpCircle,
   Infinity,
@@ -197,11 +198,12 @@ function AuthenticatedWebApp() {
     }
   }, [refreshData, isSignedIn]);
 
-  async function handleAddOrder(values: LocationValue & { orderId: string }) {
+  async function handleAddOrder(values: LocationValue & { orderId: string; tip: number | null }) {
     await apiFetch<{ order: TipOrder }>("/api/web/orders", {
       method: "POST",
       body: JSON.stringify({
         externalId: values.orderId,
+        tip: values.tip,
         location: {
           address: values.address,
           latitude: values.latitude,
@@ -416,7 +418,7 @@ function AddOrderPanel({
   orders: TipOrder[];
   isPro: boolean;
   onShowPaywall: () => void;
-  onAddOrder: (values: LocationValue & { orderId: string }) => Promise<void>;
+  onAddOrder: (values: LocationValue & { orderId: string; tip: number | null }) => Promise<void>;
   onUpdateOrder: (order: TipOrder, tip: number, location?: LocationValue) => Promise<void>;
 }) {
   const [location, setLocation] = useState<LocationValue>({
@@ -425,6 +427,7 @@ function AddOrderPanel({
     longitude: 0,
   });
   const [orderId, setOrderId] = useState("");
+  const [selectedTip, setSelectedTip] = useState<number | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -439,9 +442,13 @@ function AddOrderPanel({
     setError(null);
     setMessage(null);
     try {
-      await onAddOrder({ ...location, orderId });
+      await onAddOrder({ ...location, orderId, tip: selectedTip });
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
       setLocation({ address: "", latitude: 0, longitude: 0 });
       setOrderId("");
+      setSelectedTip(null);
       setMessage("Order added.");
     } catch (error) {
       setError(error instanceof Error ? error.message : "Could not save order.");
@@ -475,6 +482,12 @@ function AddOrderPanel({
             />
           </div>
         </Field>
+        <TipSelector
+          value={selectedTip}
+          onChange={setSelectedTip}
+          allowLater
+          hint="Choose one now, or leave it for later and update the order after delivery."
+        />
         {error ? <Banner tone="error">{error}</Banner> : null}
         {message ? <Banner tone="success">{message}</Banner> : null}
         <PrimaryButton disabled={isSaving}>
@@ -860,7 +873,7 @@ function ResultButton({
     <button
       type="button"
       onClick={onClick}
-      className={`flex w-full items-center gap-3 p-4 text-left ${
+      className={`flex w-full items-center gap-3 p-4 text-left transition hover:bg-zinc-50 active:bg-zinc-100 ${
         index ? "border-t border-zinc-100" : ""
       }`}
     >
@@ -918,7 +931,7 @@ function OrderList({
             key={order.id}
             type="button"
             onClick={() => setEditingOrder(order)}
-            className={`flex w-full items-center gap-3 p-4 text-left ${
+            className={`flex w-full items-center gap-3 p-4 text-left transition hover:bg-zinc-50 active:bg-zinc-100 ${
               index ? "border-t border-zinc-100" : ""
             }`}
           >
@@ -972,7 +985,7 @@ function LocationCard({
             key={order.id}
             type="button"
             onClick={() => setEditingOrder(order)}
-            className="flex w-full items-center justify-between gap-3 py-3 text-left"
+            className="flex w-full items-center justify-between gap-3 rounded-md px-3 py-3 text-left transition hover:bg-zinc-50 active:bg-zinc-100"
           >
             <div>
               <div className="text-sm font-semibold">Order #{order.externalId}</div>
@@ -1050,31 +1063,75 @@ function OrderEditor({
           {!lockAddress ? (
             <AddressLookupField value={location} onChange={setLocation} />
           ) : null}
-          <div className="app-card space-y-3">
-            <h3 className="text-sm font-semibold">Tip Amount</h3>
-            <div className="divide-y divide-zinc-100">
-              {tipOptions.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => setSelectedTip(option.value)}
-                  className="flex w-full items-center justify-between gap-3 py-3 text-left"
-                >
-                  <div className="flex items-center gap-3">
-                    <TipBadge tip={option.value} compact />
-                    <span className="text-sm font-semibold text-zinc-900">
-                      {option.label}
-                    </span>
-                  </div>
-                  {selectedTip === option.value ? (
-                    <CheckCircle2 className="h-5 w-5 text-emerald-700" />
-                  ) : null}
-                </button>
-              ))}
-            </div>
-          </div>
+          <TipSelector value={selectedTip} onChange={(nextTip) => setSelectedTip(nextTip ?? 0)} />
           {error ? <Banner tone="error">{error}</Banner> : null}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function TipSelector({
+  value,
+  onChange,
+  allowLater = false,
+  hint,
+}: {
+  value: number | null;
+  onChange: (value: number | null) => void;
+  allowLater?: boolean;
+  hint?: string;
+}) {
+  const options = allowLater
+    ? [
+        {
+          value: null,
+          label: "Add Later",
+          short: "Later",
+          color: "text-zinc-600 bg-zinc-500/10",
+        },
+        ...tipOptions,
+      ]
+    : tipOptions;
+
+  return (
+    <div className="app-card space-y-3">
+      <div>
+        <h3 className="text-sm font-semibold text-zinc-900">Tip Amount</h3>
+        {hint ? <p className="mt-1 text-xs leading-5 text-zinc-500">{hint}</p> : null}
+      </div>
+      <div className="space-y-2">
+        {options.map((option) => {
+          const selected = value === option.value;
+          return (
+            <button
+              key={option.value ?? "later"}
+              type="button"
+              onClick={() => onChange(option.value)}
+              aria-pressed={selected}
+              className={`flex w-full items-center justify-between gap-3 rounded-md border px-3 py-3 text-left transition ${
+                selected
+                  ? "border-emerald-600/45 bg-emerald-50 text-emerald-900"
+                  : "border-zinc-200 bg-zinc-50 text-zinc-900 hover:border-zinc-300 hover:bg-white"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                {option.value === null ? (
+                  <span className="inline-flex h-7 min-w-14 items-center justify-center gap-1 rounded-full bg-zinc-500/10 px-2 text-xs font-bold text-zinc-600">
+                    <Clock className="h-3.5 w-3.5" />
+                    Later
+                  </span>
+                ) : (
+                  <TipBadge tip={option.value} compact />
+                )}
+                <span className="text-sm font-semibold">{option.label}</span>
+              </div>
+              <CheckCircle2
+                className={`h-5 w-5 ${selected ? "text-emerald-700" : "text-zinc-300"}`}
+              />
+            </button>
+          );
+        })}
       </div>
     </div>
   );

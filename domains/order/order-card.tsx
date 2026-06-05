@@ -62,7 +62,9 @@ export const OrderCard = () => {
           <span>Location: {order.location.address}</span>
           <span>
             Tip:{" "}
-            {order.tip ? tipLabel[order.tip.toString()] : "No Tip Recorded"}
+            {order.tip === null
+              ? "No Tip Recorded"
+              : tipLabel[order.tip.toString()]}
           </span>
         </div>
         <Sheet

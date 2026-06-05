@@ -200,7 +200,7 @@ final class TipTrackStore: ObservableObject {
         )
     }
 
-    func addOrder(address: String, latitude: Double, longitude: Double, externalId: String) async throws {
+    func addOrder(address: String, latitude: Double, longitude: Double, externalId: String, tip: Int?) async throws {
         guard let userId = session.userId else { return }
 
         if let apiClient, isCloudSessionActive {
@@ -209,7 +209,8 @@ final class TipTrackStore: ObservableObject {
                 address: address,
                 latitude: latitude,
                 longitude: longitude,
-                externalId: externalId
+                externalId: externalId,
+                tip: tip
             )
             upsert(order: order)
             saveOrders()
@@ -224,7 +225,7 @@ final class TipTrackStore: ObservableObject {
             address: address,
             latitude: latitude,
             longitude: longitude,
-            tip: nil,
+            tip: tip,
             createdBy: userId,
             createdAt: now,
             updatedAt: now

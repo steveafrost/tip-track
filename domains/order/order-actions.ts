@@ -46,9 +46,11 @@ export async function getOrdersWithLocation() {
 export async function addOrder({
   location,
   externalId,
+  tip,
 }: {
   location: LocationLookup;
   externalId: string;
+  tip?: number | null;
 }) {
   const userId = await getWebUserId().catch(() => null);
 
@@ -69,6 +71,7 @@ export async function addOrder({
           },
         },
         createdBy: userId,
+        tip: tip ?? undefined,
       },
     });
   } catch (error) {

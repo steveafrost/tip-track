@@ -13,14 +13,21 @@ import {
   FormMessage,
 } from "@/components/form";
 import { useTransition } from "react";
-import { LucideLoader } from "lucide-react";
+import { CheckCircle2, LucideLoader } from "lucide-react";
 import { updateOrder } from "./order-actions";
 import { LocationLookup, orderUpdateFormSchema } from "./order.constants";
-import { RadioGroup, RadioGroupItem } from "@/components/radio-group";
 import { tipLabel } from "../tip/tip.constants";
 import { Location } from "@prisma/client";
 import { OrderAddressSearch } from "./order-address-search";
 import { Input } from "@/components/input";
+
+const tipChoices = [
+  { value: "0", label: tipLabel[0] },
+  { value: "1", label: tipLabel[1] },
+  { value: "2", label: tipLabel[2] },
+  { value: "3", label: tipLabel[3] },
+  { value: "4", label: tipLabel[4] },
+];
 
 type OrderUpdateFormProps = {
   externalId: string;
@@ -45,7 +52,7 @@ export const OrderUpdateForm = ({
     resolver: zodResolver(orderUpdateFormSchema),
     defaultValues: {
       address: existingLocation ? existingLocation.address : "",
-      tip: existingTip ? existingTip.toString() : "",
+      tip: existingTip === null ? "" : existingTip.toString(),
     },
   });
 
@@ -103,52 +110,32 @@ export const OrderUpdateForm = ({
             <FormItem className="space-y-3">
               <FormLabel className="sr-only">Tip Amount</FormLabel>
               <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  className="flex flex-col space-y-1"
-                >
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value={"0"} />
-                    </FormControl>
-                    <FormLabel className="font-normal text-base ml-2">
-                      {tipLabel[0]}
-                    </FormLabel>
-                  </FormItem>
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value={"1"} />
-                    </FormControl>
-                    <FormLabel className="font-normal ml-2 text-base">
-                      {tipLabel[1]}
-                    </FormLabel>
-                  </FormItem>
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value={"2"} />
-                    </FormControl>
-                    <FormLabel className="font-normal ml-2 text-base">
-                      {tipLabel[2]}
-                    </FormLabel>
-                  </FormItem>
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value={"3"} />
-                    </FormControl>
-                    <FormLabel className="font-normal ml-2 text-base">
-                      {tipLabel[3]}
-                    </FormLabel>
-                  </FormItem>
-                  <FormItem className="flex items-center space-x-3 space-y-0">
-                    <FormControl>
-                      <RadioGroupItem value={"4"} />
-                    </FormControl>
-                    <FormLabel className="font-normal ml-2 text-base">
-                      {tipLabel[4]}
-                    </FormLabel>
-                  </FormItem>
-                </RadioGroup>
+                <div className="space-y-2">
+                  {tipChoices.map((choice) => {
+                    const selected = field.value === choice.value;
+
+                    return (
+                      <button
+                        key={choice.value}
+                        type="button"
+                        onClick={() => field.onChange(choice.value)}
+                        aria-pressed={selected}
+                        className={`flex w-full items-center justify-between rounded-md border px-3 py-3 text-left text-sm font-semibold transition ${
+                          selected
+                            ? "border-emerald-600/45 bg-emerald-50 text-emerald-900"
+                            : "border-zinc-200 bg-zinc-50 text-zinc-900 hover:border-zinc-300 hover:bg-white"
+                        }`}
+                      >
+                        <span>{choice.label}</span>
+                        <CheckCircle2
+                          className={`h-5 w-5 ${
+                            selected ? "text-emerald-700" : "text-zinc-300"
+                          }`}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>

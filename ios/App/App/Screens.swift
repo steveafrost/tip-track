@@ -569,6 +569,10 @@ struct AppleAuthorizationButton: UIViewRepresentable {
 }
 
 private extension UIApplication {
+    func dismissTipTrackKeyboard() {
+        sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+
     var tipTrackKeyWindow: UIWindow? {
         connectedScenes
             .compactMap { $0 as? UIWindowScene }
@@ -611,6 +615,7 @@ struct AddOrderView: View {
     @State private var latitude = 0.0
     @State private var longitude = 0.0
     @State private var orderId = ""
+    @State private var selectedTip: TipCategory?
     @State private var errorMessage: String?
     @State private var didAddOrder = false
     @State private var isSubmitting = false
@@ -633,6 +638,8 @@ struct AddOrderView: View {
                     AppTextField(placeholder: "Enter an order ID", text: $orderId, systemImage: "number")
                         .textInputAutocapitalization(.characters)
                 }
+
+                InitialTipPickerCard(selectedTip: $selectedTip)
 
                 if let errorMessage {
                     ErrorBanner(message: errorMessage)
@@ -702,12 +709,15 @@ struct AddOrderView: View {
                     address: trimmedAddress,
                     latitude: latitude,
                     longitude: longitude,
-                    externalId: trimmedOrderId
+                    externalId: trimmedOrderId,
+                    tip: selectedTip?.rawValue
                 )
+                UIApplication.shared.dismissTipTrackKeyboard()
                 address = ""
                 latitude = 0
                 longitude = 0
                 orderId = ""
+                selectedTip = nil
                 didAddOrder = true
             } catch {
                 errorMessage = error.localizedDescription
@@ -919,38 +929,7 @@ struct OrderEditor: View {
                             .appCard()
                         }
 
-                        VStack(alignment: .leading, spacing: 14) {
-                            Text("Tip Amount")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundColor(.zinc800)
-
-                            VStack(spacing: 8) {
-                                ForEach(TipCategory.allCases) { category in
-                                    Button {
-                                        selectedTip = category
-                                    } label: {
-                                        HStack(spacing: 10) {
-                                            TipBadge(category: category, compact: true)
-                                            Text(category.label)
-                                                .font(.subheadline.weight(.semibold))
-                                                .foregroundColor(.zinc900)
-                                            Spacer()
-                                            if selectedTip == category {
-                                                Image(systemName: "check.circle.fill")
-                                                    .foregroundColor(.tipGreen)
-                                            }
-                                        }
-                                        .padding(.vertical, 8)
-                                    }
-                                    .buttonStyle(.plain)
-
-                                    if category.id != TipCategory.allCases.last?.id {
-                                        Divider()
-                                    }
-                                }
-                            }
-                        }
-                        .appCard()
+                        TipPickerCard(selectedTip: $selectedTip, title: "Tip Amount")
 
                         if let errorMessage {
                             ErrorBanner(message: errorMessage)
@@ -999,6 +978,133 @@ struct OrderEditor: View {
 
             isSubmitting = false
         }
+    }
+}
+
+private struct TipPickerCard: View {
+    @Binding var selectedTip: TipCategory
+    let title: String
+    var subtitle: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(.zinc800)
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundColor(.zinc500)
+                }
+            }
+
+            VStack(spacing: 8) {
+                ForEach(TipCategory.allCases) { category in
+                    Button {
+                        selectedTip = category
+                    } label: {
+                        HStack(spacing: 10) {
+                            TipBadge(category: category, compact: true)
+                            Text(category.label)
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundColor(selectedTip == category ? .tipGreen : .zinc900)
+                            Spacer()
+                            Image(systemName: selectedTip == category ? "check.circle.fill" : "circle")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(selectedTip == category ? .tipGreen : .zinc400)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(selectedTip == category ? Color.tipGreen.opacity(0.08) : Color.zinc50)
+                        .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius)
+                                .stroke(selectedTip == category ? Color.tipGreen.opacity(0.45) : Color.zinc200, lineWidth: 1)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("\(category.label)\(selectedTip == category ? ", selected" : "")")
+                }
+            }
+        }
+        .appCard()
+    }
+}
+
+private struct InitialTipPickerCard: View {
+    @Binding var selectedTip: TipCategory?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Tip Amount")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(.zinc800)
+                Text("Choose one now, or leave it for later and update the order after delivery.")
+                    .font(.caption)
+                    .foregroundColor(.zinc500)
+            }
+
+            VStack(spacing: 8) {
+                Button {
+                    selectedTip = nil
+                } label: {
+                    HStack(spacing: 10) {
+                        AppIconTile(systemName: "clock", tint: .zinc500)
+                            .scaleEffect(0.82)
+                        Text("Add Later")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundColor(selectedTip == nil ? .tipGreen : .zinc900)
+                        Spacer()
+                        Image(systemName: selectedTip == nil ? "check.circle.fill" : "circle")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(selectedTip == nil ? .tipGreen : .zinc400)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(selectedTip == nil ? Color.tipGreen.opacity(0.08) : Color.zinc50)
+                    .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius)
+                            .stroke(selectedTip == nil ? Color.tipGreen.opacity(0.45) : Color.zinc200, lineWidth: 1)
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Add Later\(selectedTip == nil ? ", selected" : "")")
+
+                ForEach(TipCategory.allCases) { category in
+                    Button {
+                        selectedTip = category
+                    } label: {
+                        HStack(spacing: 10) {
+                            TipBadge(category: category, compact: true)
+                            Text(category.label)
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundColor(selectedTip == category ? .tipGreen : .zinc900)
+                            Spacer()
+                            Image(systemName: selectedTip == category ? "check.circle.fill" : "circle")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(selectedTip == category ? .tipGreen : .zinc400)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(selectedTip == category ? Color.tipGreen.opacity(0.08) : Color.zinc50)
+                        .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius)
+                                .stroke(selectedTip == category ? Color.tipGreen.opacity(0.45) : Color.zinc200, lineWidth: 1)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("\(category.label)\(selectedTip == category ? ", selected" : "")")
+                }
+            }
+        }
+        .appCard()
     }
 }
 

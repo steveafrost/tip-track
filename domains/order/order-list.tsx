@@ -51,45 +51,46 @@ export const OrdersList = ({ orders }: OrdersListProps) => {
   };
 
   return (
-    <ul className="pl-6 list-disc">
+    <ul className="space-y-2">
       {orders.map((order) => (
-        <Sheet
-          key={order.id}
-          open={order.id === activeOrder}
-          onOpenChange={(open) =>
-            open ? setActiveOrder(order.id) : setActiveOrder("")
-          }
-        >
-          <SheetTrigger asChild>
-            <li key={order.id} className="list-item">
-              <button className="flex space-x-2 items-center">
-                <span>
-                  {order.tip
-                    ? tipLabel[order.tip.toString()]
-                    : "No Tip Recorded"}
+        <li key={order.id}>
+          <Sheet
+            open={order.id === activeOrder}
+            onOpenChange={(open) =>
+              open ? setActiveOrder(order.id) : setActiveOrder("")
+            }
+          >
+            <SheetTrigger asChild>
+              <button className="flex w-full items-center justify-between gap-3 rounded-md px-3 py-3 text-left transition hover:bg-zinc-50 active:bg-zinc-100">
+                <span className="min-w-0">
+                  <span className="block truncate font-medium text-zinc-900">
+                    {order.tip === null
+                      ? "No Tip Recorded"
+                      : tipLabel[order.tip.toString()]}
+                  </span>
+                  <span className="block text-sm text-zinc-400">
+                    {format(order.createdAt, "MM-dd-yy")}
+                  </span>
                 </span>
-                <span className="text-sm text-zinc-400">
-                  ({format(order.createdAt, "MM-dd-yy")})
-                </span>
-                <LucidePencil className="text-zinc-400 w-4" />
+                <LucidePencil className="h-4 w-4 shrink-0 text-zinc-400" />
               </button>
-            </li>
-          </SheetTrigger>
-          <SheetContent side={"bottom"}>
-            <SheetHeader>
-              <SheetTitle>Tip for Order #{order.externalId}</SheetTitle>
-              <SheetDescription asChild>
-                <OrderUpdateForm
-                  externalId={order.externalId}
-                  existingTip={order.tip}
-                  existingLocation={location}
-                  onUpdate={handleOrderUpdate}
-                  shouldAllowEditingLocation={false}
-                />
-              </SheetDescription>
-            </SheetHeader>
-          </SheetContent>
-        </Sheet>
+            </SheetTrigger>
+            <SheetContent side={"bottom"}>
+              <SheetHeader>
+                <SheetTitle>Tip for Order #{order.externalId}</SheetTitle>
+                <SheetDescription asChild>
+                  <OrderUpdateForm
+                    externalId={order.externalId}
+                    existingTip={order.tip}
+                    existingLocation={location}
+                    onUpdate={handleOrderUpdate}
+                    shouldAllowEditingLocation={false}
+                  />
+                </SheetDescription>
+              </SheetHeader>
+            </SheetContent>
+          </Sheet>
+        </li>
       ))}
     </ul>
   );
