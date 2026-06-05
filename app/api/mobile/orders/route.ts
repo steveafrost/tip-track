@@ -60,8 +60,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid tip value" }, { status: 400 });
     }
 
-    const existingOrder = await prisma.order.findUnique({
-      where: { externalId },
+    const existingOrder = await prisma.order.findFirst({
+      where: { externalId, createdBy: driverId },
       select: { id: true },
     });
 

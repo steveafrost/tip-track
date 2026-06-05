@@ -58,6 +58,15 @@ export async function addOrder({
     throw new Error(`User must be signed in to create order: ${userId}`);
 
   try {
+    const existingOrder = await prisma.order.findFirst({
+      where: { externalId, createdBy: userId },
+      select: { id: true },
+    });
+
+    if (existingOrder) {
+      throw new Error("That order ID is already saved");
+    }
+
     await prisma.order.create({
       data: {
         externalId,
@@ -90,9 +99,23 @@ export async function updateOrder({
   tip: number;
   location?: LocationLookup;
 }) {
+  const userId = await getWebUserId().catch(() => null);
+
+  if (!userId)
+    throw new Error(`User must be signed in to update order: ${userId}`);
+
   try {
+    const existingOrder = await prisma.order.findFirst({
+      where: { externalId, createdBy: userId },
+      select: { id: true },
+    });
+
+    if (!existingOrder) {
+      throw new Error("Order not found");
+    }
+
     await prisma.order.update({
-      where: { externalId },
+      where: { id: existingOrder.id },
       data: {
         location: location
           ? {

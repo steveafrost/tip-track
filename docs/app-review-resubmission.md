@@ -28,6 +28,7 @@ Changes in build 16:
 - The submitted binary contains the non-consumable StoreKit product ID: com.steveafrost.tiptrack.pro.unlock.
 - App Store Connect metadata was repaired for TipTrack Pro Unlock: the rejected `en-US` IAP localization was deleted, recreated, and resubmitted for review.
 - Order entry now supports adding a tip immediately or leaving it for later, dismisses the keyboard after saving, and shows clear selected states for tip choices.
+- Order IDs are now unique per driver instead of globally unique, so review/demo accounts cannot collide with another driver's saved order number.
 
 The attached screen recording was captured on a physical device. It starts from the Home Screen, launches TipTrack, demonstrates the core app flow, and shows a successful sandbox purchase for TipTrack Pro Unlock.
 ```
@@ -55,6 +56,8 @@ Recording must show:
 - iOS simulator build/run for build 16 after order-entry UX fixes
 - iOS Release archive/export for build 16
 - Web lint/build after order-entry UX fixes
+- Production Prisma schema pushed for per-driver order ID uniqueness.
+- `pnpm release:check:order-scope` passed against production with temporary rows cleaned up.
 - StoreKit product ID present in exported build 16 IPA
 - Sign in with Apple entitlement present in exported build 16 IPA
 - iPad simulator Release launch
