@@ -12,6 +12,7 @@ Product:
 - Bundle ID: com.steveafrost.tiptrack
 - App Store version: 1.0
 - Build: 15
+- Existing unresolved submission ID: 1aa47c93-fbf8-4f26-839e-9f9e4dda74a9
 - IAP product ID: com.steveafrost.tiptrack.pro.unlock
 - IAP type: Non-consumable
 - IAP state: Waiting for Review
@@ -32,4 +33,3 @@ Build 15 includes bounded StoreKit product-loading retries and a timeout fallbac
 
 Could you please confirm whether this first-time IAP is correctly associated with the app review submission and visible to the App Review sandbox?
 ```
-

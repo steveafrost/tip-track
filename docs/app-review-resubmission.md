@@ -91,4 +91,4 @@ After attaching the recording:
 1. Confirm build `15` is selected for version `1.0`.
 2. Confirm `TipTrack Pro Unlock` is included with the submission.
 3. Confirm App Review notes include the text above.
-4. Submit for review.
+4. Resubmit the existing unresolved review submission `1aa47c93-fbf8-4f26-839e-9f9e4dda74a9`. App Store Connect reports version `1.0` is already part of that submission, so do not use the empty draft submission `7cf36728-3927-49c2-abed-7538f80f79df`.
