@@ -10,6 +10,7 @@ Current App Store Connect state:
 - In-app purchase: `com.steveafrost.tiptrack.pro.unlock`
 - IAP state: `WAITING_FOR_REVIEW`
 - IAP type: non-consumable
+- IAP primary `en-US` localization: replaced rejected localization and resubmitted; current state is `WAITING_FOR_REVIEW`
 
 ## Review Notes
 
@@ -22,6 +23,7 @@ Changes in build 14:
 - Sign in with Apple account connection state is now tracked using connected provider data, so users are not prompted to connect Apple again after signing in with Apple.
 - The TipTrack Pro StoreKit product loader now has a timeout and user-facing fallback state instead of loading indefinitely.
 - The submitted binary contains the non-consumable StoreKit product ID: com.steveafrost.tiptrack.pro.unlock.
+- App Store Connect metadata was repaired for TipTrack Pro Unlock: the rejected `en-US` IAP localization was deleted, recreated, and resubmitted for review.
 
 The attached screen recording was captured on a physical device. It starts from the Home Screen, launches TipTrack, demonstrates the core app flow, and shows a successful sandbox purchase for TipTrack Pro Unlock.
 ```
@@ -52,6 +54,19 @@ Recording must show:
 - Local production route/API checks
 - Live production route checks
 - Desktop and mobile web screenshots
+- Physical iPhone auth persistence check: force-close and reopen lands on the dashboard after Sign in with Apple.
+- Physical iPhone StoreKit check: prior Pro unlock error reproduced before the App Store Connect IAP localization repair.
+
+## StoreKit Metadata Repair
+
+Completed on June 4, 2026:
+
+- Deleted rejected `en-US` IAP localization `7cc76b98-95f5-4bc6-98ed-cd5148b9bc4c`.
+- Created replacement `en-US` IAP localization `123c8f71-c5ff-46f6-8cc5-ae654fea8126`.
+- Resubmitted IAP `6771212307`; product and both localizations are now `WAITING_FOR_REVIEW`.
+- Verified USA availability and active manual USA price point `$4.99`.
+
+Apple notes that IAP metadata changes can take up to 1 hour to appear in the sandbox environment. Re-test the Pro screen on the physical device after propagation before recording or resubmitting.
 
 ## Submit
 
