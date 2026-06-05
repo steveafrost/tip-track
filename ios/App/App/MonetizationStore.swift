@@ -25,9 +25,15 @@ final class MonetizationStore: ObservableObject {
     }
 
     var sortedProducts: [Product] {
-        products.sorted { left, right in
+        let rankedProducts = products.sorted { left, right in
             productRank(left.id) < productRank(right.id)
         }
+
+        if let currentProduct = rankedProducts.first(where: { $0.id == Self.unlockProductID }) {
+            return [currentProduct]
+        }
+
+        return rankedProducts
     }
 
     private static var productIDs: Set<String> {
