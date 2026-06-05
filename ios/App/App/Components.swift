@@ -46,6 +46,7 @@ struct AddressLookupField: View {
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.vertical, 12)
+                            .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
 
@@ -242,8 +243,6 @@ struct ResultsList<Item: Identifiable, Row: View>: View {
                     row(item)
                         .buttonStyle(.plain)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .contentShape(Rectangle())
-                        .padding()
 
                     if index < items.count - 1 {
                         Divider()

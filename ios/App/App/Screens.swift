@@ -90,9 +90,17 @@ struct SignInView: View {
                                 .fontWeight(.semibold)
                         }
                         .frame(maxWidth: .infinity)
+                        .frame(minHeight: 50)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            startDemo()
+                        }
                     }
-                    .buttonStyle(.bordered)
-                    .controlSize(.large)
+                    .buttonStyle(.plain)
+                    .foregroundColor(.zinc900)
+                    .background(Color.zinc50)
+                    .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
+                    .overlay(AppBorder(cornerRadius: TipTrackTheme.controlRadius))
                     .disabled(isSubmitting)
 
                     if isSubmitting {
@@ -646,6 +654,7 @@ struct AddOrderView: View {
                 }
 
                 Button {
+                    UIApplication.shared.dismissTipTrackKeyboard()
                     addOrder()
                 } label: {
                     HStack {
@@ -679,6 +688,8 @@ struct AddOrderView: View {
     }
 
     private func addOrder() {
+        UIApplication.shared.dismissTipTrackKeyboard()
+
         guard monetizationStore.canAddOrder(currentOrderCount: store.orders.count) else {
             showingPaywall = true
             return
@@ -771,6 +782,9 @@ struct OrderSearchView: View {
                                 .font(.caption.weight(.bold))
                                 .foregroundColor(.zinc400)
                         }
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
                     }
                 }
             }
@@ -838,6 +852,9 @@ struct LocationSearchView: View {
                             Spacer()
                             TipBadge(category: location.averageTip, compact: true)
                         }
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
                     }
                 }
             }
@@ -953,6 +970,8 @@ struct OrderEditor: View {
     }
 
     private func update() {
+        UIApplication.shared.dismissTipTrackKeyboard()
+
         let trimmedAddress = address.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !allowsLocationEditing || trimmedAddress.count >= 2 else {
             errorMessage = "Please choose a location from the list."
@@ -1017,12 +1036,24 @@ private struct TipPickerCard: View {
                         .padding(.horizontal, 12)
                         .padding(.vertical, 10)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(selectedTip == category ? Color.tipGreen.opacity(0.08) : Color.zinc50)
+                        .background(selectedTip == category ? Color.tipGreen.opacity(0.14) : Color.zinc50)
                         .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
                         .overlay(
                             RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius)
-                                .stroke(selectedTip == category ? Color.tipGreen.opacity(0.45) : Color.zinc200, lineWidth: 1)
+                                .stroke(selectedTip == category ? Color.tipGreen : Color.zinc200, lineWidth: selectedTip == category ? 1.5 : 1)
                         )
+                        .overlay(alignment: .topTrailing) {
+                            if selectedTip == category {
+                                Text("Selected")
+                                    .font(.caption2.weight(.bold))
+                                    .foregroundColor(.tipGreen)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 3)
+                                    .background(Color.white)
+                                    .clipShape(Capsule())
+                                    .padding(7)
+                            }
+                        }
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("\(category.label)\(selectedTip == category ? ", selected" : "")")
@@ -1123,12 +1154,21 @@ private struct TipChoiceButton: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .frame(maxWidth: .infinity, minHeight: 46, alignment: .leading)
-            .background(isSelected ? Color.tipGreen.opacity(0.08) : Color.zinc50)
+            .background(isSelected ? Color.tipGreen.opacity(0.14) : Color.zinc50)
             .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
             .overlay(
                 RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius)
-                    .stroke(isSelected ? Color.tipGreen.opacity(0.45) : Color.zinc200, lineWidth: 1)
+                    .stroke(isSelected ? Color.tipGreen : Color.zinc200, lineWidth: isSelected ? 1.5 : 1)
             )
+            .overlay(alignment: .topTrailing) {
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundColor(.tipGreen)
+                        .background(Color.white.clipShape(Circle()))
+                        .padding(5)
+                }
+            }
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(title)\(isSelected ? ", selected" : "")")
