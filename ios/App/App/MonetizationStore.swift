@@ -7,12 +7,13 @@ final class MonetizationStore: ObservableObject {
     static let unlockProductID = "com.steveafrost.tiptrack.pro.unlock"
     static let freeOrderLimit = 20
     private static let logger = Logger(subsystem: "com.steveafrost.tiptrack", category: "StoreKit")
-    private static let productLoadAttempts = 2
+    private static let productLoadAttempts = 3
     private static let productLoadRetryDelayNanoseconds: UInt64 = 1_000_000_000
-    private static let productLoadTimeoutNanoseconds: UInt64 = 8_000_000_000
+    private static let productLoadTimeoutNanoseconds: UInt64 = 12_000_000_000
 
     @Published private(set) var products: [Product] = []
     @Published private(set) var purchasedProductIDs: Set<String> = []
+    @Published private(set) var productLoadDiagnostic: String?
     @Published var errorMessage: String?
     @Published var isLoading = false
 
@@ -47,14 +48,16 @@ final class MonetizationStore: ObservableObject {
 
     func start() async {
         await refreshEntitlements()
+        await refreshProducts()
     }
 
-    func refreshProducts() async {
+    func refreshProducts(force: Bool = false) async {
         guard !isLoading else { return }
-        guard products.isEmpty else { return }
+        guard force || products.isEmpty else { return }
 
         isLoading = true
         errorMessage = nil
+        productLoadDiagnostic = nil
         defer { isLoading = false }
 
         do {
@@ -63,10 +66,12 @@ final class MonetizationStore: ObservableObject {
 
             if loadedProducts.isEmpty {
                 Self.logger.error("StoreKit returned zero products after all retry attempts.")
+                productLoadDiagnostic = "StoreKit returned no product for \(Self.unlockProductID). Confirm the Paid Apps Agreement is active and the in-app purchase is cleared for testing/review in App Store Connect."
                 errorMessage = "TipTrack Pro is not available from the App Store yet. Please try again in a moment."
             }
         } catch {
             Self.logger.error("StoreKit product loading failed: \(String(describing: error), privacy: .public)")
+            productLoadDiagnostic = "StoreKit product request failed for \(Self.unlockProductID): \(Self.describeStoreKitError(error))."
             errorMessage = "Unable to load Pro options. Please try again."
         }
     }
@@ -214,8 +219,23 @@ final class MonetizationStore: ObservableObject {
 
         return []
     }
+
+    private static func describeStoreKitError(_ error: Error) -> String {
+        if let storeKitError = error as? StoreKitProductLoadError {
+            return storeKitError.localizedDescription
+        }
+
+        return error.localizedDescription
+    }
 }
 
-private enum StoreKitProductLoadError: Error {
+private enum StoreKitProductLoadError: LocalizedError {
     case timeout
+
+    var errorDescription: String? {
+        switch self {
+        case .timeout:
+            return "Timed out waiting for App Store products."
+        }
+    }
 }

@@ -1354,7 +1354,7 @@ private struct ProductUnavailableCard: View {
 
             Button {
                 Task {
-                    await monetizationStore.refreshProducts()
+                    await monetizationStore.refreshProducts(force: true)
                 }
             } label: {
                 Text(monetizationStore.isLoading ? "Loading" : "Try Again")
@@ -1365,6 +1365,14 @@ private struct ProductUnavailableCard: View {
             .controlSize(.large)
             .tint(.tipGreen)
             .disabled(monetizationStore.isLoading)
+
+            if let diagnostic = monetizationStore.productLoadDiagnostic {
+                Text(diagnostic)
+                    .font(.caption2)
+                    .foregroundColor(.zinc500)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .textSelection(.enabled)
+            }
         }
         .appCard()
     }
