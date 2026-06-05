@@ -1,10 +1,14 @@
 import Foundation
+import os
 import StoreKit
 
 @MainActor
 final class MonetizationStore: ObservableObject {
     static let unlockProductID = "com.steveafrost.tiptrack.pro.unlock"
     static let freeOrderLimit = 20
+    private static let logger = Logger(subsystem: "com.steveafrost.tiptrack", category: "StoreKit")
+    private static let productLoadAttempts = 4
+    private static let productLoadRetryDelayNanoseconds: UInt64 = 3_000_000_000
     private static let productLoadTimeoutNanoseconds: UInt64 = 12_000_000_000
 
     @Published private(set) var products: [Product] = []
@@ -55,13 +59,15 @@ final class MonetizationStore: ObservableObject {
         defer { isLoading = false }
 
         do {
-            let loadedProducts = try await Self.loadProductsWithTimeout()
+            let loadedProducts = try await Self.loadProductsWithRetry()
             products = loadedProducts
 
             if loadedProducts.isEmpty {
+                Self.logger.error("StoreKit returned zero products after all retry attempts.")
                 errorMessage = "TipTrack Pro is not available from the App Store yet. Please try again in a moment."
             }
         } catch {
+            Self.logger.error("StoreKit product loading failed: \(String(describing: error), privacy: .public)")
             errorMessage = "Unable to load Pro options. Please try again."
         }
     }
@@ -177,6 +183,37 @@ final class MonetizationStore: ObservableObject {
             group.cancelAll()
             return products
         }
+    }
+
+    private static func loadProductsWithRetry() async throws -> [Product] {
+        var lastError: Error?
+
+        for attempt in 1...productLoadAttempts {
+            do {
+                logger.info("Loading StoreKit products. attempt=\(attempt, privacy: .public)")
+
+                let loadedProducts = try await loadProductsWithTimeout()
+
+                if !loadedProducts.isEmpty {
+                    logger.info("Loaded StoreKit products. count=\(loadedProducts.count, privacy: .public)")
+                    return loadedProducts
+                }
+
+                logger.warning("StoreKit returned zero products. attempt=\(attempt, privacy: .public)")
+            } catch {
+                lastError = error
+                logger.error("StoreKit product request failed. attempt=\(attempt, privacy: .public) error=\(String(describing: error), privacy: .public)")
+            }
+
+            guard attempt < productLoadAttempts else { break }
+            try await Task.sleep(nanoseconds: productLoadRetryDelayNanoseconds)
+        }
+
+        if let lastError {
+            throw lastError
+        }
+
+        return []
     }
 }
 

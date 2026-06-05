@@ -5,8 +5,8 @@ Current App Store Connect state:
 - App: TipTrack Delivery Log
 - Bundle ID: `com.steveafrost.tiptrack`
 - Version: `1.0`
-- Attached build: `14`
-- Build processing state: `VALID`
+- Attached build: `15` after the StoreKit retry/logging build is uploaded and selected
+- Build processing state: pending upload for build `15`
 - In-app purchase: `com.steveafrost.tiptrack.pro.unlock`
 - IAP state: `WAITING_FOR_REVIEW`
 - IAP type: non-consumable
@@ -19,9 +19,9 @@ Use this in the App Review Information notes field:
 ```
 This resubmission addresses the issues reported for the prior reviewed build.
 
-Changes in build 14:
+Changes in build 15:
 - Sign in with Apple account connection state is now tracked using connected provider data, so users are not prompted to connect Apple again after signing in with Apple.
-- The TipTrack Pro StoreKit product loader now has a timeout and user-facing fallback state instead of loading indefinitely.
+- The TipTrack Pro StoreKit product loader now uses bounded retry attempts, a timeout, StoreKit logging, and a user-facing fallback state instead of loading indefinitely.
 - The submitted binary contains the non-consumable StoreKit product ID: com.steveafrost.tiptrack.pro.unlock.
 - App Store Connect metadata was repaired for TipTrack Pro Unlock: the rejected `en-US` IAP localization was deleted, recreated, and resubmitted for review.
 
@@ -56,6 +56,7 @@ Recording must show:
 - Desktop and mobile web screenshots
 - Physical iPhone auth persistence check: force-close and reopen lands on the dashboard after Sign in with Apple.
 - Physical iPhone StoreKit check: prior Pro unlock error reproduced before the App Store Connect IAP localization repair.
+- Physical iPhone StoreKit check after localization repair and a fresh debug build: Pro unlock still fails to load the App Store product.
 
 ## StoreKit Metadata Repair
 
@@ -68,11 +69,21 @@ Completed on June 4, 2026:
 
 Apple notes that IAP metadata changes can take up to 1 hour to appear in the sandbox environment. Re-test the Pro screen on the physical device after propagation before recording or resubmitting.
 
+## Remaining StoreKit Gate
+
+Before recording or resubmitting, confirm App Store Connect Business shows:
+
+- Paid Applications Agreement: `Active`
+- Banking: complete/active
+- Tax forms: complete/active
+
+Apple's sandbox troubleshooting guidance lists missing Paid Apps Agreement, incomplete banking, and incomplete tax information as reasons `Product.products(for:)` can return no in-app purchase products even when the product ID, price, localization, bundle ID, and In-App Purchase capability are correct.
+
 ## Submit
 
 After attaching the recording:
 
-1. Confirm build `14` is still selected for version `1.0`.
+1. Confirm build `15` is selected for version `1.0`.
 2. Confirm `TipTrack Pro Unlock` is included with the submission.
 3. Confirm App Review notes include the text above.
 4. Submit for review.
