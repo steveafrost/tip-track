@@ -49,6 +49,7 @@ Recording must show:
 - `pnpm lint`
 - `pnpm build`
 - iOS Release archive/export for build 14
+- iOS Release archive/export/upload for build 15
 - StoreKit product ID present in archived binary
 - Sign in with Apple entitlement present in archived binary
 - iPad simulator Release launch
@@ -80,6 +81,8 @@ Before recording or resubmitting, confirm App Store Connect Business shows:
 - Tax forms: complete/active
 
 Apple's sandbox troubleshooting guidance lists missing Paid Apps Agreement, incomplete banking, and incomplete tax information as reasons `Product.products(for:)` can return no in-app purchase products even when the product ID, price, localization, bundle ID, and In-App Purchase capability are correct.
+
+If all Business statuses are active/complete and Pro still fails to load after propagation, use `docs/app-review/storekit-escalation-note.md` as the support/review escalation text.
 
 ## Submit
 
