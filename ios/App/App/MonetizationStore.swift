@@ -7,9 +7,9 @@ final class MonetizationStore: ObservableObject {
     static let unlockProductID = "com.steveafrost.tiptrack.pro.unlock"
     static let freeOrderLimit = 20
     private static let logger = Logger(subsystem: "com.steveafrost.tiptrack", category: "StoreKit")
-    private static let productLoadAttempts = 4
-    private static let productLoadRetryDelayNanoseconds: UInt64 = 3_000_000_000
-    private static let productLoadTimeoutNanoseconds: UInt64 = 12_000_000_000
+    private static let productLoadAttempts = 2
+    private static let productLoadRetryDelayNanoseconds: UInt64 = 1_000_000_000
+    private static let productLoadTimeoutNanoseconds: UInt64 = 8_000_000_000
 
     @Published private(set) var products: [Product] = []
     @Published private(set) var purchasedProductIDs: Set<String> = []
@@ -46,7 +46,6 @@ final class MonetizationStore: ObservableObject {
     }
 
     func start() async {
-        await refreshProducts()
         await refreshEntitlements()
     }
 

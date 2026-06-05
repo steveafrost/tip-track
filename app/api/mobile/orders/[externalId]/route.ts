@@ -40,6 +40,16 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     const longitude = Number(body.location?.longitude ?? 0);
     const tip = Number(body.tip);
 
+    if (
+      address.length >= 2 &&
+      (!Number.isFinite(latitude) || !Number.isFinite(longitude))
+    ) {
+      return NextResponse.json(
+        { error: "Invalid location coordinates" },
+        { status: 400 }
+      );
+    }
+
     if (!Number.isInteger(tip) || tip < 0 || tip > 4) {
       return NextResponse.json({ error: "Invalid tip value" }, { status: 400 });
     }

@@ -1037,7 +1037,7 @@ private struct InitialTipPickerCard: View {
     @Binding var selectedTip: TipCategory?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
                 Text("Tip Amount")
                     .font(.subheadline.weight(.semibold))
@@ -1047,64 +1047,91 @@ private struct InitialTipPickerCard: View {
                     .foregroundColor(.zinc500)
             }
 
-            VStack(spacing: 8) {
-                Button {
-                    selectedTip = nil
-                } label: {
-                    HStack(spacing: 10) {
-                        AppIconTile(systemName: "clock", tint: .zinc500)
-                            .scaleEffect(0.82)
-                        Text("Add Later")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundColor(selectedTip == nil ? .tipGreen : .zinc900)
-                        Spacer()
-                        Image(systemName: selectedTip == nil ? "check.circle.fill" : "circle")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(selectedTip == nil ? .tipGreen : .zinc400)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    TipChoiceButton(
+                        title: "Later",
+                        systemName: "clock",
+                        isSelected: selectedTip == nil
+                    ) {
+                        selectedTip = nil
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(selectedTip == nil ? Color.tipGreen.opacity(0.08) : Color.zinc50)
-                    .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius)
-                            .stroke(selectedTip == nil ? Color.tipGreen.opacity(0.45) : Color.zinc200, lineWidth: 1)
-                    )
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Add Later\(selectedTip == nil ? ", selected" : "")")
+                    .frame(width: 112)
 
-                ForEach(TipCategory.allCases) { category in
-                    Button {
-                        selectedTip = category
-                    } label: {
-                        HStack(spacing: 10) {
-                            TipBadge(category: category, compact: true)
-                            Text(category.label)
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundColor(selectedTip == category ? .tipGreen : .zinc900)
-                            Spacer()
-                            Image(systemName: selectedTip == category ? "check.circle.fill" : "circle")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundColor(selectedTip == category ? .tipGreen : .zinc400)
+                    ForEach(TipCategory.allCases) { category in
+                        TipChoiceButton(
+                            title: category.shortLabel,
+                            badgeCategory: category,
+                            isSelected: selectedTip == category
+                        ) {
+                            selectedTip = category
                         }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(selectedTip == category ? Color.tipGreen.opacity(0.08) : Color.zinc50)
-                        .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius)
-                                .stroke(selectedTip == category ? Color.tipGreen.opacity(0.45) : Color.zinc200, lineWidth: 1)
-                        )
+                        .frame(width: 112)
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("\(category.label)\(selectedTip == category ? ", selected" : "")")
                 }
             }
         }
         .appCard()
+    }
+}
+
+private extension TipCategory {
+    var shortLabel: String {
+        switch self {
+        case .none:
+            return "No"
+        case .underFive:
+            return "<$5"
+        case .fiveToTen:
+            return "$5-10"
+        case .overTen:
+            return "$10+"
+        case .overTwenty:
+            return "$20+"
+        }
+    }
+}
+
+private struct TipChoiceButton: View {
+    let title: String
+    var systemName: String?
+    var badgeCategory: TipCategory?
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                if let badgeCategory {
+                    TipBadge(category: badgeCategory, compact: true)
+                } else if let systemName {
+                    AppIconTile(systemName: systemName, tint: .zinc500)
+                        .scaleEffect(0.72)
+                }
+
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(isSelected ? .tipGreen : .zinc900)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.88)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                Image(systemName: isSelected ? "check.circle.fill" : "circle")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(isSelected ? .tipGreen : .zinc400)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .frame(maxWidth: .infinity, minHeight: 46, alignment: .leading)
+            .background(isSelected ? Color.tipGreen.opacity(0.08) : Color.zinc50)
+            .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
+            .overlay(
+                RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius)
+                    .stroke(isSelected ? Color.tipGreen.opacity(0.45) : Color.zinc200, lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(title)\(isSelected ? ", selected" : "")")
     }
 }
 

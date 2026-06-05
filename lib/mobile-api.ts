@@ -77,6 +77,10 @@ export function mobileJsonError(error: unknown) {
     return NextResponse.json({ error: error.message }, { status: error.status });
   }
 
+  if (error instanceof SyntaxError) {
+    return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
+  }
+
   console.error(error);
 
   return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -138,9 +142,13 @@ function verifyMobileSessionToken(token: string) {
     throw new MobileApiError("Invalid user session", 401);
   }
 
-  const payload = JSON.parse(
-    Buffer.from(encodedPayload, "base64url").toString("utf8")
-  ) as { driverId?: string; exp?: number };
+  let payload: { driverId?: string; exp?: number };
+
+  try {
+    payload = JSON.parse(Buffer.from(encodedPayload, "base64url").toString("utf8"));
+  } catch {
+    throw new MobileApiError("Invalid user session", 401);
+  }
 
   if (!payload.driverId || !payload.exp) {
     throw new MobileApiError("Invalid user session", 401);

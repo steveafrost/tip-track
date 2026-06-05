@@ -56,6 +56,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      return NextResponse.json(
+        { error: "Invalid location coordinates" },
+        { status: 400 }
+      );
+    }
+
     if (tip !== null && (!Number.isInteger(tip) || tip < 0 || tip > 4)) {
       return NextResponse.json({ error: "Invalid tip value" }, { status: 400 });
     }
