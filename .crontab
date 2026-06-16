@@ -1,0 +1,33 @@
+# TipTrack Automation Crontab
+# Install with: crontab .crontab
+# Requires: Node.js >=20.11, pnpm, and the repo at /workspace/repos/tip-track
+
+# ──────────────────────────────────────────────
+# DAILY CHECKS (8:00 AM UTC)
+# ──────────────────────────────────────────────
+# Build health check — catches regressions early
+0 8 * * * cd /workspace/repos/tip-track && bash scripts/health-check.sh >> .health-checks/cron-daily.log 2>&1
+
+# TypeScript type checking
+30 8 * * * cd /workspace/repos/tip-track && pnpm exec tsc --noEmit >> .health-checks/cron-tsc.log 2>&1
+
+# ──────────────────────────────────────────────
+# HOURLY CHECKS
+# ──────────────────────────────────────────────
+# App Store Connect status monitoring
+0 * * * * cd /workspace/repos/tip-track && node scripts/check-app-store-status.mjs >> .health-checks/cron-appstore.log 2>&1
+
+# ──────────────────────────────────────────────
+# WEEKLY CHECKS (Monday 9:00 AM UTC)
+# ──────────────────────────────────────────────
+# Dependency audit for vulnerabilities and outdated packages
+0 9 * * 1 cd /workspace/repos/tip-track && bash scripts/weekly-audit.sh >> .health-checks/cron-audit.log 2>&1
+
+# Auth backfill — ensures all legacy users are migrated
+30 9 * * 1 cd /workspace/repos/tip-track && pnpm auth:backfill >> .health-checks/cron-auth-backfill.log 2>&1
+
+# ──────────────────────────────────────────────
+# MONTHLY CHECKS (1st of month 10:00 AM UTC)
+# ──────────────────────────────────────────────
+# Full release validation against production (requires POSTGRES env vars)
+# 0 10 1 * * cd /workspace/repos/tip-track && pnpm release:check:order-scope >> .health-checks/cron-release-check.log 2>&1
