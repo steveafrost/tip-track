@@ -105,7 +105,7 @@ function BrandStamp() {
       className="inline-flex items-center"
       aria-label="TipTrack home"
     >
-      <LogoImage className="rounded-md" priority />
+      <LogoImage className="rounded-md" priority variant="dark" />
     </Link>
   );
 }

@@ -2,6 +2,7 @@ type LogoImageProps = {
   alt?: string;
   className?: string;
   priority?: boolean;
+  variant?: "default" | "dark";
 };
 
 type PhoneScreenshotProps = {
@@ -17,15 +18,24 @@ export function LogoImage({
   alt = "TipTrack",
   className = "",
   priority = false,
+  variant = "default",
 }: LogoImageProps) {
+  const logo =
+    variant === "dark"
+      ? {
+          avif: `${optimizedBase}/logo-dark-72.avif 1x, ${optimizedBase}/logo-dark-144.avif 2x`,
+          fallback: "/images/logo-dark-192.png",
+        }
+      : {
+          avif: `${optimizedBase}/logo-72.avif 1x, ${optimizedBase}/logo-144.avif 2x`,
+          fallback: "/images/logo-192.png",
+        };
+
   return (
     <picture>
-      <source
-        type="image/avif"
-        srcSet={`${optimizedBase}/logo-72.avif 1x, ${optimizedBase}/logo-144.avif 2x`}
-      />
+      <source type="image/avif" srcSet={logo.avif} />
       <img
-        src="/images/logo-192.png"
+        src={logo.fallback}
         alt={alt}
         width={72}
         height={72}
