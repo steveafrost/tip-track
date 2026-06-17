@@ -20,9 +20,11 @@ struct AppShell: View {
     @EnvironmentObject private var store: TipTrackStore
     @EnvironmentObject private var monetizationStore: MonetizationStore
     @State private var selectedTab = AppTab.submit
+    @AppStorage("tipTrackHasSeenGuidedTour") private var hasSeenGuidedTour = false
     @State private var showingHelp = false
     @State private var showingPaywall = false
     @State private var showingAccount = false
+    @State private var showingGuidedTour = false
 
     init() {
         let appearance = UITabBarAppearance()
@@ -72,11 +74,26 @@ struct AppShell: View {
         .sheet(isPresented: $showingAccount) {
             AccountConnectionsView()
         }
+        .sheet(isPresented: $showingGuidedTour, onDismiss: markGuidedTourSeen) {
+            GuidedTourView(doneTitle: "Start Logging") {
+                markGuidedTourSeen()
+                showingGuidedTour = false
+            }
+        }
+        .onAppear {
+            if !hasSeenGuidedTour {
+                showingGuidedTour = true
+            }
+        }
         .task {
             await monetizationStore.start()
             await monetizationStore.syncActiveEntitlements(with: store)
             try? await store.refreshOrders()
         }
+    }
+
+    private func markGuidedTourSeen() {
+        hasSeenGuidedTour = true
     }
 }
 

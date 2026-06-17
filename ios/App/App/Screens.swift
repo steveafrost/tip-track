@@ -747,16 +747,20 @@ struct OrderSearchView: View {
 
     private var matches: [TipOrder] {
         store.orders
-            .filter { query.isEmpty || $0.externalId.localizedCaseInsensitiveContains(query) }
+            .filter { order in
+                query.isEmpty
+                    || order.externalId.localizedCaseInsensitiveContains(query)
+                    || order.address.localizedCaseInsensitiveContains(query)
+            }
             .prefix(5)
             .map { $0 }
     }
 
     var body: some View {
         PageScroll {
-            SectionHeader(title: "Find an order", subtitle: "Search by the customer-facing order ID.")
+            SectionHeader(title: "Find an order", subtitle: "Search by order ID or delivery address to update delayed tips.")
 
-            SearchField("Enter Order ID", text: $query)
+            SearchField("Enter order ID or address", text: $query)
 
             if store.orders.isEmpty {
                 EmptyPrompt("No orders saved yet.")
@@ -1176,22 +1180,158 @@ private struct TipChoiceButton: View {
 }
 
 struct HelpView: View {
+    var body: some View {
+        GuidedTourView(
+            title: "How TipTrack Works",
+            subtitle: "Use your own order history to make better delivery decisions.",
+            doneTitle: "Done"
+        )
+    }
+}
+
+struct GuidedTourView: View {
     @Environment(\.dismiss) private var dismiss
+
+    var title = "Welcome to TipTrack"
+    var subtitle = "Build a private tip history as you drive, then use it to spot the orders worth taking."
+    var doneTitle = "Done"
+    var onDone: (() -> Void)?
 
     var body: some View {
         NavigationView {
-            List {
-                HelpSection(title: "Track Orders", text: "Add each order with its delivery address.")
-                HelpSection(title: "Record Tips", text: "Update the tip after delivery or at the end of a shift.")
-                HelpSection(title: "Review Locations", text: "Use saved locations to spot repeat addresses and average tip patterns.")
+            ZStack {
+                AppBackground()
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        VStack(alignment: .leading, spacing: 12) {
+                            AppIconTile(systemName: "sparkles", tint: .tipGreen)
+                                .scaleEffect(1.16, anchor: .leading)
+                            Text(title)
+                                .font(.title2.weight(.bold))
+                                .foregroundColor(.zinc900)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Text(subtitle)
+                                .font(.subheadline)
+                                .foregroundColor(.zinc500)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .appCard()
+
+                        VStack(spacing: 12) {
+                            GuidedTourStep(
+                                number: "1",
+                                systemName: "shippingbox.fill",
+                                tint: .tipGreen,
+                                title: "Log every completed order",
+                                text: "Add the order number and address as soon as you complete the delivery so the shift does not move on without it."
+                            )
+
+                            GuidedTourStep(
+                                number: "2",
+                                systemName: "clock.badge.checkmark",
+                                tint: .tipAmber,
+                                title: "Choose a tip now or later",
+                                text: "If the tip is already reported, pick the range right away. If the customer tips hours later, leave Tip Amount on Later and update it when the tip appears."
+                            )
+
+                            GuidedTourStep(
+                                number: "3",
+                                systemName: "magnifyingglass.circle.fill",
+                                tint: .tipBlue,
+                                title: "Update delayed tips from Orders",
+                                text: "Search the Orders screen by order number or delivery address, open the saved order, and record the tip once it is reported."
+                            )
+
+                            GuidedTourStep(
+                                number: "4",
+                                systemName: "building.2.fill",
+                                tint: .tipGreen,
+                                title: "Check locations before accepting",
+                                text: "When a new offer comes in, look up the address in Locations to see how that location has tipped before and decide whether the order is worth taking."
+                            )
+
+                            GuidedTourStep(
+                                number: "5",
+                                systemName: "chart.pie.fill",
+                                tint: .tipRose,
+                                title: "Review your shift reports",
+                                text: "After a few orders are saved, Reports summarizes your shift totals and tip patterns so you can learn what is working."
+                            )
+
+                            GuidedTourStep(
+                                number: "6",
+                                systemName: "checkmark.seal.fill",
+                                tint: .tipGreen,
+                                title: "Try 20 orders before Pro",
+                                text: "The trial lets you save 20 orders and feel the value first. TipTrack Pro is a one-time $4.99 unlock for unlimited order logging."
+                            )
+                        }
+
+                        Button {
+                            finish()
+                        } label: {
+                            Text(doneTitle)
+                                .font(.headline.weight(.semibold))
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.large)
+                        .tint(.tipGreen)
+                    }
+                    .padding(TipTrackTheme.pagePadding)
+                }
             }
-            .navigationTitle("Help")
+            .navigationTitle(title == "Welcome to TipTrack" ? "Guided Tour" : "Help")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                    Button(doneTitle) { finish() }
                 }
             }
         }
+    }
+
+    private func finish() {
+        if let onDone {
+            onDone()
+        } else {
+            dismiss()
+        }
+    }
+}
+
+private struct GuidedTourStep: View {
+    let number: String
+    let systemName: String
+    let tint: Color
+    let title: String
+    let text: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Text(number)
+                .font(.caption.weight(.bold))
+                .foregroundColor(tint)
+                .frame(width: 26, height: 26)
+                .background(tint.opacity(0.12))
+                .clipShape(Circle())
+
+            AppIconTile(systemName: systemName, tint: tint)
+
+            VStack(alignment: .leading, spacing: 5) {
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(.zinc900)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(text)
+                    .font(.caption)
+                    .foregroundColor(.zinc500)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .appCard()
     }
 }
 
