@@ -1040,24 +1040,14 @@ private struct TipPickerCard: View {
                         .padding(.horizontal, 12)
                         .padding(.vertical, 10)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(selectedTip == category ? Color.tipGreen.opacity(0.14) : Color.zinc50)
-                        .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
+                        .background(
+                            RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius)
+                                .fill(selectedTip == category ? Color.tipGreen.opacity(0.14) : Color.zinc50)
+                        )
                         .overlay(
                             RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius)
-                                .stroke(selectedTip == category ? Color.tipGreen : Color.zinc200, lineWidth: selectedTip == category ? 1.5 : 1)
+                                .strokeBorder(selectedTip == category ? Color.tipGreen : Color.zinc200, lineWidth: selectedTip == category ? 1.5 : 1)
                         )
-                        .overlay(alignment: .topTrailing) {
-                            if selectedTip == category {
-                                Text("Selected")
-                                    .font(.caption2.weight(.bold))
-                                    .foregroundColor(.tipGreen)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 3)
-                                    .background(Color.white)
-                                    .clipShape(Capsule())
-                                    .padding(7)
-                            }
-                        }
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("\(category.label)\(selectedTip == category ? ", selected" : "")")
@@ -1158,21 +1148,14 @@ private struct TipChoiceButton: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
             .frame(maxWidth: .infinity, minHeight: 46, alignment: .leading)
-            .background(isSelected ? Color.tipGreen.opacity(0.14) : Color.zinc50)
-            .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
+            .background(
+                RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius)
+                    .fill(isSelected ? Color.tipGreen.opacity(0.14) : Color.zinc50)
+            )
             .overlay(
                 RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius)
-                    .stroke(isSelected ? Color.tipGreen : Color.zinc200, lineWidth: isSelected ? 1.5 : 1)
+                    .strokeBorder(isSelected ? Color.tipGreen : Color.zinc200, lineWidth: isSelected ? 1.5 : 1)
             )
-            .overlay(alignment: .topTrailing) {
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundColor(.tipGreen)
-                        .background(Color.white.clipShape(Circle()))
-                        .padding(5)
-                }
-            }
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(title)\(isSelected ? ", selected" : "")")
