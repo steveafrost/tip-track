@@ -1,6 +1,7 @@
 import AppIntents
 import Foundation
 import StoreKit
+import WidgetKit
 
 @available(iOS 16.0, *)
 enum TipTrackSectionIntentValue: String, AppEnum {
@@ -69,6 +70,53 @@ enum TipTrackTipIntentValue: String, AppEnum {
         case .overTwenty:
             return .overTwenty
         }
+    }
+}
+
+@available(iOS 17.0, *)
+enum TipTrackWidgetViewIntentValue: String, AppEnum {
+    case summary
+    case recentOrders
+    case locationDetail
+
+    static var typeDisplayName: LocalizedStringResource { "Widget View" }
+    static let typeDisplayRepresentation = TypeDisplayRepresentation(name: "Widget View")
+
+    static var caseDisplayRepresentations: [TipTrackWidgetViewIntentValue: DisplayRepresentation] {
+        [
+            .summary: DisplayRepresentation(title: "Summary", image: .init(systemName: "chart.pie")),
+            .recentOrders: DisplayRepresentation(title: "Recent Orders", image: .init(systemName: "receipt")),
+            .locationDetail: DisplayRepresentation(title: "Location Detail", image: .init(systemName: "building.2"))
+        ]
+    }
+}
+
+@available(iOS 17.0, *)
+struct TipTrackWidgetConfigurationIntent: WidgetConfigurationIntent {
+    static let title: LocalizedStringResource = "Tip Track Widget"
+    static let description = IntentDescription("Choose which Tip Track view and filters this widget should show.")
+
+    @Parameter(title: "View")
+    var view: TipTrackWidgetViewIntentValue?
+
+    @Parameter(title: "Location")
+    var location: TipTrackLocationEntity?
+
+    @Parameter(title: "Tip Range")
+    var tipRange: TipTrackTipIntentValue?
+
+    init() {
+        view = .summary
+    }
+
+    init(
+        view: TipTrackWidgetViewIntentValue,
+        location: TipTrackLocationEntity? = nil,
+        tipRange: TipTrackTipIntentValue? = nil
+    ) {
+        self.view = view
+        self.location = location
+        self.tipRange = tipRange
     }
 }
 
