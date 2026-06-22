@@ -1,6 +1,6 @@
 # Tip Track
 
-Tip Track is a native SwiftUI iOS app for delivery workers to log orders, remember addresses, record tip ranges, and review tip patterns by location.
+Tip Track is a native SwiftUI iOS app for delivery workers to log orders, remember addresses, record tip ranges, and review tip patterns by location. It also exposes App Intents for Shortcuts and Siri so drivers can quickly log orders, update tips, and jump back to key order or location workflows from outside the app.
 
 The original Next.js implementation remains in the repo for reference, but the iOS target no longer hosts a webview or Capacitor bridge. The native app lives in `ios/App` and starts directly from SwiftUI.
 
@@ -24,6 +24,10 @@ The original Next.js implementation remains in the repo for reference, but the i
 - View previous tips for a location
 - Edit tips from the location history
 - View report counts for each tip range
+- Log delivery orders from Shortcuts or Siri
+- Update saved order tip ranges from Shortcuts or Siri
+- Open Add, Orders, Locations, Reports, saved orders, and saved locations through App Intents
+- Provide widget configuration intents for summary, recent orders, and location-detail widget surfaces
 
 ## Build
 

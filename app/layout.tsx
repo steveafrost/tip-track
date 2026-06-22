@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://usetiptrack.com"),
   title: "TipTrack Delivery Log",
   description:
-    "A delivery driver tip tracker for logging orders, addresses, and tip patterns.",
+    "A delivery driver tip tracker for logging orders, addresses, tip patterns, and quick updates through Shortcuts and Siri.",
   manifest: "/manifest.json",
   alternates: {
     canonical: "/",
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "TipTrack Delivery Log",
     description:
-      "A delivery driver tip tracker for logging orders, addresses, and tip patterns.",
+      "A delivery driver tip tracker for logging orders, addresses, tip patterns, and quick updates through Shortcuts and Siri.",
     url: "https://usetiptrack.com",
     siteName: "TipTrack",
     type: "website",

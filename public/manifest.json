@@ -1,6 +1,7 @@
 {
   "name": "Tip Track",
   "short_name": "Tip Track",
+  "description": "A delivery driver tip tracker for logging orders, addresses, tip patterns, and quick updates through Shortcuts and Siri.",
   "theme_color": "#006c22",
   "background_color": "#006c22",
   "display": "standalone",

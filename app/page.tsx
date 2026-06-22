@@ -31,6 +31,7 @@ const logRows = [
 const fieldNotes = [
   "Log every order before the shift blurs together.",
   "Track tips, addresses, and repeat neighborhoods.",
+  "Use Shortcuts or Siri to log orders and update delayed tips faster.",
   "Keep private notes for the next time an address pops up.",
   "Use reports to spot which runs were actually worth it.",
 ];
@@ -163,7 +164,8 @@ export default function Home() {
             <p className="mt-5 max-w-full text-lg leading-8 text-[#d8cba8] sm:max-w-xl">
               A private order log for the parts of a delivery shift that
               matter after the headlights, receipts, and addresses blur
-              together.
+              together. Built for quick updates in the app, Shortcuts, and
+              Siri.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -236,8 +238,9 @@ export default function Home() {
             </h2>
             <p className="mt-5 max-w-xl text-lg leading-8 text-[#4f594b]">
               TipTrack keeps the notebook feeling but removes the guessing. Log
-              the order, remember the address, and let the totals tell you where
-              the night actually paid off.
+              the order, remember the address, update delayed tips with
+              Shortcuts or Siri, and let the totals tell you where the night
+              actually paid off.
             </p>
             <div className="mt-8 space-y-3">
               {fieldNotes.map((note) => (
