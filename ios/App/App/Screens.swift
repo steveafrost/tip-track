@@ -618,6 +618,7 @@ private extension UIViewController {
 struct AddOrderView: View {
     @EnvironmentObject private var store: TipTrackStore
     @EnvironmentObject private var monetizationStore: MonetizationStore
+    @Binding private var intentDraft: TipTrackOrderDraft?
     @StateObject private var addressSearch = AddressSearch()
     @State private var address = ""
     @State private var latitude = 0.0
@@ -628,6 +629,10 @@ struct AddOrderView: View {
     @State private var didAddOrder = false
     @State private var isSubmitting = false
     @State private var showingPaywall = false
+
+    init(intentDraft: Binding<TipTrackOrderDraft?> = .constant(nil)) {
+        _intentDraft = intentDraft
+    }
 
     var body: some View {
         PageScroll {
@@ -685,6 +690,32 @@ struct AddOrderView: View {
         .sheet(isPresented: $showingPaywall) {
             PaywallView()
         }
+        .onAppear {
+            applyIntentDraft(intentDraft)
+        }
+        .onChange(of: intentDraft) { draft in
+            applyIntentDraft(draft)
+        }
+    }
+
+    private func applyIntentDraft(_ draft: TipTrackOrderDraft?) {
+        guard let draft else { return }
+
+        if let draftAddress = draft.address, !draftAddress.isEmpty {
+            address = draftAddress
+            latitude = draft.latitude
+            longitude = draft.longitude
+        }
+
+        if let externalId = draft.externalId, !externalId.isEmpty {
+            orderId = externalId
+        }
+
+        if let tip = draft.tip {
+            selectedTip = tip
+        }
+
+        intentDraft = nil
     }
 
     private func addOrder() {
@@ -741,9 +772,14 @@ struct AddOrderView: View {
 
 struct OrderSearchView: View {
     @EnvironmentObject private var store: TipTrackStore
+    @Binding private var intentOrderID: String?
     @State private var query = ""
     @State private var selectedOrder: TipOrder?
     @State private var editingOrder: TipOrder?
+
+    init(intentOrderID: Binding<String?> = .constant(nil)) {
+        _intentOrderID = intentOrderID
+    }
 
     private var matches: [TipOrder] {
         store.orders
@@ -802,19 +838,39 @@ struct OrderSearchView: View {
         .sheet(item: $editingOrder, onDismiss: refreshSelection) { order in
             OrderEditor(order: order, allowsLocationEditing: true)
         }
+        .onAppear {
+            applyIntentOrderID(intentOrderID)
+        }
+        .onChange(of: intentOrderID) { id in
+            applyIntentOrderID(id)
+        }
     }
 
     private func refreshSelection() {
         guard let selectedOrder else { return }
         self.selectedOrder = store.orders.first { $0.id == selectedOrder.id }
     }
+
+    private func applyIntentOrderID(_ id: String?) {
+        guard let id else { return }
+        if let order = store.orders.first(where: { $0.id == id || $0.externalId == id }) {
+            selectedOrder = order
+            query = order.externalId
+        }
+        intentOrderID = nil
+    }
 }
 
 struct LocationSearchView: View {
     @EnvironmentObject private var store: TipTrackStore
+    @Binding private var intentLocationAddress: String?
     @State private var query = ""
     @State private var selectedLocation: TipLocation?
     @State private var editingOrder: TipOrder?
+
+    init(intentLocationAddress: Binding<String?> = .constant(nil)) {
+        _intentLocationAddress = intentLocationAddress
+    }
 
     private var matches: [TipLocation] {
         store.locations
@@ -870,11 +926,26 @@ struct LocationSearchView: View {
         .sheet(item: $editingOrder, onDismiss: refreshSelection) { order in
             OrderEditor(order: order, allowsLocationEditing: false)
         }
+        .onAppear {
+            applyIntentLocationAddress(intentLocationAddress)
+        }
+        .onChange(of: intentLocationAddress) { address in
+            applyIntentLocationAddress(address)
+        }
     }
 
     private func refreshSelection() {
         guard let selectedLocation else { return }
         self.selectedLocation = store.locations.first { $0.id == selectedLocation.id }
+    }
+
+    private func applyIntentLocationAddress(_ address: String?) {
+        guard let address else { return }
+        if let location = store.locations.first(where: { $0.address == address }) {
+            selectedLocation = location
+            query = location.address
+        }
+        intentLocationAddress = nil
     }
 }
 

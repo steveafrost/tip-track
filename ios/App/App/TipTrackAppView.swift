@@ -19,7 +19,11 @@ struct TipTrackAppView: View {
 struct AppShell: View {
     @EnvironmentObject private var store: TipTrackStore
     @EnvironmentObject private var monetizationStore: MonetizationStore
+    @StateObject private var intentRouter = TipTrackIntentRouter.shared
     @State private var selectedTab = AppTab.submit
+    @State private var intentOrderDraft: TipTrackOrderDraft?
+    @State private var intentOrderID: String?
+    @State private var intentLocationAddress: String?
     @AppStorage("tipTrackHasSeenGuidedTour") private var hasSeenGuidedTour = false
     @State private var showingHelp = false
     @State private var showingPaywall = false
@@ -47,15 +51,15 @@ struct AppShell: View {
             )
 
             TabView(selection: $selectedTab) {
-                AddOrderView()
+                AddOrderView(intentDraft: $intentOrderDraft)
                     .tabItem { Label("Add", systemImage: "shippingbox.fill") }
                     .tag(AppTab.submit)
 
-                OrderSearchView()
+                OrderSearchView(intentOrderID: $intentOrderID)
                     .tabItem { Label("Orders", systemImage: "magnifyingglass.circle.fill") }
                     .tag(AppTab.orders)
 
-                LocationSearchView()
+                LocationSearchView(intentLocationAddress: $intentLocationAddress)
                     .tabItem { Label("Locations", systemImage: "building.2.fill") }
                     .tag(AppTab.locations)
 
@@ -90,10 +94,29 @@ struct AppShell: View {
             await monetizationStore.syncActiveEntitlements(with: store)
             try? await store.refreshOrders()
         }
+        .onReceive(intentRouter.$route.compactMap { $0 }) { route in
+            handleIntentRoute(route)
+        }
     }
 
     private func markGuidedTourSeen() {
         hasSeenGuidedTour = true
+    }
+
+    private func handleIntentRoute(_ route: TipTrackIntentRoute) {
+        switch route.destination {
+        case .tab(let tab):
+            selectedTab = tab
+        case .addOrder(let draft):
+            selectedTab = .submit
+            intentOrderDraft = draft
+        case .order(let id):
+            selectedTab = .orders
+            intentOrderID = id
+        case .location(let address):
+            selectedTab = .locations
+            intentLocationAddress = address
+        }
     }
 }
 
