@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@apple/app-store-server-library": "^3.1.0",
-    "@clerk/nextjs": "^4.29.5",
+    "@clerk/nextjs": "^7.5.9",
     "@hookform/resolvers": "^3.3.4",
     "@prisma/client": "5.22.0",
     "@radix-ui/react-dialog": "^1.0.5",
