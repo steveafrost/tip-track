@@ -9,19 +9,20 @@ import { getWebUserId } from "@/lib/web-auth";
 export const dynamic = "force-dynamic";
 
 type RouteContext = {
-  params: {
+  params: Promise<{
     externalId: string;
-  };
+  }>;
 };
 
 export async function PATCH(request: NextRequest, { params }: RouteContext) {
   try {
     const userId = await getWebUserId();
+    const { externalId } = await params;
     const body = await request.json();
 
     const existingOrder = await prisma.order.findFirst({
       where: {
-        externalId: params.externalId,
+        externalId,
         createdBy: userId,
       },
     });

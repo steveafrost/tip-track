@@ -10,20 +10,21 @@ import {
 export const dynamic = "force-dynamic";
 
 type RouteContext = {
-  params: {
+  params: Promise<{
     externalId: string;
-  };
+  }>;
 };
 
 export async function PATCH(request: NextRequest, { params }: RouteContext) {
   try {
     authorizeMobileRequest(request);
     const driverId = getMobileDriverId(request);
+    const { externalId } = await params;
     const body = await request.json();
 
     const existingOrder = await prisma.order.findFirst({
       where: {
-        externalId: params.externalId,
+        externalId,
         createdBy: driverId,
       },
     });

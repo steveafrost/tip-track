@@ -29,6 +29,7 @@ import {
   Unlock,
   X,
 } from "lucide-react";
+import Link from "next/link";
 import Script from "next/script";
 import usePlacesAutocomplete, {
   getGeocode,
@@ -1357,7 +1358,7 @@ function PaywallDialog({
               Verified StoreKit entitlement active.
             </div>
           ) : (
-            <a
+            <Link
               href="/#download"
               className="app-card flex items-center gap-3 p-3 no-underline"
               onClick={onClose}
@@ -1370,7 +1371,7 @@ function PaywallDialog({
                 </p>
               </div>
               <span className="text-sm font-bold text-zinc-900">$4.99</span>
-            </a>
+            </Link>
           )}
 
           <button
