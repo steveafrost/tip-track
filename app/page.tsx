@@ -224,11 +224,11 @@ export default function Home() {
               </p>
             </div>
             <div className="mt-5 text-xs uppercase tracking-[0.22em] text-[#315020]">
-              42.3314 N
+              39.8283 N
               <br />
-              83.0458 W
+              98.5795 W
               <br />
-              Detroit, MI
+              United States
             </div>
           </div>
 
