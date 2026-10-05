@@ -137,8 +137,7 @@ final class TipTrackStoreTests: XCTestCase {
         try seed(orders: [order("edited", user: "A")])
         let store = TipTrackStore(defaults: defaults, apiClient: client)
         let task = Task { try await store.refreshOrders() }; await waitStarted()
-        // An independent client (such as a Shortcut) is covered separately; here use a
-        // second mock handler to finish the foreground edit before the old GET.
+        // Finish the foreground edit before the old GET.
         let requestGate = gate!
         MockURLProtocol.handler = { request in
             if request.httpMethod == "PATCH" {
@@ -207,4 +206,60 @@ final class TipTrackStoreTests: XCTestCase {
         try await store.addOrder(address: "Local Address", latitude: 1, longitude: 2, externalId: "Local", tip: 3)
         XCTAssertTrue(TipTrackStore(defaults: defaults, apiClient: nil).orders.contains { $0.externalId == "Local" })
     }
+    func testIndependentShortcutEditSurvivesForegroundRefresh() async throws {
+        try seed(orders: [order("edited", user: "A")])
+        let foreground = TipTrackStore(defaults: defaults, apiClient: client)
+        let task = Task { try await foreground.refreshOrders() }; await waitStarted()
+        MockURLProtocol.handler = { request in
+            XCTAssertEqual(request.httpMethod, "PATCH")
+            struct Response: Encodable { let order: TipOrder }
+            let encoder = JSONEncoder(); encoder.dateEncodingStrategy = .iso8601
+            return (200, try encoder.encode(Response(order: self.order("edited", user: "A", tip: 4))))
+        }
+        let shortcut = TipTrackStore(defaults: defaults, apiClient: client)
+        try await shortcut.updateOrder(id: "edited", address: "Test Address", latitude: 1, longitude: 2, tip: 4)
+        try await complete(orders: [order("edited", user: "A")]); try await task.value
+        XCTAssertEqual(foreground.orders.first?.tip, 4)
+        XCTAssertEqual(try cached().first?.tip, 4)
+    }
+
+    func testIndependentCacheAdditionRemovalAndOtherAccountEditSurviveRefresh() async throws {
+        try seed(orders: [order("removed", user: "A"), order("offline", user: "B")])
+        let foreground = TipTrackStore(defaults: defaults, apiClient: client)
+        let task = Task { try await foreground.refreshOrders() }; await waitStarted()
+        // No delete endpoint exists in the app; model a completed independent cache removal.
+        let encoder = JSONEncoder(); encoder.dateEncodingStrategy = .iso8601
+        defaults.set(try encoder.encode([order("added", user: "A"), order("offline", user: "B", tip: 4)]),
+                     forKey: "tip-track.orders")
+        try await complete(orders: [order("removed", user: "A")]); try await task.value
+        XCTAssertEqual(foreground.orders.map(\.id), ["added"])
+        XCTAssertEqual(try cached().first { $0.id == "offline" }?.tip, 4)
+        XCTAssertFalse(try cached().contains { $0.id == "removed" })
+    }
+
+    func testIndependentSessionChangesDiscardOldSuccessAndFailure() async throws {
+        for replacement in ["signout", "B", "new-token"] {
+            for failure in [false, true] {
+                gate = RequestGate()
+                let requestGate = gate!
+                MockURLProtocol.handler = { _ in try await requestGate.response() }
+                try seed(orders: [order("cached", user: "A")])
+                let foreground = TipTrackStore(defaults: defaults, apiClient: client)
+                let task = Task { try await foreground.refreshOrders() }; await waitStarted()
+                if replacement == "signout" {
+                    TipTrackStore(defaults: defaults, apiClient: nil).signOut()
+                } else {
+                    try seed(user: replacement == "B" ? "B" : "A", token: replacement,
+                             orders: [order("cached", user: "A")])
+                }
+                if failure { await gate.complete(.failure(URLError(.notConnectedToInternet))) }
+                else { try await complete(orders: [order("stale", user: "A")]) }
+                try await task.value
+                XCTAssertEqual(try cached().map(\.id), ["cached"])
+                XCTAssertEqual(TipTrackStore(defaults: defaults, apiClient: nil).session.userId,
+                               replacement == "signout" ? nil : replacement == "B" ? "B" : "A")
+            }
+        }
+    }
+
 }
