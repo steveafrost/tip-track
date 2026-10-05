@@ -196,6 +196,8 @@ final class TipTrackStore: ObservableObject {
         guard let apiClient, isCloudSessionActive, let userId = session.userId else { return }
         let requestedSession = session
         let requestedSessionRevision = sessionRevision
+        let persistedSession = defaults.data(forKey: sessionKey)
+        let persistedOrders = readPersistedOrders()
         refreshRevision += 1
         let requestedRefreshRevision = refreshRevision
         let originalOrders = Dictionary(orders.map { ($0.id, $0) }, uniquingKeysWith: { _, latest in latest })
@@ -206,23 +208,35 @@ final class TipTrackStore: ObservableObject {
         } catch {
             guard sessionRevision == requestedSessionRevision,
                   session == requestedSession,
-                  refreshRevision == requestedRefreshRevision else { return }
+                  refreshRevision == requestedRefreshRevision,
+                  defaults.data(forKey: sessionKey) == persistedSession else { return }
             throw error
         }
 
         // Never apply a response belonging to a signed-out or replaced session.
         guard sessionRevision == requestedSessionRevision,
               session == requestedSession,
-              refreshRevision == requestedRefreshRevision else { return }
+              refreshRevision == requestedRefreshRevision,
+                  defaults.data(forKey: sessionKey) == persistedSession else { return }
 
-        // Keep other accounts offline, and retain edits made while the request was in flight.
-        let changedOrders = orders.filter { originalOrders[$0.id] != $0 }
+        // A Shortcut owns a separate store. Compare persisted snapshots as well as
+        // this instance so its completed edits, additions and removals survive an old GET.
+        let currentPersistedOrders = readPersistedOrders()
         var refreshedOrders = Dictionary(
             fetchedOrders.filter { $0.createdBy == userId }.map { ($0.id, $0) },
             uniquingKeysWith: { _, latest in latest }
         )
-        for order in changedOrders { refreshedOrders[order.id] = order }
-        allOrders = (allOrders.filter { $0.createdBy != userId } + refreshedOrders.values)
+        func reconcile(before: [TipOrder], after: [TipOrder]) {
+            let original = Dictionary(before.filter { $0.createdBy == userId }.map { ($0.id, $0) },
+                                      uniquingKeysWith: { _, latest in latest })
+            let current = Dictionary(after.filter { $0.createdBy == userId }.map { ($0.id, $0) },
+                                     uniquingKeysWith: { _, latest in latest })
+            for id in original.keys where current[id] == nil { refreshedOrders.removeValue(forKey: id) }
+            for (id, order) in current where original[id] != order { refreshedOrders[id] = order }
+        }
+        reconcile(before: persistedOrders, after: currentPersistedOrders)
+        reconcile(before: Array(originalOrders.values), after: orders)
+        allOrders = (currentPersistedOrders.filter { $0.createdBy != userId } + refreshedOrders.values)
             .sorted { $0.createdAt > $1.createdAt }
         saveOrders()
     }
@@ -326,6 +340,12 @@ final class TipTrackStore: ObservableObject {
 
         session.connectedProviders = providers
         saveSession()
+    }
+
+    private func readPersistedOrders() -> [TipOrder] {
+        guard let data = defaults.data(forKey: ordersKey),
+              let orders = try? decoder.decode([TipOrder].self, from: data) else { return [] }
+        return orders
     }
 
     private func saveOrders() {
