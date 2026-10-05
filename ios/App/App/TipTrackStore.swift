@@ -3,10 +3,17 @@ import Foundation
 
 @MainActor
 final class TipTrackStore: ObservableObject {
-    @Published private(set) var session: DriverSession
+    @Published private(set) var session: DriverSession {
+        didSet {
+            if session != oldValue { sessionRevision += 1 }
+        }
+    }
     @Published private var allOrders: [TipOrder]
 
     private let apiClient: TipTrackAPIClient?
+    private let defaults: UserDefaults
+    private var sessionRevision: UInt64 = 0
+    private var refreshRevision: UInt64 = 0
     private let sessionKey = "tip-track.session"
     private let ordersKey = "tip-track.orders"
     private let decoder = JSONDecoder()
@@ -39,12 +46,16 @@ final class TipTrackStore: ObservableObject {
             .sorted { $0.address.localizedCaseInsensitiveCompare($1.address) == .orderedAscending }
     }
 
-    init(defaults: UserDefaults = .standard) {
-        decoder.dateDecodingStrategy = .iso8601
-        encoder.dateEncodingStrategy = .iso8601
-        apiClient = TipTrackAPIConfiguration.bundled.map {
+    init(
+        defaults: UserDefaults = .standard,
+        apiClient: TipTrackAPIClient? = TipTrackAPIConfiguration.bundled.map {
             TipTrackAPIClient(configuration: $0)
         }
+    ) {
+        self.defaults = defaults
+        self.apiClient = apiClient
+        decoder.dateDecodingStrategy = .iso8601
+        encoder.dateEncodingStrategy = .iso8601
 
 #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--tiptrack-demo-data") {
@@ -182,8 +193,37 @@ final class TipTrackStore: ObservableObject {
     }
 
     func refreshOrders() async throws {
-        guard let apiClient, isCloudSessionActive else { return }
-        allOrders = try await apiClient.fetchOrders(session: session)
+        guard let apiClient, isCloudSessionActive, let userId = session.userId else { return }
+        let requestedSession = session
+        let requestedSessionRevision = sessionRevision
+        refreshRevision += 1
+        let requestedRefreshRevision = refreshRevision
+        let originalOrders = Dictionary(orders.map { ($0.id, $0) }, uniquingKeysWith: { _, latest in latest })
+
+        let fetchedOrders: [TipOrder]
+        do {
+            fetchedOrders = try await apiClient.fetchOrders(session: requestedSession)
+        } catch {
+            guard sessionRevision == requestedSessionRevision,
+                  session == requestedSession,
+                  refreshRevision == requestedRefreshRevision else { return }
+            throw error
+        }
+
+        // Never apply a response belonging to a signed-out or replaced session.
+        guard sessionRevision == requestedSessionRevision,
+              session == requestedSession,
+              refreshRevision == requestedRefreshRevision else { return }
+
+        // Keep other accounts offline, and retain edits made while the request was in flight.
+        let changedOrders = orders.filter { originalOrders[$0.id] != $0 }
+        var refreshedOrders = Dictionary(
+            fetchedOrders.filter { $0.createdBy == userId }.map { ($0.id, $0) },
+            uniquingKeysWith: { _, latest in latest }
+        )
+        for order in changedOrders { refreshedOrders[order.id] = order }
+        allOrders = (allOrders.filter { $0.createdBy != userId } + refreshedOrders.values)
+            .sorted { $0.createdAt > $1.createdAt }
         saveOrders()
     }
 
@@ -270,7 +310,7 @@ final class TipTrackStore: ObservableObject {
 
     private func saveSession() {
         if let data = try? encoder.encode(session) {
-            UserDefaults.standard.set(data, forKey: sessionKey)
+            defaults.set(data, forKey: sessionKey)
         }
     }
 
@@ -290,7 +330,7 @@ final class TipTrackStore: ObservableObject {
 
     private func saveOrders() {
         if let data = try? encoder.encode(allOrders) {
-            UserDefaults.standard.set(data, forKey: ordersKey)
+            defaults.set(data, forKey: ordersKey)
         }
     }
 
