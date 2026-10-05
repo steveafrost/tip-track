@@ -82,7 +82,7 @@ struct TipLocation: Identifiable, Equatable {
     }
 }
 
-struct DriverSession: Codable {
+struct DriverSession: Codable, Equatable {
     var userId: String?
     var displayName: String?
     var sessionToken: String?
