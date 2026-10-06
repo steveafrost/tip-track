@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 const clerkMiddleware = authMiddleware({
   publicRoutes: [
     "/",
+    "/privacy",
+    "/privacy-policy",
     "/api/mobile(.*)",
     "/api/web(.*)",
     "/app(.*)",

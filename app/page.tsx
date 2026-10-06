@@ -1,3 +1,4 @@
+import { approvedPrivacyPolicy } from "@/lib/privacy-policy";
 import Link from "next/link";
 import {
   LogoImage,
@@ -400,6 +401,7 @@ export default function Home() {
             <a href="#pricing" className="hover:text-[#b8f26d]">
               Pricing
             </a>
+            {approvedPrivacyPolicy && <Link href="/privacy" className="hover:text-[#b8f26d]">Privacy policy</Link>}
             <Link href="/app" className="hover:text-[#b8f26d]">
               Open web app
             </Link>
