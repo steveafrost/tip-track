@@ -12,7 +12,6 @@ struct TipTrackAppView: View {
                 SignInView()
             }
         }
-        .preferredColorScheme(.light)
     }
 }
 
@@ -33,7 +32,7 @@ struct AppShell: View {
     init() {
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(Color.white)
+        appearance.backgroundColor = UIColor.systemBackground
         appearance.shadowColor = UIColor(Color.zinc200)
         UITabBar.appearance().standardAppearance = appearance
         if #available(iOS 15.0, *) {
@@ -52,15 +51,15 @@ struct AppShell: View {
 
             TabView(selection: $selectedTab) {
                 AddOrderView(intentDraft: $intentOrderDraft)
-                    .tabItem { Label("Add", systemImage: "shippingbox.fill") }
+                    .tabItem { Label("Add", systemImage: "shippingbox") }
                     .tag(AppTab.submit)
 
                 OrderSearchView(intentOrderID: $intentOrderID)
-                    .tabItem { Label("Orders", systemImage: "magnifyingglass.circle.fill") }
+                    .tabItem { Label("Orders", systemImage: "magnifyingglass") }
                     .tag(AppTab.orders)
 
                 LocationSearchView(intentLocationAddress: $intentLocationAddress)
-                    .tabItem { Label("Locations", systemImage: "building.2.fill") }
+                    .tabItem { Label("Locations", systemImage: "building.2") }
                     .tag(AppTab.locations)
 
                 ReportsView()
@@ -129,86 +128,50 @@ struct AppHeader: View {
     @Binding var showingAccount: Bool
     @State private var showingSignOutConfirmation = false
 
-    private let headerIconSize: CGFloat = 36
-    private let actionButtonSize: CGFloat = 34
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        HStack(spacing: 8) {
-            AppIconTile(systemName: selectedTab.systemImage, tint: .tipGreen)
-                .frame(width: headerIconSize, height: headerIconSize)
-            VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: 5) {
+            HStack(alignment: .center, spacing: 10) {
                 Text(selectedTab.title)
-                    .font(.title2.weight(.bold))
-                    .foregroundColor(.zinc900)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.82)
-                    .layoutPriority(2)
-                Text(store.session.displayName ?? "Tip Track")
-                    .font(.caption.weight(.medium))
-                    .foregroundColor(.zinc500)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.88)
+                    .font(dynamicTypeSize.isAccessibilitySize ? .headline : .title.weight(.bold))
+                    .foregroundStyle(Color.zinc900)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityAddTraits(.isHeader)
+                Spacer(minLength: 4)
+                Menu {
+                    Button("Account", systemImage: "person.crop.circle") { showingAccount = true }
+                    Button(monetizationStore.isPro ? "TipTrack Pro active" : "Upgrade to TipTrack Pro", systemImage: "checkmark.seal") { showingPaywall = true }
+                    Button("Sign out", systemImage: "rectangle.portrait.and.arrow.right", role: .destructive) { showingSignOutConfirmation = true }
+                } label: {
+                    Image(systemName: "person.crop.circle")
+                        .font(.system(size: 22))
+                        .frame(width: 44, height: 44)
+                        .background(Color.zinc100, in: Circle())
+                }
+                .accessibilityLabel("Account and Pro options")
+                Button { showingHelp = true } label: {
+                    Image(systemName: "questionmark.circle")
+                        .font(.system(size: 22))
+                        .frame(width: 44, height: 44)
+                        .background(Color.zinc100, in: Circle())
+                }
+                .accessibilityLabel("Help")
             }
-            .layoutPriority(1)
-            Spacer()
-            Button {
-                showingPaywall = true
-            } label: {
-                Image(systemName: monetizationStore.isPro ? "checkmark.seal.fill" : "lock.open")
-                    .font(.system(size: 18, weight: .semibold))
-                    .frame(width: actionButtonSize, height: actionButtonSize)
-                    .background(monetizationStore.isPro ? Color.tipGreen.opacity(0.12) : Color.zinc100)
-                    .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
+            if selectedTab == .submit && !dynamicTypeSize.isAccessibilitySize {
+                Text("Log the order before the shift moves on.")
+                    .font(.footnote)
+                    .foregroundStyle(Color.zinc500)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .foregroundColor(monetizationStore.isPro ? .tipGreen : .zinc900)
-            .accessibilityLabel(monetizationStore.isPro ? "TipTrack Pro active" : "Upgrade to TipTrack Pro")
-
-            Button {
-                showingAccount = true
-            } label: {
-                Image(systemName: "person.crop.circle")
-                    .font(.system(size: 18, weight: .semibold))
-                    .frame(width: actionButtonSize, height: actionButtonSize)
-                    .background(Color.zinc100)
-                    .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
-            }
-            .accessibilityLabel("Account")
-
-            Button {
-                showingHelp = true
-            } label: {
-                Image(systemName: "info.circle")
-                    .font(.system(size: 18, weight: .semibold))
-                    .frame(width: actionButtonSize, height: actionButtonSize)
-                    .background(Color.zinc100)
-                    .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
-            }
-            .accessibilityLabel("Help")
-
-            Button {
-                showingSignOutConfirmation = true
-            } label: {
-                Image(systemName: "rectangle.portrait.and.arrow.right")
-                    .font(.system(size: 18, weight: .semibold))
-                    .frame(width: actionButtonSize, height: actionButtonSize)
-                    .background(Color.zinc100)
-                    .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
-            }
-            .accessibilityLabel("Sign out")
         }
-        .foregroundColor(.zinc900)
-        .padding(.horizontal, TipTrackTheme.pagePadding)
-        .padding(.vertical, 10)
-        .background(Color.white.opacity(0.96))
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(Color.zinc200)
-                .frame(height: 1)
-        }
+        .foregroundStyle(Color.zinc900)
+        .padding(.horizontal, 18)
+        .padding(.top, 12)
+        .padding(.bottom, 16)
+        .background(Color.appBackground)
         .confirmationDialog("Sign out?", isPresented: $showingSignOutConfirmation, titleVisibility: .visible) {
-            Button("Sign out", role: .destructive) {
-                store.signOut()
-            }
+            Button("Sign out", role: .destructive) { store.signOut() }
             Button("Cancel", role: .cancel) {}
         }
     }
