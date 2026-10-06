@@ -616,6 +616,7 @@ private extension UIViewController {
 }
 
 struct AddOrderView: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @EnvironmentObject private var store: TipTrackStore
     @EnvironmentObject private var monetizationStore: MonetizationStore
     @Binding private var intentDraft: TipTrackOrderDraft?
@@ -635,55 +636,72 @@ struct AddOrderView: View {
     }
 
     var body: some View {
-        PageScroll {
-            VStack(alignment: .leading, spacing: 16) {
-                SectionHeader(title: "New delivery", subtitle: "Log the order before the shift moves on.")
-
-                AddressLookupField(
-                    title: "Address",
-                    address: $address,
-                    latitude: $latitude,
-                    longitude: $longitude,
-                    search: addressSearch
-                )
-
-                FieldStack("Order ID") {
-                    AppTextField(placeholder: "Enter an order ID", text: $orderId, systemImage: "number")
-                        .textInputAutocapitalization(.characters)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                if dynamicTypeSize.isAccessibilitySize {
+                    Text("Log the order before the shift moves on.")
+                        .font(.footnote)
+                        .foregroundStyle(Color.zinc500)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
+                VStack(alignment: .leading, spacing: 14) {
+                    AddressLookupField(
+                        title: "Address", address: $address,
+                        latitude: $latitude, longitude: $longitude,
+                        search: addressSearch, labelFont: .subheadline.weight(.semibold), inputFont: .callout,
+                        showsClearButton: true
+                    )
+                    Divider()
+                    FieldStack("Order ID", labelFont: .subheadline.weight(.semibold)) {
+                        AppTextField(placeholder: "Enter an order ID", text: $orderId,
+                                     systemImage: "number", showsClearButton: true, fieldIdentifier: "order-id", inputFont: .callout)
+                            .textInputAutocapitalization(.characters)
+                            .submitLabel(.done)
+                            .onSubmit { UIApplication.shared.dismissTipTrackKeyboard() }
+                            .accessibilityIdentifier("order-id")
+                    }
+                }
+                .padding(16)
+                .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
+                .overlay(AppBorder(cornerRadius: 12))
 
                 InitialTipPickerCard(selectedTip: $selectedTip)
 
-                if let errorMessage {
-                    ErrorBanner(message: errorMessage)
-                }
+                if let errorMessage { ErrorBanner(message: errorMessage) }
 
                 Button {
                     UIApplication.shared.dismissTipTrackKeyboard()
                     addOrder()
                 } label: {
-                    HStack {
-                        if isSubmitting {
-                            ProgressView()
-                        } else {
-                            Image(systemName: "plus.circle.fill")
-                        }
+                    HStack(spacing: 8) {
+                        if isSubmitting { ProgressView().tint(.white) }
                         Text(isSubmitting ? "Saving" : "Save Order")
-                            .fontWeight(.semibold)
+                            .font(.headline)
                     }
-                    .frame(maxWidth: .infinity)
+                    .frame(maxWidth: .infinity, minHeight: 50)
+                    .foregroundStyle(.white)
+                    .background(Color(red: 0.05, green: 0.52, blue: 0.26), in: RoundedRectangle(cornerRadius: 18))
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .tint(.tipGreen)
+                .buttonStyle(.plain)
                 .disabled(isSubmitting)
-            }
-            .appCard()
+                .accessibilityIdentifier("save-order")
 
-            DashboardSummary()
-            TrialStatusCard(showingPaywall: $showingPaywall)
-            RecentOrdersPreview()
+                VStack(spacing: 12) {
+                    Divider()
+                    Label("\(store.orders.count) orders · \(store.locations.count) locations", systemImage: "shippingbox")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.zinc500)
+                        .frame(maxWidth: .infinity)
+                }
+                .padding(.horizontal, 14)
+                .padding(.top, 2)
+            }
+            .padding(.horizontal, 18)
+            .padding(.top, 8)
+            .padding(.bottom, 96)
         }
+        .dismissKeyboardOnScroll()
+        .background(Color.appBackground)
         .alert("Order added", isPresented: $didAddOrder) {
             Button("OK", role: .cancel) {}
         }
@@ -1131,105 +1149,88 @@ private struct TipPickerCard: View {
 
 private struct InitialTipPickerCard: View {
     @Binding var selectedTip: TipCategory?
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    private var columns: [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: 8), count: dynamicTypeSize.isAccessibilitySize ? 2 : 3)
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text("Tip Amount")
                     .font(.subheadline.weight(.semibold))
-                    .foregroundColor(.zinc800)
+                    .foregroundStyle(Color.zinc800)
+                    .accessibilityAddTraits(.isHeader)
                 Text("Choose one now, or leave it for later and update the order after delivery.")
-                    .font(.caption)
-                    .foregroundColor(.zinc500)
+                    .font(.footnote)
+                    .foregroundStyle(Color.zinc500)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    TipChoiceButton(
-                        title: "Later",
-                        systemName: "clock",
-                        isSelected: selectedTip == nil
-                    ) {
-                        selectedTip = nil
-                    }
-                    .frame(width: 112)
-
-                    ForEach(TipCategory.allCases) { category in
-                        TipChoiceButton(
-                            title: category.shortLabel,
-                            badgeCategory: category,
-                            isSelected: selectedTip == category
-                        ) {
-                            selectedTip = category
-                        }
-                        .frame(width: 112)
-                    }
+            LazyVGrid(columns: columns, spacing: 8) {
+                TipChoiceButton(title: "Later", systemName: "clock", isSelected: selectedTip == nil) { selectedTip = nil }
+                    .accessibilityIdentifier("tip-later")
+                ForEach(TipCategory.allCases) { category in
+                    TipChoiceButton(title: category.entryLabel, systemName: category.entrySymbol, isSelected: selectedTip == category) { selectedTip = category }
+                        .accessibilityLabel(category.label)
+                        .accessibilityIdentifier("tip-\(category.rawValue)")
                 }
             }
         }
-        .appCard()
+        .padding(16)
+        .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(AppBorder(cornerRadius: 12))
     }
 }
 
 private extension TipCategory {
-    var shortLabel: String {
+    var entryLabel: String {
         switch self {
-        case .none:
-            return "No"
-        case .underFive:
-            return "<$5"
-        case .fiveToTen:
-            return "$5-10"
-        case .overTen:
-            return "$10+"
-        case .overTwenty:
-            return "$20+"
+        case .none: return "No tip"
+        case .underFive: return "<$5"
+        case .fiveToTen: return "$5–10"
+        case .overTen: return ">$10"
+        case .overTwenty: return ">$20"
+        }
+    }
+    var entrySymbol: String {
+        switch self {
+        case .none: return "nosign"
+        case .underFive: return "dollarsign"
+        case .fiveToTen: return "dollarsign.circle"
+        case .overTen: return "dollarsign.circle"
+        case .overTwenty: return "dollarsign.circle.fill"
         }
     }
 }
 
 private struct TipChoiceButton: View {
     let title: String
-    var systemName: String?
-    var badgeCategory: TipCategory?
+    let systemName: String
     let isSelected: Bool
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 8) {
-                if let badgeCategory {
-                    TipBadge(category: badgeCategory, compact: true)
-                } else if let systemName {
-                    AppIconTile(systemName: systemName, tint: .zinc500)
-                        .scaleEffect(0.72)
-                }
-
+            VStack(spacing: 8) {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : systemName)
+                    .font(.title2)
+                    .accessibilityHidden(true)
                 Text(title)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundColor(isSelected ? .tipGreen : .zinc900)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.88)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                Image(systemName: isSelected ? "check.circle.fill" : "circle")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(isSelected ? .tipGreen : .zinc400)
+                    .font(.subheadline.weight(isSelected ? .semibold : .regular))
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .frame(maxWidth: .infinity, minHeight: 46, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius)
-                    .fill(isSelected ? Color.tipGreen.opacity(0.14) : Color.zinc50)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius)
-                    .strokeBorder(isSelected ? Color.tipGreen : Color.zinc200, lineWidth: isSelected ? 1.5 : 1)
-            )
+            .foregroundStyle(isSelected ? Color.tipGreen : Color.zinc900)
+            .frame(maxWidth: .infinity, minHeight: 64)
+            .padding(.vertical, 4)
+            .background(isSelected ? Color.tipGreen.opacity(0.10) : Color.zinc50, in: RoundedRectangle(cornerRadius: 9))
+            .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(isSelected ? Color.tipGreen : Color.zinc200, lineWidth: isSelected ? 1.5 : 1))
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(title)\(isSelected ? ", selected" : "")")
+        .accessibilityLabel(title)
+        .accessibilityValue(isSelected ? "Selected" : "")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 

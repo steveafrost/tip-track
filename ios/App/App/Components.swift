@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 enum TipTrackTheme {
     static let cardRadius: CGFloat = 8
@@ -12,20 +13,33 @@ struct AddressLookupField: View {
     @Binding var latitude: Double
     @Binding var longitude: Double
     @ObservedObject var search: AddressSearch
+    var labelFont: Font = .subheadline.weight(.semibold)
+    var inputFont: Font = .body
+    var showsClearButton = false
+    @State private var isEditing = false
 
     var body: some View {
-        FieldStack(title) {
+        FieldStack(title, labelFont: labelFont) {
             AppTextField(
                 placeholder: "Enter an address",
                 text: $address,
-                systemImage: "mappin.and.ellipse"
+                systemImage: "mappin.and.ellipse",
+                showsClearButton: showsClearButton,
+                multiline: true,
+                fieldIdentifier: "order-address",
+                inputFont: inputFont,
+                onFocusChange: { focused in
+                    isEditing = focused
+                    if !focused { search.clear() }
+                }
             )
             .textInputAutocapitalization(.words)
+            .accessibilityIdentifier("order-address")
             .onChange(of: address) { newValue in
                 search.update(query: newValue)
             }
 
-            if !search.suggestions.isEmpty {
+            if isEditing && !search.suggestions.isEmpty {
                 VStack(spacing: 0) {
                     ForEach(Array(search.suggestions.prefix(5).enumerated()), id: \.element.id) { index, suggestion in
                         Button {
@@ -56,7 +70,7 @@ struct AddressLookupField: View {
                     }
                 }
                 .padding(.horizontal, 14)
-                .background(Color.white)
+                .background(Color(uiColor: .secondarySystemGroupedBackground))
                 .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.cardRadius))
                 .overlay(AppBorder(cornerRadius: TipTrackTheme.cardRadius))
                 .shadow(color: .black.opacity(0.04), radius: 12, y: 6)
@@ -67,17 +81,19 @@ struct AddressLookupField: View {
 
 struct FieldStack<Content: View>: View {
     let title: String
+    var labelFont: Font
     @ViewBuilder let content: Content
 
-    init(_ title: String, @ViewBuilder content: () -> Content) {
+    init(_ title: String, labelFont: Font = .subheadline.weight(.semibold), @ViewBuilder content: () -> Content) {
         self.title = title
+        self.labelFont = labelFont
         self.content = content()
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
-                .font(.subheadline.weight(.semibold))
+                .font(labelFont)
                 .foregroundColor(.zinc800)
             content
         }
@@ -88,6 +104,12 @@ struct AppTextField: View {
     let placeholder: String
     @Binding var text: String
     var systemImage: String?
+    var showsClearButton = false
+    var multiline = false
+    var fieldIdentifier = ""
+    var inputFont: Font = .body
+    var onFocusChange: ((Bool) -> Void)?
+    @FocusState private var isFocused: Bool
 
     var body: some View {
         HStack(spacing: 10) {
@@ -96,15 +118,35 @@ struct AppTextField: View {
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(.zinc500)
             }
-            TextField(placeholder, text: $text)
-                .font(.body)
-                .foregroundColor(.zinc900)
+            Group {
+                if #available(iOS 16.0, *), multiline {
+                    TextField(placeholder, text: $text, axis: .vertical)
+                        .lineLimit(1...2)
+                } else {
+                    TextField(placeholder, text: $text)
+                }
+            }
+            .font(inputFont)
+            .focused($isFocused)
+            .foregroundColor(.zinc900)
+            .accessibilityLabel(placeholder)
+            .accessibilityIdentifier(fieldIdentifier)
+            if showsClearButton && !text.isEmpty {
+                Button { text = "" } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.tertiary)
+                        .frame(width: 44, height: 44)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Clear \(placeholder.lowercased())")
+            }
         }
         .padding(.horizontal, 12)
         .frame(minHeight: 48)
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.controlRadius))
         .overlay(AppBorder(cornerRadius: TipTrackTheme.controlRadius))
+        .onChange(of: isFocused) { focused in onFocusChange?(focused) }
     }
 }
 
@@ -250,7 +292,7 @@ struct ResultsList<Item: Identifiable, Row: View>: View {
                 }
             }
         }
-        .background(Color.white)
+        .background(Color(uiColor: .secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.cardRadius))
         .overlay(AppBorder(cornerRadius: TipTrackTheme.cardRadius))
         .shadow(color: .black.opacity(0.04), radius: 12, y: 6)
@@ -279,18 +321,7 @@ struct EmptyPrompt: View {
 
 struct AppBackground: View {
     var body: some View {
-        ZStack(alignment: .topTrailing) {
-            Color.appBackground
-            Circle()
-                .fill(Color.tipGreen.opacity(0.08))
-                .frame(width: 260, height: 260)
-                .offset(x: 96, y: -128)
-            Circle()
-                .fill(Color.tipAmber.opacity(0.08))
-                .frame(width: 180, height: 180)
-                .offset(x: -220, y: 280)
-        }
-        .ignoresSafeArea()
+        Color.appBackground.ignoresSafeArea()
     }
 }
 
@@ -384,10 +415,19 @@ struct StatTile: View {
 }
 
 extension View {
+    @ViewBuilder
+    func dismissKeyboardOnScroll() -> some View {
+        if #available(iOS 16.0, *) {
+            self.scrollDismissesKeyboard(.interactively)
+        } else {
+            self
+        }
+    }
+
     func appCard(padding: CGFloat = 16) -> some View {
         self
             .padding(padding)
-            .background(Color.white)
+            .background(Color(uiColor: .secondarySystemGroupedBackground))
             .clipShape(RoundedRectangle(cornerRadius: TipTrackTheme.cardRadius))
             .overlay(AppBorder(cornerRadius: TipTrackTheme.cardRadius))
             .shadow(color: .black.opacity(0.05), radius: 16, y: 8)
@@ -401,16 +441,20 @@ extension View {
 }
 
 extension Color {
-    static let appBackground = Color(red: 0.98, green: 0.98, blue: 0.97)
-    static let tipGreen = Color(red: 0.05, green: 0.52, blue: 0.26)
-    static let tipAmber = Color(red: 0.78, green: 0.43, blue: 0.05)
-    static let tipBlue = Color(red: 0.10, green: 0.35, blue: 0.72)
-    static let tipRose = Color(red: 0.75, green: 0.16, blue: 0.30)
-    static let zinc50 = Color(red: 0.98, green: 0.98, blue: 0.98)
-    static let zinc100 = Color(red: 0.96, green: 0.96, blue: 0.96)
-    static let zinc200 = Color(red: 0.90, green: 0.90, blue: 0.91)
-    static let zinc400 = Color(red: 0.63, green: 0.63, blue: 0.66)
-    static let zinc500 = Color(red: 0.44, green: 0.44, blue: 0.48)
-    static let zinc800 = Color(red: 0.15, green: 0.15, blue: 0.16)
-    static let zinc900 = Color(red: 0.09, green: 0.09, blue: 0.10)
+    static let appBackground = Color(uiColor: .systemGroupedBackground)
+    static let tipGreen = Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark
+            ? UIColor(red: 0.20, green: 0.78, blue: 0.42, alpha: 1)
+            : UIColor(red: 0.05, green: 0.52, blue: 0.26, alpha: 1)
+    })
+    static let tipAmber = Color.orange
+    static let tipBlue = Color.blue
+    static let tipRose = Color.pink
+    static let zinc50 = Color(uiColor: .tertiarySystemGroupedBackground)
+    static let zinc100 = Color(uiColor: .tertiarySystemFill)
+    static let zinc200 = Color(uiColor: .separator)
+    static let zinc400 = Color(uiColor: .tertiaryLabel)
+    static let zinc500 = Color(uiColor: .secondaryLabel)
+    static let zinc800 = Color(uiColor: .label)
+    static let zinc900 = Color(uiColor: .label)
 }
