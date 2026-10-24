@@ -5,6 +5,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "sonner";
 import { AppChrome } from "@/components/app-chrome";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://usetiptrack.com"),
@@ -55,6 +56,7 @@ export default function RootLayout({
       >
         <AppChrome>{children}</AppChrome>
         <Toaster position="top-center" richColors={true} />
+        <SpeedInsights />
       </body>
     </html>
   );
