@@ -1,11 +1,7 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { createPrismaAdapter } from "../lib/prisma-adapter";
 
-const adapter = new PrismaPg({
-  connectionString: process.env.POSTGRES_PRISMA_URL,
-});
-
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient({ adapter: createPrismaAdapter() });
 
 const load = async () => {
   try {
