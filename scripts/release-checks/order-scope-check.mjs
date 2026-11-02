@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 
 function loadEnvFile(path) {
@@ -26,7 +27,14 @@ function loadEnvFile(path) {
 
 loadEnvFile(".env.production.local");
 
-const prisma = new PrismaClient();
+// Prisma 7 needs a driver adapter; this mirrors lib/prisma-adapter.ts, which an
+// .mjs script cannot import. The URL carries no sslmode, so ask for TLS.
+const adapter = new PrismaPg({
+  connectionString: process.env.POSTGRES_PRISMA_URL,
+  ssl: true,
+});
+
+const prisma = new PrismaClient({ adapter });
 const suffix = Date.now().toString(36);
 const externalId = `release-scope-${suffix}`;
 const address = `Release Scope Check ${suffix}`;
