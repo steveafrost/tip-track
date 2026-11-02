@@ -19,23 +19,41 @@ import {
   Truck,
 } from "lucide-react";
 
-const appStoreUrl = "https://apps.apple.com/app/id6771138274";
+const appStoreUrl =
+  "https://apps.apple.com/us/app/tiptrack-delivery-log/id6771138274?ct=website-home";
 
 const logRows = [
-  ["6:34 PM", "#8337", "3217 Elmwood Ave", "$8.25", "Leave at door"],
-  ["6:58 PM", "#8338", "8687 Pinecrest Dr", "$5.00", "Nice porch light"],
-  ["7:18 PM", "#8342", "1504 Brookside Dr", "$12.50", "Cash tip"],
-  ["7:45 PM", "#8345", "412 Riverview Ln", "$7.75", "Gate code needed"],
-  ["8:12 PM", "#8349", "9800 Maplewood Ave", "$18.24", "Best tip tonight"],
+  ["6:34 PM", "#8337", "3217 Elmwood Ave", "$5–10"],
+  ["6:58 PM", "#8338", "8687 Pinecrest Dr", "<$5"],
+  ["7:18 PM", "#8342", "1504 Brookside Dr", "$10+"],
+  ["7:45 PM", "#8345", "412 Riverview Ln", "No tip"],
+  ["8:12 PM", "#8349", "9800 Maplewood Ave", "$20+"],
 ];
 
 const fieldNotes = [
   "Log every order before the shift blurs together.",
-  "Track tips, addresses, and repeat neighborhoods.",
+  "Track tip ranges and address history for repeat locations.",
   "Use Shortcuts or Siri to log orders and update delayed tips faster.",
-  "Keep private notes for the next time an address pops up.",
-  "Use reports to spot which runs were actually worth it.",
+  "Search a saved order by its number or delivery address.",
+  "Use reports to see the tip ranges you record most often.",
 ];
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "MobileApplication",
+  name: "TipTrack Delivery Log",
+  applicationCategory: "ProductivityApplication",
+  operatingSystem: "iOS",
+  downloadUrl: appStoreUrl,
+  description:
+    "An iPhone delivery log for saving order IDs, addresses, and tip ranges; updating delayed tips; and reviewing repeat locations.",
+  featureList: [
+    "Address history and location tip patterns",
+    "Delayed tip updates",
+    "Shortcuts and Siri actions for logging and updating orders",
+    "Twenty free orders before a one-time Pro unlock",
+  ],
+};
 
 const faqs = [
   {
@@ -44,9 +62,9 @@ const faqs = [
       "Your first 20 orders are free. After that, unlock the full app for $4.99 once.",
   },
   {
-    question: "Is my data safe?",
+    question: "Can I decide what to save?",
     answer:
-      "TipTrack is built for a private delivery log. Your routes, notes, and totals stay tied to your account.",
+      "Yes. TipTrack is a manual delivery log: you choose which order IDs, addresses, and tip ranges to save and update.",
   },
   {
     question: "Can I use it on the web?",
@@ -123,6 +141,10 @@ function TornEdge({ dark = false }: { dark?: boolean }) {
 export default function Home() {
   return (
     <main className="min-h-screen overflow-hidden bg-[#f4ead1] text-[#132114]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
       <section className="relative min-h-[790px] overflow-hidden bg-[#050705] text-[#fff8df]">
         <MarketingHeroImage />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.94)_0%,rgba(0,0,0,0.76)_38%,rgba(0,0,0,0.24)_72%,rgba(0,0,0,0.42)_100%)]" />
@@ -139,6 +161,9 @@ export default function Home() {
               <a href="#log" className="hover:text-[#b8f26d]">
                 Log
               </a>
+              <Link href="/delivery-tip-tracker" className="hover:text-[#b8f26d]">
+                How it works
+              </Link>
               <a href="#pricing" className="hover:text-[#b8f26d]">
                 Pricing
               </a>
@@ -163,10 +188,9 @@ export default function Home() {
               Know which deliveries are worth remembering.
             </p>
             <p className="mt-5 max-w-full text-lg leading-8 text-[#d8cba8] sm:max-w-xl">
-              A private order log for the parts of a delivery shift that
-              matter after the headlights, receipts, and addresses blur
-              together. Built for quick updates in the app, Shortcuts, and
-              Siri.
+              A manual delivery log for the order IDs, addresses, and tip
+              ranges that matter after the shift blurs together. Built for
+              quick updates in the app, Shortcuts, and Siri.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -186,21 +210,21 @@ export default function Home() {
               <div className="border-b border-[#7b6c4b]/30 pb-3 text-xs uppercase tracking-[0.2em]">
                 Order #8342
               </div>
-              <div className="mt-4 text-5xl font-black">$12.50</div>
-              <div className="mt-2 text-sm">7:18 PM / 2.3 mi</div>
+              <div className="mt-4 text-5xl font-black">$10+</div>
+              <div className="mt-2 text-sm">7:18 PM / $10+ range</div>
               <ul className="mt-5 space-y-2 text-sm">
-                <li>[x] leave at door</li>
-                <li>[x] cash tip</li>
+                <li>[x] save order ID</li>
+                <li>[x] update tip later</li>
                 <li>[x] save address</li>
               </ul>
             </div>
             <div className="absolute bottom-2 right-24 rotate-[-5deg] border-2 border-[#8f2d22] bg-[#f2e4be] px-8 py-5 text-center font-mono text-[#315020] shadow-[0_20px_60px_rgba(0,0,0,0.28)]">
               <div className="text-xs uppercase tracking-[0.2em] text-[#8f2d22]">
-                Tonight&apos;s total
+                Saved locations
               </div>
-              <div className="mt-2 text-5xl font-black">$156.78</div>
+              <div className="mt-2 text-5xl font-black">Tip history</div>
               <div className="mt-2 inline-block border border-[#8f2d22] px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-[#8f2d22]">
-                Worth it
+                Check repeat addresses
               </div>
             </div>
           </div>
@@ -238,10 +262,10 @@ export default function Home() {
               Your working shift, on paper.
             </h2>
             <p className="mt-5 max-w-xl text-lg leading-8 text-[#4f594b]">
-              TipTrack keeps the notebook feeling but removes the guessing. Log
-              the order, remember the address, update delayed tips with
-              Shortcuts or Siri, and let the totals tell you where the night
-              actually paid off.
+              TipTrack keeps the notebook feeling but removes the scramble.
+              Log the order, remember the address, update delayed tips with
+              Shortcuts or Siri, and revisit a location&apos;s saved tip history
+              before you make another decision.
             </p>
             <div className="mt-8 space-y-3">
               {fieldNotes.map((note) => (
@@ -274,14 +298,14 @@ export default function Home() {
       <section id="log" className="bg-[#0b0d0a] px-5 py-16 text-[#f5ead0] sm:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="mb-6 flex flex-wrap items-end justify-between gap-4 border-b border-[#f5ead0]/20 pb-5 font-mono uppercase tracking-[0.16em]">
-            <h2 className="text-2xl font-black">Today&apos;s delivery log</h2>
-            <span className="text-sm text-[#b8f26d]">18 orders / May 18, 2025</span>
+            <h2 className="text-2xl font-black">Sample delivery log</h2>
+            <span className="text-sm text-[#b8f26d]">Tip range examples</span>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] border-collapse font-mono text-sm">
+            <table className="w-full min-w-[640px] border-collapse font-mono text-sm">
               <thead>
                 <tr className="border-b border-[#f5ead0]/18 text-left text-[#8bc34a]">
-                  {["Time", "Order", "Address", "Tip", "Notes"].map((head) => (
+                  {["Time", "Order", "Address", "Tip range"].map((head) => (
                     <th key={head} className="px-4 py-4 font-black uppercase tracking-[0.16em]">
                       {head}
                     </th>
@@ -337,15 +361,15 @@ export default function Home() {
               Unlock the full log
             </h2>
             <p className="mt-5 max-w-xl text-lg leading-8 text-[#4f594b]">
-              After 20 orders, keep unlimited logging, full reports, and saved
-              address history with a single purchase. No subscription rhythm
-              hiding inside a simple app.
+              After 20 orders, keep unlimited logging, saved address history,
+              and tip-pattern reports with a single purchase. No subscription
+              rhythm hiding inside a simple app.
             </p>
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
               {[
                 "Unlimited orders",
                 "Location history",
-                "Shift and weekly reports",
+                "Tip-pattern reports",
                 "Works on iPhone and web",
               ].map((item) => (
                 <div key={item} className="flex items-center gap-3 font-mono text-sm">
@@ -388,7 +412,7 @@ export default function Home() {
           <div>
             <BrandStamp />
             <p className="mt-5 max-w-sm text-sm leading-7 text-[#b9ad8f]">
-              Track today. Remember tomorrow. Earn more.
+              Track today. Remember tomorrow. Make better delivery decisions.
             </p>
           </div>
           <div className="grid gap-2 font-mono text-xs uppercase tracking-[0.16em] text-[#b9ad8f]">
@@ -398,6 +422,9 @@ export default function Home() {
             <a href="#log" className="hover:text-[#b8f26d]">
               Log
             </a>
+            <Link href="/delivery-tip-tracker" className="hover:text-[#b8f26d]">
+              How it works
+            </Link>
             <a href="#pricing" className="hover:text-[#b8f26d]">
               Pricing
             </a>

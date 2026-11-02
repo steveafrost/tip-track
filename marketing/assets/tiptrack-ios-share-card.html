@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TipTrack iOS share card</title>
+    <style>
+      * { box-sizing: border-box; }
+      html, body { width: 1200px; height: 630px; margin: 0; overflow: hidden; }
+      body {
+        background:
+          radial-gradient(circle at 76% 8%, rgba(59, 205, 145, 0.27), transparent 29%),
+          radial-gradient(circle at 15% 87%, rgba(255, 200, 96, 0.17), transparent 31%),
+          linear-gradient(135deg, #062d25 0%, #07533e 56%, #043d31 100%);
+        color: #ffffff;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      .card { position: relative; width: 1200px; height: 630px; padding: 56px 64px; }
+      .brand { display: flex; align-items: center; gap: 14px; font-size: 27px; font-weight: 800; letter-spacing: -0.8px; }
+      .brand img { width: 50px; height: 50px; border-radius: 12px; box-shadow: 0 10px 28px rgba(0,0,0,0.28); }
+      .eyebrow { margin: 66px 0 12px; color: #b7f5d7; font-size: 18px; font-weight: 750; letter-spacing: 0.7px; text-transform: uppercase; }
+      h1 { width: 620px; margin: 0; font-size: 59px; line-height: 1.03; letter-spacing: -2.5px; }
+      .accent { color: #c6f7dc; }
+      .summary { width: 575px; margin: 22px 0 24px; color: #e5f6ed; font-size: 22px; line-height: 1.36; letter-spacing: -0.25px; }
+      .chips { display: flex; gap: 10px; flex-wrap: wrap; width: 600px; }
+      .chip { border: 1px solid rgba(216,255,232,0.35); background: rgba(255,255,255,0.1); border-radius: 999px; padding: 9px 14px; color: #ffffff; font-size: 16px; font-weight: 650; }
+      .footer { position: absolute; left: 64px; bottom: 53px; display: flex; align-items: center; gap: 15px; color: #e1f5e8; font-size: 18px; font-weight: 650; }
+      .store { border-radius: 12px; background: #ffffff; color: #082f27; padding: 12px 16px; font-size: 16px; font-weight: 800; letter-spacing: -0.2px; }
+      .phone { position: absolute; right: 105px; top: 38px; width: 308px; height: 558px; padding: 10px; border-radius: 42px; background: linear-gradient(145deg, #252827, #050607); box-shadow: 0 28px 58px rgba(0,0,0,0.42), 0 0 0 3px rgba(255,255,255,0.13); transform: rotate(5deg); }
+      .phone::before { content: ""; position: absolute; z-index: 2; top: 15px; left: 50%; transform: translateX(-50%); width: 108px; height: 27px; border-radius: 18px; background: #000; }
+      .screen { width: 100%; height: 100%; border-radius: 33px; object-fit: cover; object-position: top; }
+      .location-card { position: absolute; right: 18px; bottom: 36px; width: 235px; padding: 13px; border: 1px solid rgba(255,255,255,0.24); border-radius: 21px; background: rgba(11, 53, 42, 0.94); box-shadow: 0 18px 40px rgba(0,0,0,0.24); transform: rotate(-5deg); }
+      .location-card img { width: 100%; height: 115px; display: block; object-fit: cover; object-position: top; border-radius: 13px; }
+      .location-card p { margin: 9px 2px 1px; font-size: 14px; font-weight: 750; line-height: 1.2; color: #eafff1; }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <div class="brand">
+        <img src="../../ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png" alt="TipTrack app icon" />
+        <span>TipTrack</span>
+      </div>
+      <p class="eyebrow">iPhone delivery tip history</p>
+      <h1>Your delivery history,<br /><span class="accent">ready when you need it.</span></h1>
+      <p class="summary">Log an order quickly, recognize a repeat address, and update a tip after the delivery.</p>
+      <div class="chips">
+        <span class="chip">Native iPhone app</span>
+        <span class="chip">Siri &amp; Shortcuts</span>
+        <span class="chip">First 20 orders free</span>
+      </div>
+      <div class="footer">
+        <span>usetiptrack.com</span>
+        <span class="store">Available on the App Store</span>
+      </div>
+      <div class="phone">
+        <img class="screen" src="../../public/images/optimized/jpg/marketing/add-order-464.jpg" alt="TipTrack Add Order screen" />
+      </div>
+      <div class="location-card">
+        <img src="../../public/images/optimized/jpg/marketing/locations-464.jpg" alt="TipTrack location history screen" />
+        <p>Remember repeat delivery addresses.</p>
+      </div>
+    </main>
+  </body>
+</html>

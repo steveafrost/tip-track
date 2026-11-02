@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TipTrack iOS short-video frames</title>
+    <style>
+      * { box-sizing: border-box; }
+      html, body, main { width: 540px; height: 960px; margin: 0; overflow: hidden; }
+      body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #073f31; color: white; }
+      main { position: relative; padding: 55px 44px; background: radial-gradient(circle at 78% 8%, rgba(105,244,170,.3), transparent 28%), linear-gradient(160deg,#074032,#08714d 58%,#05372d); }
+      .brand { display: flex; align-items: center; gap: 12px; color: #e8fff1; font-weight: 800; font-size: 23px; }
+      .brand img { width: 42px; height: 42px; border-radius: 11px; }
+      .eyebrow { margin: 50px 0 10px; color: #bdf6d4; font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: .8px; }
+      h1 { margin: 0; max-width: 390px; font-size: 50px; line-height: 1.02; letter-spacing: -2px; }
+      .copy { max-width: 365px; margin: 21px 0 0; color: #e4f8ea; font-size: 22px; line-height: 1.3; }
+      .phone { position: absolute; right: 65px; bottom: 37px; width: 310px; height: 545px; padding: 10px; border-radius: 42px; background: #080a09; box-shadow: 0 28px 48px rgba(0,0,0,.38); transform: rotate(5deg); }
+      .phone::before { content: ""; position: absolute; z-index: 1; top: 14px; left: 50%; width: 110px; height: 28px; border-radius: 18px; background: #000; transform: translateX(-50%); }
+      .phone img { width: 100%; height: 100%; object-fit: cover; object-position: top; border-radius: 32px; }
+      .card { position: absolute; left: 43px; bottom: 62px; padding: 15px 17px; max-width: 355px; border: 1px solid rgba(255,255,255,.28); border-radius: 18px; background: rgba(3,35,27,.85); box-shadow: 0 12px 32px rgba(0,0,0,.25); color: #f2fff6; font-size: 20px; line-height: 1.22; font-weight: 750; }
+      .end { display: flex; height: 100%; flex-direction: column; justify-content: center; align-items: flex-start; }
+      .end h1 { font-size: 59px; }
+      .end .copy { font-size: 25px; }
+      .cta { margin-top: 28px; border-radius: 13px; background: #fff; padding: 15px 18px; color: #08352a; font-size: 19px; font-weight: 850; }
+      .url { position: absolute; bottom: 52px; color: #d8fbe5; font-size: 19px; font-weight: 750; }
+    </style>
+  </head>
+  <body>
+    <main id="frame"></main>
+    <script>
+      const root = document.getElementById('frame');
+      const icon = '../../ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png';
+      const add = '../../public/images/optimized/jpg/marketing/add-order-464.jpg';
+      const locations = '../../public/images/optimized/jpg/marketing/locations-464.jpg';
+      const frames = [
+        { eyebrow: 'Delivery shifts move fast', title: 'Keep the order before it gets lost.', copy: 'TipTrack gives each delivery a home on your iPhone.', image: add, card: 'Log an order as it comes in.' },
+        { eyebrow: 'When a tip updates later', title: 'Come back to the delivery, not the guesswork.', copy: 'Find the order or address, then update the saved tip history.', image: add, card: 'Update delayed tips after delivery.' },
+        { eyebrow: 'For a repeat address', title: 'Know the location before it feels familiar.', copy: 'Search saved delivery addresses and review the history you already logged.', image: locations, card: 'Remember repeat delivery addresses.' },
+        { end: true }
+      ];
+      const index = Math.max(0, Math.min(frames.length - 1, Number(location.hash.slice(1)) || 0));
+      const f = frames[index];
+      const brand = `<div class="brand"><img src="${icon}" alt=""/><span>TipTrack</span></div>`;
+      root.innerHTML = f.end
+        ? `<section class="end">${brand}<p class="eyebrow">Delivery history for iPhone</p><h1>TipTrack keeps the shift organized.</h1><p class="copy">Orders, repeat addresses, and tip history—ready when you need them.</p><div class="cta">Available on the App Store</div><div class="url">usetiptrack.com</div></section>`
+        : `${brand}<p class="eyebrow">${f.eyebrow}</p><h1>${f.title}</h1><p class="copy">${f.copy}</p><div class="phone"><img src="${f.image}" alt=""/></div><div class="card">${f.card}</div>`;
+    </script>
+  </body>
+</html>
