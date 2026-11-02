@@ -296,7 +296,7 @@ function AuthenticatedWebApp() {
               className="grid h-9 w-9 place-items-center rounded-md bg-zinc-100 text-zinc-800"
               title="Manage account"
             >
-              <UserButton afterSignOutUrl="/app" />
+              <UserButton />
             </div>
           </div>
         </div>

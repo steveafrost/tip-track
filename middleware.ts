@@ -1,22 +1,26 @@
-import { authMiddleware } from "@clerk/nextjs";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-const clerkMiddleware = authMiddleware({
-  publicRoutes: [
-    "/",
-    "/privacy",
-    "/privacy-policy",
-    "/api/mobile(.*)",
-    "/api/web(.*)",
-    "/app(.*)",
-    "/search(.*)",
-    "/submit(.*)",
-    "/reports(.*)",
-  ],
+const isPublicRoute = createRouteMatcher([
+  "/",
+  "/privacy",
+  "/privacy-policy",
+  "/api/mobile(.*)",
+  "/api/web(.*)",
+  "/app(.*)",
+  "/search(.*)",
+  "/submit(.*)",
+  "/reports(.*)",
+]);
+
+const protectRoutes = clerkMiddleware(async (auth, request) => {
+  if (!isPublicRoute(request)) {
+    await auth.protect();
+  }
 });
 
 export default process.env.CLERK_SECRET_KEY
-  ? clerkMiddleware
+  ? protectRoutes
   : function middleware() {
       return NextResponse.next();
     };
