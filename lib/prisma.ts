@@ -1,12 +1,8 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { createPrismaAdapter } from "./prisma-adapter";
 
 function createPrismaClient() {
-  const adapter = new PrismaPg({
-    connectionString: process.env.POSTGRES_PRISMA_URL,
-  });
-
-  return new PrismaClient({ adapter });
+  return new PrismaClient({ adapter: createPrismaAdapter() });
 }
 
 let prisma: PrismaClient;
