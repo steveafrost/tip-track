@@ -33,14 +33,17 @@ The original Next.js implementation remains in the repo for reference, but the i
 
 Open `ios/App/App.xcodeproj` in Xcode, select your Apple Developer Team, then build or archive the `App` target.
 
-Command-line simulator build:
+Command-line device build (physical iPhone only — simulators are never used; attach
+`Mr Chips iPhone`, UDID `00008120-001865AC3E0B401E`, and stop if signing fails
+rather than switching destination):
 
 ```bash
 xcodebuild -project ios/App/App.xcodeproj \
   -scheme App \
   -configuration Debug \
-  -destination 'platform=iOS Simulator,OS=26.5,name=iPhone 17 Pro' \
+  -destination 'id=00008120-001865AC3E0B401E' \
   -derivedDataPath /private/tmp/tip-track-derived \
+  -allowProvisioningUpdates \
   build
 ```
 

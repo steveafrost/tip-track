@@ -313,13 +313,17 @@ pnpm auth:backfill
 # Release checks
 pnpm release:check:order-scope
 
-# iOS build (simulator)
+# iOS build (physical device only — simulators are never used)
+# Attach Mr Chips iPhone (00008120-001865AC3E0B401E) first; if signing fails,
+# stop and ask Steve. Never switch to a simulator destination.
 xcodebuild -project ios/App/App.xcodeproj \
   -scheme App \
   -configuration Debug \
-  -destination 'platform=iOS Simulator,OS=26.5,name=iPhone 17 Pro' \
+  -destination 'id=00008120-001865AC3E0B401E' \
   -derivedDataPath /private/tmp/tip-track-derived \
+  -allowProvisioningUpdates \
   build
+# install/launch: xcrun devicectl device install app --device 00008120-001865AC3E0B401E <built>.app
 ```
 
 ---
