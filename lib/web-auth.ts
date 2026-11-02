@@ -1,4 +1,4 @@
-import { currentUser } from "@clerk/nextjs";
+import { currentUser } from "@clerk/nextjs/server";
 import { resolveLinkedAuthIdentities } from "@/lib/auth-resolver";
 import { MobileApiError } from "@/lib/mobile-api";
 import type { VerifiedIdentity } from "@/lib/auth-resolver";

@@ -60,7 +60,7 @@ export default function RootLayout({
   );
 
   return process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? (
-    <ClerkProvider>{document}</ClerkProvider>
+    <ClerkProvider afterSignOutUrl="/app">{document}</ClerkProvider>
   ) : (
     document
   );
