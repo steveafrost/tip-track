@@ -28,10 +28,16 @@ function loadEnvFile(path) {
 loadEnvFile(".env.production.local");
 
 // Prisma 7 needs a driver adapter; this mirrors lib/prisma-adapter.ts, which an
-// .mjs script cannot import. The URL carries no sslmode, so ask for TLS.
+// .mjs script cannot import. An explicit sslmode in the URL wins; otherwise use
+// TLS for everything that is not a local database, so CI can run this against a
+// throwaway service container with no secret and no TLS.
+const connectionString = process.env.POSTGRES_PRISMA_URL;
+const hasSslMode = /[?&]sslmode=/i.test(connectionString ?? "");
+const isLocal = /@(localhost|127\.0\.0\.1)[:/]/i.test(connectionString ?? "");
+
 const adapter = new PrismaPg({
-  connectionString: process.env.POSTGRES_PRISMA_URL,
-  ssl: true,
+  connectionString,
+  ...(hasSslMode || isLocal ? {} : { ssl: true }),
 });
 
 const prisma = new PrismaClient({ adapter });
