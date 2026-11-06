@@ -64,6 +64,24 @@ jobs:
     if: github.ref == 'refs/heads/main'
     needs: [build]
 
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: tiptrack
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      POSTGRES_PRISMA_URL: postgresql://postgres:postgres@localhost:5432/tiptrack
+      POSTGRES_URL_NON_POOLING: postgresql://postgres:postgres@localhost:5432/tiptrack
+
     steps:
       - uses: actions/checkout@v4
 
@@ -81,8 +99,8 @@ jobs:
       - name: Generate Prisma client
         run: pnpm db:generate
 
+      - name: Create schema
+        run: pnpm db:push
+
       - name: Run release scope check
         run: pnpm release:check:order-scope
-        env:
-          POSTGRES_PRISMA_URL: ${{ secrets.POSTGRES_PRISMA_URL }}
-          POSTGRES_URL_NON_POOLING: ${{ secrets.POSTGRES_URL_NON_POOLING }}
