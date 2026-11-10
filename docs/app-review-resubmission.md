@@ -1,16 +1,19 @@
 # App Review Resubmission Checklist
 
-Current App Store Connect state:
+## Current status (2026-11-06)
 
-- App: TipTrack Delivery Log
-- Bundle ID: `com.steveafrost.tiptrack`
-- Version: `1.0`
-- Attached build: `16` after the next archive/upload
-- Build processing state: `VALID`
-- In-app purchase: `com.steveafrost.tiptrack.pro.unlock`
-- IAP state: `WAITING_FOR_REVIEW`
-- IAP type: non-consumable
-- IAP primary `en-US` localization: replaced rejected localization and resubmitted; current state is `WAITING_FOR_REVIEW`
+- App Store live version: `1.0.2`.
+- Version `1.0.3` is `PREPARE_FOR_SUBMISSION`; it has not been submitted for App Review.
+- Build `27` is `VALID` and attached to `1.0.3`; it is in internal TestFlight.
+- Both Pro products are `APPROVED`: `com.steveafrost.tiptrack.pro.unlock.v2` and legacy `com.steveafrost.tiptrack.pro.unlock`.
+- Build `27` predates the merged grouped Add form and privacy policy. Do not submit build `27`.
+- Next candidate is a fresh build `28` from current source, including in-app account deletion.
+- Required before submission: physical-device build/install, sandbox Pro purchase and restore, new physical-device screen recording, updated App Review notes, and build `28` selected for `1.0.3`.
+- Pro is now opened from the person icon account menu, not a lock icon.
+
+The build `16` instructions below are historical. Do not reuse their submission ID or build references.
+
+## Historical build 16 state (June 2026)
 
 ## Review Notes
 

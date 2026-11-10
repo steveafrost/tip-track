@@ -165,6 +165,15 @@ struct TipTrackAPIClient {
         return response.order
     }
 
+    func deleteAccount(session driverSession: DriverSession) async throws {
+        let _: MobileDeleteAccountResponse = try await send(
+            path: "/api/mobile/account",
+            method: "DELETE",
+            body: Optional<String>.none,
+            session: driverSession
+        )
+    }
+
     func fetchAppleEntitlement(session driverSession: DriverSession) async throws -> StoreKitEntitlement {
         let response: MobileEntitlementResponse = try await send(
             path: "/api/mobile/entitlements/apple",
@@ -327,6 +336,10 @@ struct StoreKitEntitlement: Decodable {
 
 private struct MobileEntitlementResponse: Decodable {
     let entitlement: StoreKitEntitlement
+}
+
+private struct MobileDeleteAccountResponse: Decodable {
+    let deleted: Bool
 }
 
 private struct MobileLocationRequest: Encodable {

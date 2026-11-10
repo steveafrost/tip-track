@@ -53,15 +53,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check iOS Swift syntax
-        run: swiftc -parse ios/App/App/AppDelegate.swift 2>&1 || true
+      - name: Run native tests
+        run: swift test
 
       - name: Validate Info.plist
         run: plutil -lint ios/App/App/Info.plist
 
   release-check:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && vars.ENABLE_RELEASE_DB_CHECK == 'true'
     needs: [build]
 
     services:

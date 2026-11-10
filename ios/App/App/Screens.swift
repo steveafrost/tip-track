@@ -92,9 +92,6 @@ struct SignInView: View {
                         .frame(maxWidth: .infinity)
                         .frame(minHeight: 50)
                         .contentShape(Rectangle())
-                        .onTapGesture {
-                            startDemo()
-                        }
                     }
                     .buttonStyle(.plain)
                     .foregroundColor(.zinc900)
@@ -225,11 +222,14 @@ struct AccountConnectionsView: View {
     @State private var errorMessage: String?
     @State private var isSubmitting = false
     @State private var successMessage: String?
+    @State private var showingDeleteConfirmation = false
+    @State private var isDeleting = false
 
     var body: some View {
         NavigationView {
-            VStack(alignment: .leading, spacing: 16) {
-                SectionHeader(title: "Connected logins", subtitle: "Connect Apple and Google to use the same TipTrack data from any sign-in method.")
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    SectionHeader(title: "Connected logins", subtitle: "Connect Apple and Google to use the same TipTrack data from any sign-in method.")
 
                 if let successMessage {
                     HStack(alignment: .top, spacing: 10) {
@@ -277,9 +277,39 @@ struct AccountConnectionsView: View {
                     .disabled(isSubmitting)
                 }
 
-                Spacer()
+                if store.isCloudSessionActive {
+                    Divider()
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Delete account")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundColor(.zinc900)
+                        Text("Permanently removes your TipTrack cloud orders, connected logins, and Pro verification. Your App Store purchase stays with your Apple Account.")
+                            .font(.caption)
+                            .foregroundColor(.zinc500)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        Button(role: .destructive) {
+                            showingDeleteConfirmation = true
+                        } label: {
+                            HStack(spacing: 8) {
+                                if isDeleting { ProgressView().tint(.red) }
+                                Text(isDeleting ? "Deleting account" : "Delete account")
+                                    .font(.subheadline.weight(.semibold))
+                                    .frame(maxWidth: .infinity)
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.large)
+                        .tint(.red)
+                        .disabled(isSubmitting || isDeleting)
+                    }
+                }
+
+                    Spacer()
+                }
+                .padding(TipTrackTheme.pagePadding)
             }
-            .padding(TipTrackTheme.pagePadding)
             .navigationTitle("Account")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -287,6 +317,14 @@ struct AccountConnectionsView: View {
                         dismiss()
                     }
                 }
+            }
+            .alert("Delete TipTrack account?", isPresented: $showingDeleteConfirmation) {
+                Button("Cancel", role: .cancel) {}
+                Button("Delete account", role: .destructive) {
+                    deleteAccount()
+                }
+            } message: {
+                Text("This permanently deletes your cloud orders, connected logins, and Pro verification from TipTrack. This cannot be undone. Signing in again creates a new, empty TipTrack account. Your App Store purchase is not refunded or removed.")
             }
         }
     }
@@ -326,6 +364,22 @@ struct AccountConnectionsView: View {
             }
 
             isSubmitting = false
+        }
+    }
+
+    private func deleteAccount() {
+        isDeleting = true
+        errorMessage = nil
+        successMessage = nil
+
+        Task { @MainActor in
+            do {
+                try await store.deleteAccount()
+                dismiss()
+            } catch {
+                errorMessage = error.localizedDescription
+                isDeleting = false
+            }
         }
     }
 

@@ -40,3 +40,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# SwiftPM
+/.build/
+/.swiftpm/
+
+# local review captures and a patch already applied to the tree
+/artifacts/

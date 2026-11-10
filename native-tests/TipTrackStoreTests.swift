@@ -262,4 +262,35 @@ final class TipTrackStoreTests: XCTestCase {
         }
     }
 
+    func testDeleteAccountClearsOnlyCurrentUsersCacheAndSession() async throws {
+        try seed(orders: [order("mine", user: "A"), order("other", user: "B")])
+        let store = TipTrackStore(defaults: defaults, apiClient: client)
+        MockURLProtocol.handler = { request in
+            XCTAssertEqual(request.httpMethod, "DELETE")
+            XCTAssertEqual(request.url?.path, "/api/mobile/account")
+            return (200, Data(#"{"deleted":true}"#.utf8))
+        }
+
+        try await store.deleteAccount()
+
+        XCTAssertNil(store.session.userId)
+        XCTAssertEqual(try cached().map(\.id), ["other"])
+    }
+
+    func testDeleteAccountFailurePreservesSessionAndCache() async throws {
+        try seed(orders: [order("mine", user: "A")])
+        let store = TipTrackStore(defaults: defaults, apiClient: client)
+        MockURLProtocol.handler = { _ in
+            (500, Data(#"{"error":"Account deletion failed"}"#.utf8))
+        }
+
+        do {
+            try await store.deleteAccount()
+            XCTFail("Expected account deletion to fail")
+        } catch {}
+
+        XCTAssertEqual(store.session.userId, "A")
+        XCTAssertEqual(try cached().map(\.id), ["mine"])
+    }
+
 }

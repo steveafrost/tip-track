@@ -188,6 +188,26 @@ final class TipTrackStore: ObservableObject {
         saveSession()
     }
 
+    func deleteAccount() async throws {
+        guard let apiClient, isCloudSessionActive, let userId = session.userId else {
+            throw TipTrackAPIError.server("Sign in to a TipTrack cloud account to delete it.")
+        }
+
+        refreshRevision += 1
+        try await apiClient.deleteAccount(session: session)
+
+        allOrders.removeAll { $0.createdBy == userId }
+        saveOrders()
+        session = DriverSession(
+            userId: nil,
+            displayName: nil,
+            sessionToken: nil,
+            authProvider: nil,
+            connectedProviders: nil
+        )
+        saveSession()
+    }
+
     func hasOrder(externalId: String) -> Bool {
         orders.contains { $0.externalId.caseInsensitiveCompare(externalId) == .orderedSame }
     }

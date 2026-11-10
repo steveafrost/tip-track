@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import {
   mobileJsonError,
@@ -76,25 +77,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const order = await prisma.order.create({
-      data: {
-        externalId,
-        tip,
-        createdBy: userId,
-        location: {
-          connectOrCreate: {
-            where: { address },
-            create: {
-              address,
-              coordinates: [latitude, longitude],
+    try {
+      const order = await prisma.order.create({
+        data: {
+          externalId,
+          tip,
+          createdBy: userId,
+          location: {
+            connectOrCreate: {
+              where: { address },
+              create: {
+                address,
+                coordinates: [latitude, longitude],
+              },
             },
           },
         },
-      },
-      include: { location: true },
-    });
+        include: { location: true },
+      });
 
-    return NextResponse.json({ order: serializeOrder(order) }, { status: 201 });
+      return NextResponse.json({ order: serializeOrder(order) }, { status: 201 });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        return NextResponse.json(
+          { error: "That order ID is already saved" },
+          { status: 409 }
+        );
+      }
+
+      throw error;
+    }
   } catch (error) {
     return mobileJsonError(error);
   }
